@@ -32,7 +32,7 @@ per released iteration:
 ```
 
 Each app carries its own counter — they are not kept in step. Aengus starts at 26.0;
-Kairos is already at 26.5 and the other two at 26.1.
+Kairos is already at 26.5, Minerva at 26.1 and Kubera at 26.2.
 
 In Aengus the version lives in one place, `APP_VERSION`, and both the `<title>` and the
 header chip are built from it. The other three still have it written out by hand in a
@@ -61,6 +61,37 @@ Two things Aengus is careful about, because getting them wrong is worse than use
 wall monitor: a panel that **could not be read** says so, rather than showing a
 comforting zero; and a Minerva week that was published a while ago is labelled with its
 age, so nobody plans a Tuesday off last month's board.
+
+## Live quotes in the archive
+
+The archive is history, but not all of it is finished — a quote sent last month may
+still be sitting on a customer's desk. Two different actions cover this, and the
+difference matters:
+
+- **Quote this again** starts a *new* quote with a *new* number, for re-quoting old work.
+- **This one is still live** brings the record into the pipeline *as itself* — same
+  number, same revision, same date. Change the number and you break the thread with
+  whatever the customer is holding.
+
+Promote one at a time from a document, or tick several in the archive list and move
+them together. The archive record is kept either way: it's the evidence of what was
+actually sent, and it keeps its link to the original PDF. The two are joined by
+`quote.fromArchive`, and the archive list shows the live version instead of the
+historical one so a number never appears twice.
+
+Before it moves anything, it warns about the things that bite:
+
+- **A newer revision exists.** Numbers repeat across revisions, so ticking rev 0 when
+  rev 2 is on file would drag a superseded document into the pipeline.
+- **The lines never reconciled.** Roughly a third of the extracted catalogue has line
+  items that don't add up to the printed total — a line that ran across a page break,
+  or an option quote where only one option was counted. Those need checking against
+  the original before you send anything based on them.
+- **Index-only entries** arrive with one empty line to fill in.
+- **Unmatched customers** must be picked before the quote will save.
+
+It also nudges the quote counter past any promoted number, so a promoted 26206 can't
+collide with the next new quote.
 
 ## The Mercury rename
 
