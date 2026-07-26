@@ -7,9 +7,9 @@ set of design tokens. No build step: each file is opened directly in a browser.
 
 | Product name                 | Header chip    | File           | Firestore collection | Doc keys  |
 | ---------------------------- | -------------- | -------------- | -------------------- | --------- |
-| Lanko Aengus Dashboard       | `Aengus 26.0`  | `index.html`   | *(reads only)*       | —         |
+| Lanko Aengus Dashboard       | `Aengus 26.2`  | `index.html`   | *(reads only)*       | —         |
 | Lanko Kairos Timeclock       | `Kairos 26.5`  | `kairos.html`  | `kairos_state`       | `lanko_*` |
-| Lanko Minerva Planner        | `Minerva 26.1` | `minerva.html` | `minerva_state`      | `lb_*`    |
+| Lanko Minerva Planner        | `Minerva 26.2` | `minerva.html` | `minerva_state`      | `lb_*`    |
 | Lanko Kubera Quote Builder   | `Kubera 26.1`  | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
 
 The pattern is **`Lanko <Deity> <Function>`**. The deity alone is the short name; the
@@ -32,7 +32,7 @@ per released iteration:
 ```
 
 Each app carries its own counter — they are not kept in step. Aengus starts at 26.0;
-Kairos is already at 26.5, Minerva at 26.1 and Kubera at 26.2.
+Kairos is at 26.5, Minerva 26.2, Kubera 26.3, Aengus 26.2.
 
 In Aengus the version lives in one place, `APP_VERSION`, and both the `<title>` and the
 header chip are built from it. The other three still have it written out by hand in a
@@ -146,18 +146,49 @@ connection". Re-bookmark the shop tablets — the old URL will not follow.
 Note GitHub Pages needs a **public** repo unless you are on a paid plan. Public means
 anyone with the URL loads the app, so:
 
-## Two things worth tightening
+## Who can sign in, and why
+
+These are static files on a public URL. The Firebase config inside them is public by
+design, which means anyone who knows the project id can reach the database with the
+REST API without ever loading a page. So the PINs in Kairos and Minerva are not
+security — they run in JavaScript on the visitor's own machine. `firestore.rules` is
+the only real boundary, and it works by telling a real account apart from an
+anonymous session.
+
+| App | Sign-in | Why |
+| --- | --- | --- |
+| Kairos | none, anonymous | Shop tablets have no keyboard. Deliberate trade. |
+| Minerva | required | Editing the schedule. Kairos still reads it anonymously. |
+| Kubera | required | Quote prices, margins, customer contacts. |
+| Aengus | optional | Anonymous shows timeclock + planner; quotes need an account. |
+
+Aengus is optional on purpose: a wall monitor shouldn't go blank because a session
+lapsed, and nobody walking past sees quote values unless someone deliberately signs
+in. Its listeners re-attach on sign-in, because a Firestore listener that has already
+failed with permission-denied stays dead and the panel would otherwise be stuck on
+its error until a reload.
+
+Adding someone: Firebase Console → Authentication → Users → Add user. There are no
+roles — any account can read and write everything the rules allow. If that changes,
+put an allow-list in the rules rather than in the apps, since the apps are editable
+by whoever is looking at them.
+
+**Deploy order, if you ever change this.** Ship the apps that can sign in first,
+sign in once to prove it works, then publish the rules. The other way round locks the
+office apps out of their own data.
+
+## Still worth tightening
 
 Neither is caused by the rename, but both get more exposed on a new public URL.
 
-**1. Anonymous auth is doing all the work.** Every app signs in anonymously and the rules
-almost certainly say `request.auth != null`. That is satisfied by *anybody* who loads the
-page, so in practice the shop's time entries, roster and quote values are readable and
-writable by anyone with the URL. The app PINs are UI gates, not security — they are
-checked in JavaScript the visitor controls. Worth moving to real accounts, or at minimum
-rules that restrict writes per collection and make `mercury_state` unreadable except to
-known users. Aengus only needs **read** on the three collections.
+**1. `kairos_state` is still open to anonymous sessions.** It has to be, so keyboardless
+tablets can clock people in. Anyone who works out the project id can read the roster,
+jobs and hours. The pricing is what's locked; this is names and times. The proper fix is
+App Check, which attests a request came from your real site without adding a login. It
+needs SDK changes in all four apps, so it is not a five-minute job.
 
-**2. Do not commit `Lanko_quote_archive.json`.** It is 640 KB of real customer quotes,
-names and prices. In a public repo it is a public document. It belongs in Kubera's
-importer or a private backup, not the site.
+**2. Never commit `Lanko_quote_archive.json`.** It is 640 KB of real customer quotes,
+names and prices. It went into a public repo once already and had to be deleted along
+with the whole repository, because deleting a file leaves it in git history. It only ever
+needs to pass through Kubera's Archive tab, which reads it off your disk and writes it
+straight to Firestore. It has no reason to be in any repo.

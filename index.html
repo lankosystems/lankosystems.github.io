@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lanko Aengus Dashboard 26.1</title>
+<title>Lanko Aengus Dashboard 26.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -480,7 +480,7 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.1';
+  var APP_VERSION = '26.2';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
@@ -812,7 +812,14 @@
   }
 
   function renderFoot(){
-    var bad = Object.keys(DATA.err);
+    // A denied quotes read is the normal state for an anonymous viewer, not a
+    // misconfiguration, so it must not be reported as one -- otherwise the footer
+    // sends someone auditing rules that are working exactly as intended.
+    var u = firebase.auth().currentUser;
+    var anon = !u || u.isAnonymous;
+    var bad = Object.keys(DATA.err).filter(function(k){
+      return !(k === 'quotes' && anon);
+    });
     var h = '<div class="foot">Read-only. Aengus never writes &mdash; changes belong in Kairos, Minerva or Kubera.';
     if(bad.length){
       h += '<br><span class="stale">Could not read: ' + esc(bad.join(', ')) +
