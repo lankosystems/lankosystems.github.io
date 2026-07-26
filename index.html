@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lanko Aengus Dashboard 26.0</title>
+<title>Lanko Aengus Dashboard 26.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -257,6 +257,52 @@
      live quote, and there'd be no way to tell which app did it. Anything that
      needs to change data belongs in Kairos, Minerva or Kubera.
      ============================================================================ -->
+<style>
+  /* ---------- office sign-in gate ----------
+     Full-cover overlay rather than an inline form, so no part of the app renders
+     before there is a real account behind it. Uses the same tokens as everything
+     else. Hidden from print. */
+  #authgate{ position:fixed; inset:0; z-index:9999; background:var(--oxblood-deep);
+    display:flex; align-items:center; justify-content:center; padding:24px; }
+  #authgate[hidden]{ display:none; }
+  #authgate .box{ background:var(--card); border:1px solid var(--gold-dim); border-radius:6px;
+    padding:26px 28px 22px; width:100%; max-width:390px;
+    box-shadow:0 20px 50px -12px rgba(0,0,0,0.6); }
+  #authgate .eyebrow{ font-family:var(--mono); font-size:10px; font-weight:600;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:6px; }
+  #authgate h1{ font-family:var(--display); font-weight:800; font-size:27px; line-height:1;
+    margin:0 0 6px; text-transform:uppercase; letter-spacing:0.01em; color:var(--oxblood); }
+  #authgate p.sub{ font-family:var(--body); font-size:13px; color:#8a7f68;
+    margin:0 0 18px; line-height:1.5; }
+  #authgate label{ display:block; font-family:var(--display-text); font-weight:700; font-size:11.5px;
+    text-transform:uppercase; letter-spacing:0.07em; color:#7a6f5c; margin:0 0 5px; }
+  #authgate input{ width:100%; font-family:var(--body); font-size:15px; padding:10px 12px;
+    border:1.5px solid var(--line); border-radius:4px; background:var(--paper);
+    color:var(--ink); margin-bottom:14px; }
+  #authgate input:focus{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold-dim); }
+  #authgate button.go{ width:100%; font-family:var(--display-text); font-weight:700; font-size:15px;
+    text-transform:uppercase; letter-spacing:0.06em; padding:12px; border:none; border-radius:4px;
+    background:var(--oxblood); color:var(--gold-light); cursor:pointer; }
+  #authgate button.go:disabled{ opacity:0.6; cursor:default; }
+  #authgate .err{ font-family:var(--body); font-size:13px; color:var(--rust);
+    background:var(--rust-dim); border-radius:4px; padding:9px 11px; margin-bottom:12px;
+    line-height:1.45; }
+  #authgate .err[hidden]{ display:none; }
+
+  /* who is signed in, plus the way out. Free-standing because Minerva rebuilds its
+     header markup on every render. */
+  #whoami{ position:fixed; left:12px; bottom:12px; z-index:900;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.04em;
+    background:var(--card); border:1px solid var(--line); border-radius:999px;
+    padding:5px 12px; color:#8a7f68; display:flex; gap:9px; align-items:center;
+    box-shadow:0 2px 8px rgba(36,24,17,0.08); }
+  #whoami[hidden]{ display:none; }
+  #whoami button{ font-family:var(--display-text); font-weight:700; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.06em; background:none; border:none;
+    color:var(--oxblood); cursor:pointer; padding:0; }
+  #whoami button:hover{ text-decoration:underline; }
+  @media print{ #whoami, #authgate{ display:none !important; } }
+</style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -274,9 +320,139 @@
   firebaseDb.enablePersistence({ synchronizeTabs: false }).catch(function(e){
     console.warn('Firestore offline persistence not enabled:', e.code);
   });
-  var firebaseAuthReady = firebase.auth().signInAnonymously().catch(function(e){
-    console.error('Firebase anonymous sign-in failed - check that Anonymous sign-in is enabled in the Firebase console.', e);
-  });
+
+  /* ---------- office sign-in ----------
+     These apps are static files on a public URL, so the only real boundary around
+     the shop's data is the Firestore rules, and those rules distinguish a real
+     account from an anonymous session. This is where that account is obtained.
+
+     Kairos is deliberately NOT gated: shop tablets have no keyboard, and the
+     rules keep kairos_state open to anonymous sessions for exactly that reason. */
+  function authFriendlyError(code){
+    switch(code){
+      case 'auth/invalid-email':        return 'That does not look like an email address.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':   return 'Email or password not recognised.';
+      case 'auth/user-disabled':        return 'That account has been disabled in Firebase.';
+      case 'auth/too-many-requests':    return 'Too many attempts. Wait a few minutes and try again.';
+      case 'auth/network-request-failed': return 'No connection. Check the internet and try again.';
+      case 'auth/operation-not-allowed': return 'Email sign-in is not switched on for this Firebase project yet.';
+      default: return 'Could not sign in (' + code + ').';
+    }
+  }
+
+  function buildAuthGate(appName, subtitle){
+    var g = document.createElement('div');
+    g.id = 'authgate';
+    g.hidden = true;
+    g.innerHTML =
+      '<div class="box">' +
+        '<div class="eyebrow">Lanko</div>' +
+        '<h1>' + appName + '</h1>' +
+        '<p class="sub">' + subtitle + '</p>' +
+        '<div class="err" id="agErr" hidden></div>' +
+        '<label for="agEmail">Email</label>' +
+        '<input type="email" id="agEmail" autocomplete="username" autocapitalize="off" spellcheck="false">' +
+        '<label for="agPass">Password</label>' +
+        '<input type="password" id="agPass" autocomplete="current-password">' +
+        '<button class="go" id="agGo">Sign in</button>' +
+      '</div>';
+    document.body.appendChild(g);
+
+    var err = g.querySelector('#agErr');
+    var email = g.querySelector('#agEmail');
+    var pass = g.querySelector('#agPass');
+    var go = g.querySelector('#agGo');
+
+    function fail(msg){
+      err.textContent = msg; err.hidden = false;
+      go.disabled = false; go.textContent = 'Sign in';
+    }
+    function submit(){
+      var e = email.value.trim(), p = pass.value;
+      if(!e || !p){ fail('Enter both an email and a password.'); return; }
+      err.hidden = true;
+      go.disabled = true; go.textContent = 'Signing in...';
+      firebase.auth().signInWithEmailAndPassword(e, p).catch(function(ex){
+        fail(authFriendlyError(ex.code || 'unknown'));
+        pass.value = '';
+        pass.focus();
+      });
+    }
+    go.onclick = submit;
+    [email, pass].forEach(function(el){
+      el.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') submit(); });
+    });
+    return g;
+  }
+
+  function buildWhoami(){
+    var w = document.createElement('div');
+    w.id = 'whoami';
+    w.hidden = true;
+    w.innerHTML = '<span id="waWho"></span><button id="waOut">Sign out</button>';
+    document.body.appendChild(w);
+    w.querySelector('#waOut').onclick = function(){
+      firebase.auth().signOut();
+    };
+    return w;
+  }
+
+  var firebaseAuthReady = (function(){
+    var resolveReady, resolved = false;
+    var ready = new Promise(function(res){ resolveReady = res; });
+
+    var gate = buildAuthGate('Aengus', 'Sign in to include the quote pipeline. ' +
+      'The timeclock and planner panels do not need it.');
+    var who = buildWhoami();
+    var whoEl, outEl;
+
+    function paintChip(user){
+      if(!whoEl){ whoEl = who.querySelector('#waWho'); outEl = who.querySelector('#waOut'); }
+      who.hidden = false;
+      if(user && !user.isAnonymous){
+        whoEl.textContent = user.email || 'signed in';
+        outEl.textContent = 'Sign out';
+        outEl.onclick = function(){ firebase.auth().signOut(); };
+      } else {
+        whoEl.textContent = 'quotes hidden';
+        outEl.textContent = 'Sign in';
+        outEl.onclick = function(){
+          gate.hidden = false;
+          var f = gate.querySelector('#agEmail');
+          if(f) f.focus();
+        };
+      }
+    }
+
+    // Escape hatch: the dashboard is useful without signing in, so the overlay must
+    // be dismissable here, unlike in Minerva and Kubera.
+    gate.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') gate.hidden = true; });
+    gate.addEventListener('click', function(ev){ if(ev.target === gate) gate.hidden = true; });
+
+    firebase.auth().onAuthStateChanged(function(user){
+      if(!user){
+        firebase.auth().signInAnonymously().catch(function(e){
+          console.error('anonymous sign-in failed', e);
+        });
+        return;
+      }
+      gate.hidden = true;
+      paintChip(user);
+      if(!resolved){
+        resolved = true;
+        resolveReady(user);
+      } else if(typeof window.__lankoReattach === 'function'){
+        // Signing in or out changes what mercury_state will allow, and a Firestore
+        // listener that has already failed with permission-denied is dead for good.
+        // Re-attach rather than leaving the quote panel stuck on its error.
+        window.__lankoReattach();
+      }
+    });
+    return ready;
+  })();
+
 </script>
 
 <script>
@@ -304,7 +480,7 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.0';
+  var APP_VERSION = '26.1';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
@@ -318,8 +494,8 @@
 
   var APPS = [
     { id:'kairos',  deity:'Kairos',  role:'Timeclock',     href:'kairos.html',  version:'26.5' },
-    { id:'minerva', deity:'Minerva', role:'Planner',       href:'minerva.html', version:'26.1' },
-    { id:'kubera',  deity:'Kubera',  role:'Quote Builder', href:'kubera.html',  version:'26.2' }
+    { id:'minerva', deity:'Minerva', role:'Planner',       href:'minerva.html', version:'26.2' },
+    { id:'kubera',  deity:'Kubera',  role:'Quote Builder', href:'kubera.html',  version:'26.3' }
   ];
 
   /* Each field has three meaningful states, and the panels below rely on the
@@ -548,7 +724,8 @@
       kubera: [
         ['Out for decision', vit(qBad, DATA.quotes===null, String(pipe.sent.n))],
         ['Value out',        vit(qBad, DATA.quotes===null, money(pipe.sent.v))],
-        ['Drafts open',      vit(qBad, DATA.quotes===null, String(pipe.draft.n))]
+        [qBad ? 'Sign in for these' : 'Drafts open',
+                             vit(qBad, DATA.quotes===null, String(pipe.draft.n))]
       ]
     };
   }
@@ -602,8 +779,13 @@
   function renderPipeline(){
     var h = '<div class="ledger"><div class="eyebrow">Quote pipeline &middot; Kubera<span class="rule"></span></div>';
     if(DATA.err.quotes){
-      h += '<div class="empty"><b>Quote builder unavailable</b>Aengus could not read mercury_state ' +
-        '(Kubera&rsquo;s collection). Open Kubera directly to check the pipeline.</div>';
+      var u = firebase.auth().currentUser;
+      h += (!u || u.isAnonymous)
+        ? '<div class="empty"><b>Sign in to see the pipeline</b>' +
+          'Quote values stay hidden until someone signs in. Use the button at the ' +
+          'bottom left. The timeclock and planner panels above do not need it.</div>'
+        : '<div class="empty"><b>Quote builder unavailable</b>Signed in, but this account ' +
+          'still could not read mercury_state. Check the Firestore rules.</div>';
       return h + '</div>';
     }
     if(DATA.quotes === null){
@@ -664,6 +846,25 @@
       });
   }
 
+  /* Listeners are re-attachable because signing in or out changes what
+     mercury_state will allow, and a Firestore listener that has already failed
+     with permission-denied stays dead. Dropping and re-opening them is the only
+     way the quote panel can recover without a page reload. */
+  var unsubs = [];
+  function attachAll(){
+    unsubs.forEach(function(u){ try { u(); } catch(e){} });
+    unsubs = [];
+    DATA.err = {};
+    lamp('saving', 'Loading');
+    var S = SOURCES;
+    unsubs.push(watch('kairos',  S.kairos.employees, 'roster',   function(v){ DATA.employees = v || []; }));
+    unsubs.push(watch('kairos',  S.kairos.entries,   'timeclock',function(v){ DATA.entries   = v || []; }));
+    unsubs.push(watch('minerva', S.minerva.schedule, 'planner',  function(v){ DATA.schedule  = v || false; }));
+    unsubs.push(watch('kubera',  S.kubera.quotes,    'quotes',   function(v){ DATA.quotes    = v || []; }));
+  }
+  // The sign-in overlay calls this when the account changes.
+  window.__lankoReattach = attachAll;
+
   function boot(){
     tickClock();
     setInterval(tickClock, 20000);
@@ -671,15 +872,7 @@
     // honest without anyone touching it.
     setInterval(function(){ if(DATA.entries) render(); }, 60000);
     render();
-
-    firebaseAuthReady.then(function(){
-      lamp('saving', 'Loading');
-      var S = SOURCES;
-      watch('kairos',  S.kairos.employees, 'roster',   function(v){ DATA.employees = v || []; });
-      watch('kairos',  S.kairos.entries,   'timeclock',function(v){ DATA.entries   = v || []; });
-      watch('minerva', S.minerva.schedule, 'planner',  function(v){ DATA.schedule  = v || false; });
-      watch('kubera',  S.kubera.quotes,    'quotes',   function(v){ DATA.quotes    = v || []; });
-    });
+    firebaseAuthReady.then(attachAll);
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
