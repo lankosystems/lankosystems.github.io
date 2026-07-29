@@ -1346,27 +1346,40 @@
   // carrying an audience tag from before the merge are cleaned as they are re-synced.
   function reconcileJobsFromSheet(list, rows){
     var out = list.map(function(j){ return Object.assign({}, j); });
-    var outByName = {};
-    out.forEach(function(j){ outByName[j.name.toLowerCase()] = j; });
+    /* Keyed to a LIST per name, not a single job. Before the shop/office merge, two
+       independent syncs could each create their own job record for the same job number
+       (one tagged audience:'shop', one tagged audience:'office') - that's not
+       hypothetical, it's the normal result of two syncs running for months against
+       overlapping job numbers. A plain name->job map would let the second one silently
+       overwrite the first in this lookup, so only one of the pair would ever receive
+       fresh data again - the other would sit frozen with whatever status it last had,
+       which is exactly the "row shows the wrong status" bug this replaced. */
+    var byName = {};
+    out.forEach(function(j){
+      var key = j.name.toLowerCase();
+      (byName[key] = byName[key] || []).push(j);
+    });
     var seen = {};
     rows.forEach(function(r){
       var key = r.name.toLowerCase();
       seen[key] = true;
-      var existing = outByName[key];
-      if(existing){
-        existing.active = true; existing.source = 'sheet';
-        /* Jobs used to be tagged shop or office by which sheet they arrived from. One
-           merged sheet makes that meaningless, so the tag is cleared as each row is seen
-           and visibility comes from status instead. */
-        if(existing.audience) delete existing.audience;
-        if(r.description!=null) existing.description = r.description;
-        if(r.afterHours!=null) existing.afterHoursAllowed = r.afterHours;
-        if(r.status!=null) existing.status = r.status;
+      var matches = byName[key];
+      if(matches && matches.length){
+        matches.forEach(function(existing){
+          existing.active = true; existing.source = 'sheet';
+          /* Jobs used to be tagged shop or office by which sheet they arrived from. One
+             merged sheet makes that meaningless, so the tag is cleared as each row is seen
+             and visibility comes from status instead. */
+          if(existing.audience) delete existing.audience;
+          if(r.description!=null) existing.description = r.description;
+          if(r.afterHours!=null) existing.afterHoursAllowed = r.afterHours;
+          if(r.status!=null) existing.status = r.status;
+        });
       } else {
         var job = {id:uid('job'), name:r.name, active:true, source:'sheet',
           description:r.description||'', afterHoursAllowed: r.afterHours||false,
           status: r.status||''};
-        out.push(job); outByName[key]=job;
+        out.push(job); byName[key]=[job];
       }
     });
     out.forEach(function(j){
@@ -2396,6 +2409,21 @@
     var editing = STATE.editingJobId ? STATE.jobs.find(function(j){ return j.id===STATE.editingJobId; }) : null;
     var editStatus = editing ? (jobStatusCode(editing) || ACTIVE_JOB_STATUS) : ACTIVE_JOB_STATUS;
 
+    /* Left over from the shop/office two-sheet era: a job number that existed in both old
+       sheets got two separate job records, one per audience. Both now sync correctly, but
+       there are still two rows for one job number until someone deactivates the older of
+       the pair - that's a manual call (which one has the entries worth keeping attached to
+       it), not something to silently merge automatically. */
+    var nameCounts = {};
+    list.forEach(function(j){ if(j.active) nameCounts[j.name.toLowerCase()] = (nameCounts[j.name.toLowerCase()]||0)+1; });
+    var dupeNames = Object.keys(nameCounts).filter(function(k){ return nameCounts[k]>1; });
+    var dupeWarning = dupeNames.length
+      ? '<div class="formerr" style="margin-bottom:14px;">'+dupeNames.length+' job number'+(dupeNames.length===1?'':'s')+
+        ' appear'+(dupeNames.length===1?'s':'')+' as more than one row below &mdash; left over from before the shop and office sheets '+
+        'were merged. Both rows will now stay in sync, but worth deactivating whichever one shouldn\u2019t stick around: '+
+        dupeNames.map(function(n){ return esc(list.find(function(j){return j.name.toLowerCase()===n;}).name); }).join(', ')+'.</div>'
+      : '';
+
     var formHtml = '';
     if(formOpen){
       formHtml = '<div class="inlineform">'+
@@ -2433,6 +2461,7 @@
     }).join('');
 
     return '<div class="admin-section-head"><h2>Jobs</h2>'+(!formOpen?'<button class="addbtn" data-action="admin-job-new">+ Add job manually</button>':'')+'</div>'+
+      dupeWarning+
       '<div class="subhead">Job list &mdash; one sheet for shop and office</div>'+
       renderJobSourcePanel()+
       formHtml+
