@@ -3510,6 +3510,28 @@
     }, 120000);
   }
 
+  /* ---------------- hourly auto-refresh ----------------
+     A full reload is the one guaranteed way to clear out anything a tablet has had
+     sitting stale in memory since boot - the job list, the employee roster, all of it.
+     But firing on a blind timer would occasionally land mid-PIN-entry or halfway through
+     a time-off form, which is worse than the staleness it's fixing. So this checks rather
+     than forces: every 30s, if an hour has passed AND the tablet is sitting idle on the
+     rack screen with no overlay showing and no save in flight, reload. If someone's
+     mid-task when the hour ticks over, it just waits and checks again - it will still
+     catch the next idle moment, usually within seconds on a shop floor. */
+  var REFRESH_INTERVAL_MS = 60 * 60 * 1000;
+  var pageLoadedAt = Date.now();
+  function isSafeToAutoRefresh(){
+    return STATE.view === 'rack' && !STATE.stamp && !STATE.lateAlert && !STATE.busy;
+  }
+  function startHourlyAutoRefresh(){
+    setInterval(function(){
+      if(Date.now() - pageLoadedAt < REFRESH_INTERVAL_MS) return;
+      if(!isSafeToAutoRefresh()) return;
+      location.reload();
+    }, 30000);
+  }
+
   function boot(){
     STATE.lastInteractionAt = Date.now();
     document.body.addEventListener('click', onBodyClick);
@@ -3535,6 +3557,7 @@
       startOfficeJobSourceSync();
       startEmployeeSourceSync();
       startTaskSourceSync();
+      startHourlyAutoRefresh();
       if(STATE.jobSource) syncJobsFromSheet(false);
       if(STATE.employeeSource) syncEmployeesFromSheet(false);
       if(STATE.taskSource) syncTasksFromSheet(false);
