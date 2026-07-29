@@ -3544,6 +3544,40 @@
     }, 30000);
   }
 
+  /* ---------------- new-build watch ----------------
+     The hourly refresh above handles data going stale. This handles CODE going stale -
+     a tablet left open from before an upload keeps running the old JavaScript
+     indefinitely, including whatever sync logic that old build had (or didn't have).
+     There is no one driving out to every tablet after every upload, so the tablet has to
+     notice on its own.
+
+     BUILD_ID is a hash of the file's own contents, injected as the last step of packaging
+     a build - not a version number I have to remember to bump by hand, which is exactly
+     the kind of manual step that gets skipped under time pressure. Any change anywhere in
+     the file changes the hash automatically.
+
+     Every 5 minutes, fetch the live page fresh (cache-busted so a browser or CDN cache
+     can't hand back yesterday's copy) and compare its embedded BUILD_ID to this tablet's
+     own. A mismatch means a new version has been uploaded since this tablet last loaded -
+     reload, but only once it's actually safe to, using the exact same idle check as the
+     hourly refresh. A failed fetch (offline, tablet Wi-Fi hiccup) just skips that round
+     and tries again in 5 minutes; it never treats "couldn't check" as "must reload." */
+  var BUILD_ID = 'sha256-b332aa5abed8535a'; // replaced with a real content hash when packaged
+  function checkForNewBuild(){
+    var bustUrl = location.href.split('#')[0].split('?')[0] + '?_v=' + Date.now();
+    fetch(bustUrl, { cache:'no-store' })
+      .then(function(r){ return r.ok ? r.text() : null; })
+      .then(function(html){
+        if(!html) return;
+        var m = html.match(/var BUILD_ID = '([^']+)'/);
+        if(m && m[1] && m[1] !== BUILD_ID && isSafeToAutoRefresh()) location.reload();
+      })
+      .catch(function(){ /* offline or blocked this round - try again next interval */ });
+  }
+  function startBuildUpdateWatch(){
+    setInterval(checkForNewBuild, 5 * 60 * 1000);
+  }
+
   function boot(){
     STATE.lastInteractionAt = Date.now();
     document.body.addEventListener('click', onBodyClick);
@@ -3570,6 +3604,7 @@
       startEmployeeSourceSync();
       startTaskSourceSync();
       startHourlyAutoRefresh();
+      startBuildUpdateWatch();
       if(STATE.jobSource) syncJobsFromSheet(false);
       if(STATE.employeeSource) syncEmployeesFromSheet(false);
       if(STATE.taskSource) syncTasksFromSheet(false);
