@@ -100,6 +100,14 @@
     background: radial-gradient(ellipse at top, rgba(110,36,18,0.06), transparent 60%), var(--paper);
   }
   .rack-heading{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
+  .build-banner{
+    background: var(--olive-dim); color: var(--olive); border:2px solid rgba(91,107,63,0.4);
+    border-left:8px solid var(--olive); border-radius:12px;
+    padding:20px 28px; margin-bottom:22px; font-family:var(--display-text); font-weight:800; font-size:19px;
+    letter-spacing:0.3px; text-align:center; line-height:1.4;
+    box-shadow: 0 10px 20px -10px rgba(91,107,63,0.45), 0 2px 4px rgba(26,26,26,0.1);
+  }
+  .build-banner .bb-icon{ font-size:26px; margin-right:8px; vertical-align:-4px; }
   .rack-heading h1{
     font-family:var(--display); font-size:19px; font-weight:700; letter-spacing:1.5px;
     text-transform:uppercase; color: var(--oxblood); margin:0;
@@ -466,7 +474,7 @@
 (function(){
   'use strict';
 
-  var K = { employees:'lanko_employees', jobs:'lanko_jobs', entries:'lanko_entries', adminPin:'lanko_admin_pin', jobSource:'lanko_job_source', employeeSource:'lanko_employee_source', taskSource:'lanko_task_source', tasks:'lanko_tasks', sheetWrite:'lanko_sheet_write', entriesArchive:'lanko_entries_archive', lateAlert:'lanko_late_alert_enabled', timeOff:'lanko_timeoff_requests' };
+  var K = { employees:'lanko_employees', jobs:'lanko_jobs', entries:'lanko_entries', adminPin:'lanko_admin_pin', jobSource:'lanko_job_source', employeeSource:'lanko_employee_source', taskSource:'lanko_task_source', tasks:'lanko_tasks', sheetWrite:'lanko_sheet_write', entriesArchive:'lanko_entries_archive', lateAlert:'lanko_late_alert_enabled', timeOff:'lanko_timeoff_requests', buildBanner:'lanko_build_banner' };
 
   // The shop and office job sheets have been merged into one. There is now a single job
   // source, and what decides who sees a job is column M (job status) rather than which
@@ -589,6 +597,7 @@
     entryArchiveManifest:null, entryArchive:null, rolloffBusy:false, rolloffMsg:null,
     lateAlertEnabled:true, lateAlert:null, lateAlertTimeoutId:null, audioCtx:null,
     timeOffRequests:[], timeOffFormError:null, timeOffSavedMsg:null,
+    buildBannerActive:false,
     timeOffCalMonth:null, timeOffActor:null, timeOffCounterOpenId:null, timeOffCounterError:null,
     view:'loading',
     selectedEmployeeId:null,
@@ -1727,7 +1736,9 @@
         '<div class="dashed">'+dashed+'</div></div>';
     }).join('');
 
-    return '<main class="rack"><div class="rack-heading"><h1>Tap your name to clock in or out</h1>'+
+    return '<main class="rack">'+
+      (STATE.buildBannerActive ? '<div class="build-banner"><span class="bb-icon">&#10024;</span>Lanko Kairos has expanded \u2014 check for more options.</div>' : '')+
+      '<div class="rack-heading"><h1>Tap your name to clock in or out</h1>'+
       '<span>'+activeEmployees.length+' on the team &middot; '+activeCount+' active now</span></div>'+
       '<div class="grid">'+cards+'</div></main>';
   }
@@ -3562,7 +3573,7 @@
      reload, but only once it's actually safe to, using the exact same idle check as the
      hourly refresh. A failed fetch (offline, tablet Wi-Fi hiccup) just skips that round
      and tries again in 5 minutes; it never treats "couldn't check" as "must reload." */
-  var BUILD_ID = 'sha256-b332aa5abed8535a'; // replaced with a real content hash when packaged
+  var BUILD_ID = 'sha256-fc7ba217b018f168'; // replaced with a real content hash when packaged
   function checkForNewBuild(){
     var bustUrl = location.href.split('#')[0].split('?')[0] + '?_v=' + Date.now();
     fetch(bustUrl, { cache:'no-store' })
@@ -3576,6 +3587,29 @@
   }
   function startBuildUpdateWatch(){
     setInterval(checkForNewBuild, 5 * 60 * 1000);
+  }
+
+  /* ---------------- "just updated" banner ----------------
+     Shows on the rack screen for 24 hours after a new build first appears, so the crew
+     knows this isn't the same screen they saw yesterday - useful right after a rollout,
+     especially since the tablet may have updated itself with nobody around to announce it.
+
+     The window is anchored in Firestore, not on the device, and keyed to BUILD_ID rather
+     than a date someone has to remember to set: whichever tablet notices a BUILD_ID it
+     hasn't seen recorded yet writes the start time once, and every other tablet - whenever
+     it happens to reload, minutes or hours apart - reads that same start time and agrees
+     on the same 24-hour window. No manual step, and it re-arms itself automatically for
+     every future build the same way. */
+  var BUILD_BANNER_WINDOW_MS = 24 * 60 * 60 * 1000;
+  function checkBuildBanner(){
+    return safeGetJSON(K.buildBanner, null).then(function(rec){
+      if(rec && rec.buildId === BUILD_ID) return rec;
+      var fresh = { buildId: BUILD_ID, shownSince: new Date().toISOString() };
+      return safeSetJSON(K.buildBanner, fresh).then(function(){ return fresh; });
+    }).then(function(rec){
+      var ageMs = Date.now() - new Date(rec.shownSince).getTime();
+      STATE.buildBannerActive = rec.buildId === BUILD_ID && ageMs >= 0 && ageMs < BUILD_BANNER_WINDOW_MS;
+    }).catch(function(e){ console.error('build banner check failed', e); });
   }
 
   function boot(){
@@ -3605,6 +3639,7 @@
       startTaskSourceSync();
       startHourlyAutoRefresh();
       startBuildUpdateWatch();
+      checkBuildBanner().then(function(){ if(STATE.view==='rack') render(); });
       if(STATE.jobSource) syncJobsFromSheet(false);
       if(STATE.employeeSource) syncEmployeesFromSheet(false);
       if(STATE.taskSource) syncTasksFromSheet(false);
