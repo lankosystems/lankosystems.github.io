@@ -315,20 +315,20 @@
   /* ---------- late arrival overlay ---------- */
   .late-overlay{
     position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; animation: lateFlash 0.4s steps(2) infinite;
+    cursor:pointer; animation: lateGlow 1.1s ease-in-out infinite;
   }
-  @keyframes lateFlash{ 0%,100%{ background: rgba(162,59,30,0.55); } 50%{ background: rgba(173,128,7,0.5); } }
+  @keyframes lateGlow{ 0%,100%{ background: rgba(173,128,7,0.28); } 50%{ background: rgba(91,107,63,0.28); } }
   .late-box{
-    background:#1A1A1A; color:#fff; border:6px solid var(--gold); border-radius:16px;
-    padding:30px 42px; text-align:center; max-width:420px; animation: lateShake 0.5s ease-in-out infinite;
-    box-shadow: 0 0 0 6px rgba(0,0,0,0.25), 0 20px 50px rgba(0,0,0,0.5);
+    background:var(--card); color:var(--ink); border:5px solid var(--olive); border-radius:16px;
+    padding:30px 42px; text-align:center; max-width:420px; animation: lateBob 1.4s ease-in-out infinite;
+    box-shadow: 0 0 0 6px rgba(91,107,63,0.15), 0 20px 50px rgba(0,0,0,0.35);
   }
-  @keyframes lateShake{ 0%,100%{ transform:rotate(-1.1deg); } 50%{ transform:rotate(1.1deg); } }
-  .late-box .late-siren{ font-size:32px; letter-spacing:3px; font-family:var(--display); font-weight:800; color:var(--gold); text-transform:uppercase; }
+  @keyframes lateBob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
+  .late-box .late-headline{ font-size:28px; letter-spacing:1px; font-family:var(--display); font-weight:800; color:var(--oxblood); }
   .late-box .late-name{ font-size:26px; font-weight:700; font-family:var(--display); margin-top:10px; }
-  .late-box .late-time{ font-family:var(--mono); font-size:14px; color:var(--gold-muted); margin-top:4px; }
-  .late-box .late-caption{ font-family:var(--display-text); font-size:15px; margin-top:14px; font-style:italic; opacity:0.92; }
-  .late-box .late-dismiss{ margin-top:16px; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.5); }
+  .late-box .late-time{ font-family:var(--mono); font-size:14px; color:#797979; margin-top:4px; }
+  .late-box .late-caption{ font-family:var(--display-text); font-size:15px; margin-top:14px; opacity:0.92; }
+  .late-box .late-dismiss{ margin-top:16px; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#8b8d8f; }
 
   /* ---------- admin ---------- */
   .admin-view{ flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -533,6 +533,18 @@
     var m = String(name == null ? '' : name).match(/\d+/);
     return m ? parseInt(m[0], 10) : Number.MAX_SAFE_INTEGER;
   }
+  /* Matching by exact name string is fragile against exactly the kind of mess a real
+     spreadsheet accumulates over months: a leading zero that parseInt quietly drops
+     ("099001" and "99001" are the same job to a person, different strings to ===), stray
+     whitespace, or a description that got typed into the number column once and stuck.
+     A job's real identity here is its number, so two names are the same job whenever they
+     parse to the same number - regardless of what text surrounds it. Only a name with no
+     number in it at all (a manual job like "Internal R&D") falls back to matching on the
+     trimmed, lowercased string, since there's no number to key on. */
+  function jobIdentityKey(name){
+    var num = jobNumberValue(name);
+    return num !== Number.MAX_SAFE_INTEGER ? ('n:'+num) : ('x:'+String(name||'').trim().toLowerCase());
+  }
   function sortJobsAscending(list){
     return list.slice().sort(function(a, b){
       var av = jobNumberValue(a.name), bv = jobNumberValue(b.name);
@@ -586,7 +598,7 @@
     adminPinBuffer:'', adminPinError:false,
     adminTab:'employees',
     employeeFormOpen:false, editingEmployeeId:null, employeeFormError:null,
-    jobFormOpen:false, editingJobId:null, jobFormError:null,
+    jobFormOpen:false, editingJobId:null, jobFormError:null, jobMergeBusy:false, jobMergeMsg:null,
     taskFormOpen:false, editingTaskId:null, taskFormError:null,
     editingEntryId:null, logEditError:null,
     logFrom:null, logTo:null,
@@ -629,32 +641,30 @@
     return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
   }
 
-  /* ---------------- late arrival alert (just for fun - fully admin-switchable) ----------------
+  /* ---------------- late arrival pick-me-up (just for fun - fully admin-switchable) ----------------
      Fires once, on the FIRST clock-in of the calendar day, if that clock-in lands after 7:15am
      local time. Deliberately keyed off "first entry today" rather than "any clock-in after
      7:15am" - the same check by time-of-day alone would also catch an ordinary post-lunch
      return, which has nothing to do with arriving late. It never fires twice in one day and
      never fires on a transfer or an afternoon clock-in.
 
-     This exists purely for shop-floor fun, so it's built to be easy to walk back: one toggle in
-     Settings turns it off with no code change, and the overlay itself is dismissable with a tap
-     so it never holds up the line if a few people clock in late back-to-back. */
+     Started as a ribbing bit and got walked back to encouragement plus a clean joke instead -
+     same trigger, same overlay, same toggle, just kinder content. Still built to be easy to
+     walk back again: one toggle in Settings turns it off with no code change, and the overlay
+     itself is dismissable with a tap so it never holds up the line if a few people clock in
+     back-to-back. */
   var LATE_CUTOFF_MIN = 7*60 + 15; // 7:15am, in minutes since midnight
-  var LATE_CAPTIONS = [
-    'The early bird thanks you for the extra worms.',
-    'Fashionably late. Very fashionable.',
-    'Traffic must\u2019ve been rough on a 2-minute commute.',
-    'Snooze button: 1, You: 0.',
-    'Coffee first. Understandable, but noted.',
-    'This has been logged for posterity, not payroll.'
+  var LATE_ENCOURAGEMENT = [
+    'Glad you made it in. Why did the scarecrow win an award? He was outstanding in his field.',
+    'Everyone has one of those mornings. What do you call a fish with no eyes? A fsh.',
+    'You\u2019re here, that\u2019s what counts. Why don\u2019t skeletons fight each other? They don\u2019t have the guts.',
+    'Coffee first, shift second \u2014 fair trade. Why did the bicycle fall over? It was two-tired.',
+    'Good to see you. What did the ocean say to the beach? Nothing, it just waved.',
+    'Rough start, good finish. That\u2019s the plan anyway. Why can\u2019t you give Elsa a balloon? She\u2019ll let it go.'
   ];
   function isLateArrival(iso){
     var d = new Date(iso);
     return (d.getHours()*60 + d.getMinutes()) > LATE_CUTOFF_MIN;
-  }
-  function minutesLate(iso){
-    var d = new Date(iso);
-    return Math.max(1, (d.getHours()*60 + d.getMinutes()) - LATE_CUTOFF_MIN);
   }
   function isFirstEntryToday(employeeId, iso){
     var key = dateKeyLocal(new Date(iso));
@@ -671,9 +681,10 @@
     if(STATE.audioCtx.state === 'suspended') STATE.audioCtx.resume();
     return STATE.audioCtx;
   }
-  /* A comedic klaxon flourish followed by the classic four-note "sad trombone" descent,
-     entirely synthesized - no audio file, so nothing to fetch and nothing to fail loading
-     on a shop tablet. Runs about 5.6s inside the 6s overlay window. */
+  /* A warm four-note rising chime into a sustained major chord, entirely synthesized - no
+     audio file, so nothing to fetch and nothing to fail loading on a shop tablet. Triangle
+     and sine waves throughout for a softer timbre than the old klaxon+trombone had; this is
+     a welcome now, not a foghorn. Runs about 5.4s inside the 6s overlay window. */
   function playLateSound(){
     var ctx = getAudioCtx();
     if(!ctx) return;
@@ -694,13 +705,15 @@
       osc.start(t0+start); osc.stop(t0+start+dur+0.02);
       STATE.lateAlertAudioNodes.push(osc, g);
     }
-    // klaxon: alternating two-tone alert, ~1.6s
-    for(var i=0;i<8;i++) tone(i%2===0?620:520, i*0.2, 0.18, 'square', 1);
-    // the sad trombone: four descending notes, the last one glides down and fades slow
-    tone(392, 2.0, 0.55, 'sawtooth', 0.9);
-    tone(349, 2.6, 0.55, 'sawtooth', 0.9);
-    tone(330, 3.2, 0.55, 'sawtooth', 0.9);
-    tone(311, 3.8, 1.7, 'sawtooth', 0.9, 220);
+    // rising "doo-doo-doo-DOO" - C5, E5, G5, C6
+    tone(523.25, 0.00, 0.18, 'triangle', 0.8);
+    tone(659.25, 0.18, 0.18, 'triangle', 0.8);
+    tone(783.99, 0.36, 0.18, 'triangle', 0.8);
+    tone(1046.50, 0.54, 0.42, 'triangle', 0.9);
+    // warm sustained chord fade - C5+E5+G5 together, soft sine, holds then fades
+    tone(523.25, 1.4, 3.4, 'sine', 0.42);
+    tone(659.25, 1.4, 3.4, 'sine', 0.34);
+    tone(783.99, 1.4, 3.4, 'sine', 0.34);
   }
   function stopLateSound(){
     (STATE.lateAlertAudioNodes||[]).forEach(function(n){ try{ n.stop && n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
@@ -708,8 +721,8 @@
   }
   function showLateAlert(emp, clockInIso){
     STATE.lateAlert = {
-      name: emp.name, time: fmtTime(clockInIso), minutes: minutesLate(clockInIso),
-      caption: LATE_CAPTIONS[Math.floor(Math.random()*LATE_CAPTIONS.length)]
+      name: emp.name, time: fmtTime(clockInIso),
+      caption: LATE_ENCOURAGEMENT[Math.floor(Math.random()*LATE_ENCOURAGEMENT.length)]
     };
     render();
     playLateSound();
@@ -1356,20 +1369,21 @@
        which is exactly the "row shows the wrong status" bug this replaced. */
     var byName = {};
     out.forEach(function(j){
-      var key = j.name.toLowerCase();
+      var key = jobIdentityKey(j.name);
       (byName[key] = byName[key] || []).push(j);
     });
     var seen = {};
     rows.forEach(function(r){
-      var key = r.name.toLowerCase();
+      var key = jobIdentityKey(r.name);
       seen[key] = true;
       var matches = byName[key];
       if(matches && matches.length){
         matches.forEach(function(existing){
           existing.active = true; existing.source = 'sheet';
-          /* Jobs used to be tagged shop or office by which sheet they arrived from. One
-             merged sheet makes that meaningless, so the tag is cleared as each row is seen
-             and visibility comes from status instead. */
+          /* Matched by number now, not exact string, so the name itself is refreshed too -
+             this is what actually cleans up a name that picked up stray text or a leading
+             zero from an old sync, rather than leaving it frozen forever. */
+          existing.name = r.name;
           if(existing.audience) delete existing.audience;
           if(r.description!=null) existing.description = r.description;
           if(r.afterHours!=null) existing.afterHoursAllowed = r.afterHours;
@@ -1383,9 +1397,75 @@
       }
     });
     out.forEach(function(j){
-      if(j.source==='sheet' && !seen[j.name.toLowerCase()]) j.active = false;
+      if(j.source==='sheet' && !seen[jobIdentityKey(j.name)]) j.active = false;
     });
     return out;
+  }
+
+  /* ---------------- merging duplicate job numbers ----------------
+     Left over from the shop/office two-sheet era: one job number, two job objects,
+     different ids. The sync fix stops them going stale, but there are still two rows
+     for one job number - this is the actual merge, on request rather than automatic,
+     because it has to touch entries.
+
+     The part that matters: entries reference a job by id (entry.jobId), not by name.
+     Deleting a duplicate without repointing its entries first would leave payroll
+     history pointing at a job that no longer exists. So the survivor in each duplicate
+     group is whichever id already has the most entries attached - that keeps the
+     MINORITY of entries needing to move, and it's a real, checkable number rather than
+     a guess (there's no created-at on a job to sort by "oldest" instead).
+
+     Order matters for the same reason K7's roll-off writes the archive before pruning
+     the live entries: repoint entries onto the survivor FIRST, and only remove the
+     duplicate job objects after that succeeds. If the second step never runs, the
+     result is two rows for a job number the sync now already reconciles - a rerun of
+     this fixes it. Reversed, a failure between the two steps would leave entries
+     pointing at a job id that was already deleted, which is a real loss, not a
+     cosmetic one. */
+  function planJobMerges(){
+    var groups = {};
+    STATE.jobs.forEach(function(j){
+      var key = jobIdentityKey(j.name);
+      (groups[key] = groups[key] || []).push(j);
+    });
+    var plans = [];
+    Object.keys(groups).forEach(function(key){
+      var group = groups[key];
+      if(group.length < 2) return;
+      var counts = {};
+      group.forEach(function(j){ counts[j.id] = 0; });
+      STATE.entries.forEach(function(en){ if(counts.hasOwnProperty(en.jobId)) counts[en.jobId]++; });
+      var ranked = group.slice().sort(function(a,b){
+        if(counts[b.id] !== counts[a.id]) return counts[b.id] - counts[a.id];
+        var scoreA = (a.active?2:0) + (a.description?1:0), scoreB = (b.active?2:0) + (b.description?1:0);
+        return scoreB - scoreA;
+      });
+      var survivor = ranked[0], losers = ranked.slice(1);
+      plans.push({
+        name: survivor.name, survivorId: survivor.id, loserIds: losers.map(function(j){ return j.id; }),
+        entriesMoved: losers.reduce(function(sum,l){ return sum + counts[l.id]; }, 0)
+      });
+    });
+    return plans;
+  }
+  function runJobMerge(){
+    var plans = planJobMerges();
+    if(!plans.length) return Promise.resolve({merged:0, entriesMoved:0});
+    var survivorForLoser = {};
+    plans.forEach(function(p){ p.loserIds.forEach(function(lid){ survivorForLoser[lid] = p.survivorId; }); });
+    return mutateEntries(function(list){
+      return list.map(function(en){
+        return survivorForLoser[en.jobId] ? Object.assign({}, en, {jobId: survivorForLoser[en.jobId]}) : en;
+      });
+    }).then(function(updatedEntries){
+      STATE.entries = updatedEntries;
+      var loserIdSet = {};
+      plans.forEach(function(p){ p.loserIds.forEach(function(lid){ loserIdSet[lid]=true; }); });
+      return mutateLocal(K.jobs, STATE.jobs, function(list){ return list.filter(function(j){ return !loserIdSet[j.id]; }); });
+    }).then(function(updatedJobs){
+      STATE.jobs = updatedJobs;
+      return { merged: plans.length, entriesMoved: plans.reduce(function(s,p){ return s+p.entriesMoved; }, 0) };
+    });
   }
   function syncJobsFromSheet(manualTrigger){
     if(!STATE.jobSource) return Promise.resolve();
@@ -1592,9 +1672,9 @@
     wrap.setAttribute('data-action', 'dismiss-late-alert');
     var la = STATE.lateAlert;
     wrap.innerHTML = '<div class="late-box">'+
-      '<div class="late-siren">&#128680; Late Arrival &#128680;</div>'+
+      '<div class="late-headline">&#128075; Glad You\u2019re Here!</div>'+
       '<div class="late-name">'+esc(la.name)+'</div>'+
-      '<div class="late-time">Clocked in '+esc(la.time)+' &middot; '+la.minutes+' min after 7:15</div>'+
+      '<div class="late-time">Clocked in '+esc(la.time)+'</div>'+
       '<div class="late-caption">'+esc(la.caption)+'</div>'+
       '<div class="late-dismiss">Tap anywhere to dismiss</div></div>';
     document.getElementById('app').appendChild(wrap);
@@ -2415,13 +2495,21 @@
        the pair - that's a manual call (which one has the entries worth keeping attached to
        it), not something to silently merge automatically. */
     var nameCounts = {};
-    list.forEach(function(j){ if(j.active) nameCounts[j.name.toLowerCase()] = (nameCounts[j.name.toLowerCase()]||0)+1; });
+    list.forEach(function(j){ if(j.active) nameCounts[jobIdentityKey(j.name)] = (nameCounts[jobIdentityKey(j.name)]||0)+1; });
     var dupeNames = Object.keys(nameCounts).filter(function(k){ return nameCounts[k]>1; });
+    var mergePlans = dupeNames.length ? planJobMerges() : [];
     var dupeWarning = dupeNames.length
-      ? '<div class="formerr" style="margin-bottom:14px;">'+dupeNames.length+' job number'+(dupeNames.length===1?'':'s')+
-        ' appear'+(dupeNames.length===1?'s':'')+' as more than one row below &mdash; left over from before the shop and office sheets '+
-        'were merged. Both rows will now stay in sync, but worth deactivating whichever one shouldn\u2019t stick around: '+
-        dupeNames.map(function(n){ return esc(list.find(function(j){return j.name.toLowerCase()===n;}).name); }).join(', ')+'.</div>'
+      ? '<div class="formerr" style="margin-bottom:14px;">'+
+        '<div>'+dupeNames.length+' job number'+(dupeNames.length===1?'':'s')+' still show'+(dupeNames.length===1?'s':'')+
+        ' as more than one row: '+mergePlans.map(function(p){ return esc(p.name); }).join(', ')+
+        '. Both rows stay correctly synced now, but merging collapses each pair into one, moving '+
+        mergePlans.reduce(function(s,p){return s+p.entriesMoved;},0)+' time entr'+
+        (mergePlans.reduce(function(s,p){return s+p.entriesMoved;},0)===1?'y':'ies')+' onto whichever id already has the most history.</div>'+
+        (STATE.jobMergeMsg?'<div style="margin-top:6px;font-weight:700;color:'+(STATE.jobMergeMsg.ok?'var(--olive)':'var(--rust)')+';">'+esc(STATE.jobMergeMsg.text)+'</div>':'')+
+        '<div class="formbtns" style="margin-top:8px;">'+
+          '<button class="save" data-action="admin-merge-duplicate-jobs" '+(STATE.jobMergeBusy?'disabled':'')+'>'+
+            (STATE.jobMergeBusy?'Merging&hellip;':'Merge duplicate job numbers')+'</button>'+
+        '</div></div>'
       : '';
 
     var formHtml = '';
@@ -2758,8 +2846,8 @@
      clocking in, on a shared tablet other people can see - worth being able to turn off in one
      tap if it ever stops landing well for someone. */
   function renderLateAlertSection(){
-    return '<div class="admin-section-head" style="margin-top:28px;"><h2>Late arrival alert</h2></div>'+
-      '<p class="settingsnote">Plays a 6-second animation and sound the first time someone clocks in after 7:15am. '+
+    return '<div class="admin-section-head" style="margin-top:28px;"><h2>Late arrival pick-me-up</h2></div>'+
+      '<p class="settingsnote">Plays a 6-second welcome, a joke, and a chime the first time someone clocks in after 7:15am. '+
         'Doesn\u2019t trigger on lunch returns or transfers &mdash; only the first clock-in of the day.</p>'+
       '<div class="formbtns" style="margin-top:8px;">'+
         '<button class="'+(STATE.lateAlertEnabled?'save':'cancel')+'" data-action="toggle-late-alert">'+
@@ -2917,6 +3005,25 @@
     if(!confirm('Delete this job? This cannot be undone.')) return;
     mutateLocal(K.jobs, STATE.jobs, function(list){ return list.filter(function(j){ return j.id!==id; }); })
       .then(function(updated){ STATE.jobs = updated; render(); });
+  }
+  function onAdminMergeDuplicateJobs(){
+    var plans = planJobMerges();
+    if(!plans.length) return;
+    var summary = plans.map(function(p){
+      return p.name+' ('+(p.loserIds.length+1)+' rows \u2192 1'+(p.entriesMoved?', '+p.entriesMoved+' entr'+(p.entriesMoved===1?'y':'ies')+' moved':'')+')';
+    }).join('\n');
+    if(!confirm('Merge these job numbers?\n\n'+summary+'\n\nThis rewrites which job id some time entries point to. It cannot be undone.')) return;
+    STATE.jobMergeBusy = true; STATE.jobMergeMsg = null; render();
+    runJobMerge().then(function(r){
+      STATE.jobMergeBusy = false;
+      STATE.jobMergeMsg = { ok:true, text: 'Merged '+r.merged+' job number'+(r.merged===1?'':'s')+'. '+r.entriesMoved+' time entr'+(r.entriesMoved===1?'y':'ies')+' moved.' };
+      render();
+    }).catch(function(e){
+      console.error('job merge failed', e);
+      STATE.jobMergeBusy = false;
+      STATE.jobMergeMsg = { ok:false, text:'The merge did not finish. Nothing should have moved \u2014 check the Daily Log before retrying.' };
+      render();
+    });
   }
 
   function onAdminTaskSave(editId){
@@ -3278,6 +3385,7 @@
       case 'admin-job-save': onAdminJobSave(id||null); break;
       case 'admin-job-toggle-active': onAdminJobToggle(id); break;
       case 'admin-job-delete': onAdminJobDelete(id); break;
+      case 'admin-merge-duplicate-jobs': onAdminMergeDuplicateJobs(); break;
 
       case 'admin-task-new': STATE.taskFormOpen=true; STATE.editingTaskId=null; STATE.taskFormError=null; render(); break;
       case 'admin-task-edit': STATE.taskFormOpen=true; STATE.editingTaskId=id; STATE.taskFormError=null; render(); break;
