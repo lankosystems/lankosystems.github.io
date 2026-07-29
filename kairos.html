@@ -1490,6 +1490,18 @@
           STATE.jobSource = Object.assign({}, STATE.jobSource, {lastSyncAt: new Date().toISOString()});
           return safeSetJSON(K.jobSource, STATE.jobSource);
         })
+        /* Duplicates left over from the two-sheet era (or reintroduced by a stale tablet's
+           own write) get cleaned up automatically here, every sync, using the exact same
+           safe merge - entries repointed first, duplicate rows removed only after that
+           succeeds. No confirm dialog, because this now runs unattended every 2 minutes;
+           the manual "Merge duplicate job numbers" button stays for on-demand cleanup, but
+           routine dedup no longer waits on anyone clicking it. */
+        .then(function(){ return runJobMerge().catch(function(e){ console.error('auto job merge failed', e); }); })
+        .then(function(result){
+          if(result && result.merged){
+            if(STATE.adminTab==='jobs') render(); // reflect the cleanup live if someone's looking at it
+          }
+        })
         .then(function(){ maybeRenderAfterBackgroundSync(manualTrigger); });
     });
   }
