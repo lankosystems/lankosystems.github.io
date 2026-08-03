@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lanko Minerva Planner 26.4</title>
+<title>Lanko Minerva Planner 26.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -930,8 +930,12 @@
       }
       window[cbName] = function(data){ finish(true, data); };
       scriptEl = document.createElement('script');
+      /* headers=0 is NOT optional: without it Google silently promotes what it
+         guesses is a header row into column labels and removes it from the rows,
+         and our own hasHeader strip then eats the first real data row. Job 99001
+         has now been the casualty of this twice. Never remove this parameter. */
       scriptEl.src = 'https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?gid='+(gid||'0')+
-        '&tqx=responseHandler:'+cbName+'&_ts='+Date.now();
+        '&headers=0&tqx=responseHandler:'+cbName+'&_ts='+Date.now();
       scriptEl.onerror = function(){ finish(false, new Error('script load error')); };
       document.head.appendChild(scriptEl);
     });
