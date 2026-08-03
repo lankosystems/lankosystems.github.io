@@ -484,7 +484,7 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.3';
+  var APP_VERSION = '26.4';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
@@ -499,9 +499,9 @@
   };
 
   var APPS = [
-    { id:'kairos',  deity:'Kairos',  role:'Timeclock',       href:'kairos.html',  version:'26.7' },
-    { id:'minerva', deity:'Minerva', role:'Planner',         href:'minerva.html', version:'26.2' },
-    { id:'kubera',  deity:'Kubera',  role:'Quote Builder',   href:'kubera.html',  version:'26.5' },
+    { id:'kairos',  deity:'Kairos',  role:'Timeclock',       href:'kairos.html',  version:'26.9' },
+    { id:'minerva', deity:'Minerva', role:'Planner',         href:'minerva.html', version:'26.4' },
+    { id:'kubera',  deity:'Kubera',  role:'Quote Builder',   href:'kubera.html',  version:'26.6' },
     { id:'odin',    deity:'Odin',    role:'Projects',        href:'odin.html',    version:'26.2' },
     { id:'iris',    deity:'Iris',    role:'Ship &amp; Receive', href:'iris.html', version:'26.1' }
   ];
@@ -524,6 +524,18 @@
     });
   }
   function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  /* Minerva publishes canonical op codes since 26.4; older published weeks
+     still carry the 7 lowercase skills. Label both. */
+  function opLabel(sk){
+    var canon = { DRAFT:'Drafting', ORDER:'Ordering', ADMIN:'Admin', PLASMA:'Plasma',
+      BANDSAW:'Bandsaw', DRILL:'Drilling', LINEBORE:'Linebore', MACHINE:'Machining',
+      FIT:'Fitting', WELD:'Welding', REPAIR:'Repair', CHECK:'Checking', PAINT:'Painting',
+      ASSEM:'Assembly', PACK:'Packaging', TRANSP:'Transport', OTHER:'Other' };
+    var oldSkills = { drafting:'Drafting', ordering:'Ordering', cutting:'Plasma',
+      fitting:'Fitting', welding:'Welding', lineboring:'Linebore', assembly:'Assembly' };
+    var k = String(sk||'').trim();
+    return canon[k.toUpperCase()] || oldSkills[k.toLowerCase()] || k;
+  }
   function pad(n){ return String(n).padStart(2,'0'); }
   function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
   function fmtTime(iso){
@@ -907,7 +919,7 @@
     rows.forEach(function(r){
       h += '<tr><td class="name">' + esc(r.name) + '</td>' +
         '<td class="mono">' + esc(r.jobNum || '') + '</td>' +
-        '<td>' + esc(r.skill || '') + '</td>' +
+        '<td>' + esc(opLabel(r.skill)) + '</td>' +
         '<td class="right">' + (r.hours ? num(r.hours) : '') + '</td></tr>';
     });
     h += '</tbody></table>';

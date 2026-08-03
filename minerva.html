@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lanko Minerva Planner 26.3</title>
+<title>Lanko Minerva Planner 26.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -431,13 +431,104 @@
     jobSource:'lb_job_source', employeeSource:'lb_employee_source', sheetWrite:'lb_sheet_write',
     manualOverrides:'lb_manual_overrides', publishedSchedule:'lb_published_schedule' };
 
-  var ALL_SKILLS = ["drafting","ordering","cutting","fitting","welding","lineboring","assembly"];
-  var FAB_SKILLS = ["cutting","fitting","welding","lineboring"];
-  var SKILL_LABEL = { drafting:"Drafting", ordering:"Ordering", cutting:"Cutting", fitting:"Fitting",
-    welding:"Welding", lineboring:"Lineboring", assembly:"Assembly" };
+  /* ==================== Lanko canonical operations ====================
+     Odin's 17-code list is the master vocabulary for the whole suite
+     (see Lanko_Operations_Spec.md). Everything read from Firestore or the
+     Google Sheets normalizes into these codes; everything written out uses
+     them verbatim. Old 7-skill data (drafting/ordering/cutting/...) keeps
+     loading forever via the alias map - expand before contract. */
+  var LANKO_OPS = ['DRAFT','ORDER','ADMIN','PLASMA','BANDSAW','DRILL','LINEBORE','MACHINE',
+                   'FIT','WELD','REPAIR','CHECK','PAINT','ASSEM','PACK','TRANSP','OTHER'];
+  var LANKO_OP_LABEL = { DRAFT:'Drafting', ORDER:'Ordering', ADMIN:'Admin', PLASMA:'Plasma',
+    BANDSAW:'Bandsaw', DRILL:'Drilling', LINEBORE:'Linebore', MACHINE:'Machining', FIT:'Fitting',
+    WELD:'Welding', REPAIR:'Repair', CHECK:'Checking', PAINT:'Painting', ASSEM:'Assembly',
+    PACK:'Packaging', TRANSP:'Transport', OTHER:'Other' };
+  var LANKO_OP_ALIASES = {
+    drafting:'DRAFT', draft:'DRAFT', ordering:'ORDER', order:'ORDER', purchasing:'ORDER',
+    admin:'ADMIN', administration:'ADMIN', office:'ADMIN',
+    cutting:'PLASMA', cut:'PLASMA', plasma:'PLASMA', 'plasma cutting':'PLASMA', torch:'PLASMA',
+    bandsaw:'BANDSAW', bandsawing:'BANDSAW', saw:'BANDSAW', sawing:'BANDSAW',
+    drill:'DRILL', drilling:'DRILL',
+    linebore:'LINEBORE', lineboring:'LINEBORE', 'line bore':'LINEBORE', 'line boring':'LINEBORE',
+    machine:'MACHINE', machining:'MACHINE', machinist:'MACHINE', lathe:'MACHINE', mill:'MACHINE',
+    fit:'FIT', fitting:'FIT', 'fit up':'FIT', fitup:'FIT', 'fit-up':'FIT',
+    weld:'WELD', welding:'WELD', welder:'WELD',
+    repair:'REPAIR', repairing:'REPAIR', rework:'REPAIR',
+    check:'CHECK', checking:'CHECK', 'checking/testing':'CHECK', testing:'CHECK', test:'CHECK',
+    qc:'CHECK', inspect:'CHECK', inspection:'CHECK',
+    paint:'PAINT', painting:'PAINT', coating:'PAINT', powdercoat:'PAINT', powdercoating:'PAINT',
+    sandblast:'PAINT', blasting:'PAINT',
+    assem:'ASSEM', assembly:'ASSEM', assembling:'ASSEM', assemble:'ASSEM',
+    pack:'PACK', packaging:'PACK', packing:'PACK', crating:'PACK', crate:'PACK',
+    transp:'TRANSP', transport:'TRANSP', transportation:'TRANSP', shipping:'TRANSP',
+    delivery:'TRANSP', trucking:'TRANSP',
+    other:'OTHER', misc:'OTHER', general:'OTHER'
+  };
+  /* Loose: unknown strings become OTHER (hours must land somewhere).
+     Strict: unknown strings are dropped (a typo must not grant a skill). */
+  function normalizeOp(s){
+    var k = String(s||'').trim().toLowerCase();
+    if(!k) return '';
+    if(LANKO_OPS.indexOf(k.toUpperCase()) >= 0) return k.toUpperCase();
+    return LANKO_OP_ALIASES[k] || 'OTHER';
+  }
+  function normalizeOpStrict(s){
+    var k = String(s||'').trim().toLowerCase();
+    if(!k) return '';
+    if(LANKO_OPS.indexOf(k.toUpperCase()) >= 0) return k.toUpperCase();
+    return LANKO_OP_ALIASES[k] || '';
+  }
+  function normHours(h){
+    var out = {}; LANKO_OPS.forEach(function(op){ out[op] = 0; });
+    Object.keys(h || {}).forEach(function(k){
+      var op = normalizeOp(k); if(!op) return;
+      var v = parseFloat(h[k]); if(!isNaN(v)) out[op] += v;
+    });
+    return out;
+  }
+  function normSkills(list){
+    var seen = {}, out = [];
+    (list || []).forEach(function(s){
+      var op = normalizeOpStrict(s);
+      if(op && !seen[op]){ seen[op] = true; out.push(op); }
+    });
+    return out;
+  }
+  function normJobs(jobs){
+    return (jobs || []).map(function(j){
+      var o = Object.assign({}, j);
+      o.hours = normHours(j.hours);
+      o.remaining = normHours(j.remaining);
+      return o;
+    });
+  }
+  function normEmployees(list){
+    return (list || []).map(function(e){
+      var o = Object.assign({}, e);
+      o.skills = normSkills(e.skills);
+      if(!o.skills.length) o.skills = ['FIT','WELD'];
+      return o;
+    });
+  }
+  function normOverrides(all){
+    Object.keys(all || {}).forEach(function(wk){
+      Object.keys(all[wk] || {}).forEach(function(emp){
+        Object.keys(all[wk][emp] || {}).forEach(function(d){
+          (all[wk][emp][d] || []).forEach(function(en){ if(en && en.skill) en.skill = normalizeOp(en.skill); });
+        });
+      });
+    });
+    return all || {};
+  }
+
+  var ALL_SKILLS = LANKO_OPS.slice();
+  /* Direct successors of the old cutting/fitting/welding/lineboring floor set. */
+  var FAB_SKILLS = ['PLASMA','BANDSAW','DRILL','LINEBORE','MACHINE','FIT','WELD','REPAIR'];
+  var SKILL_LABEL = LANKO_OP_LABEL;
   var POOL_LABEL = { fab:"Fab Crew", assembly:"Assembly & Packaging", draftorder:"Drafting & Ordering" };
   var POOL_HEX = { fab:"#2F6846", assembly:"#2A4E7C", draftorder:"#8A5A22" };
-  var SKILL_OPTIONS = ["cutting","fitting","welding","lineboring","assembly","drafting","ordering"];
+  var SKILL_OPTIONS = ['PLASMA','BANDSAW','DRILL','LINEBORE','MACHINE','FIT','WELD','REPAIR',
+                       'CHECK','PAINT','ASSEM','PACK','DRAFT','ORDER','ADMIN','TRANSP','OTHER'];
 
   // Same starting point as the React version -- current true state of the shop's queue.
   var DEFAULT_EMPLOYEES = [
@@ -455,7 +546,7 @@
     { id:"newhelper1", name:"New Helper 1", pool:"assembly", skills:["assembly"], otPolicy:"limited", active:true, startDate:"2026-08-04" },
     { id:"jay", name:"Jay", pool:"draftorder", skills:["drafting","ordering"], otPolicy:"limited", active:true, startDate:null }
   ];
-  function blankHours(){ return {drafting:0,ordering:0,cutting:0,fitting:0,welding:0,lineboring:0,assembly:0}; }
+  function blankHours(){ var o = {}; LANKO_OPS.forEach(function(op){ o[op] = 0; }); return o; }
   var DEFAULT_JOBS = [
     { id:"j25205", jobNum:"25205", desc:"TH-551i Ej Body", dueDate:"2026-08-31",
       hours:{drafting:6,ordering:6,cutting:20,fitting:320,welding:360,lineboring:40,assembly:60},
@@ -557,7 +648,7 @@
     nameColumnIndex:1, poolColumnIndex:2, skillsColumnIndex:3, hasHeader:true, lastSyncAt:null };
 
   var STATE = {
-    employees: DEFAULT_EMPLOYEES.slice(), jobs: DEFAULT_JOBS.slice(), preferences: DEFAULT_PREFERENCES.slice(),
+    employees: normEmployees(DEFAULT_EMPLOYEES), jobs: normJobs(DEFAULT_JOBS), preferences: DEFAULT_PREFERENCES.slice(),
     pins: DEFAULT_PINS.slice(), restrictions: Object.assign({}, DEFAULT_RESTRICTIONS), calendar: Object.assign({}, DEFAULT_CALENDAR),
     manualOverrides: {}, // { weekStart: { employeeId: { dateISO: [{jobId,skill,hours},...] } } }
     weekStart: null, adminPin: DEFAULT_ADMIN_PIN,
@@ -949,14 +1040,17 @@
       seen[key] = true;
       var pool = poolCol!=null ? (r[poolCol]||'').trim().toLowerCase() : '';
       if(['fab','assembly','draftorder'].indexOf(pool)===-1) pool = 'fab';
-      var skills = skillsCol!=null ? (r[skillsCol]||'').split(',').map(function(s){return s.trim().toLowerCase();}).filter(Boolean) : [];
+      /* Roster sheet column D speaks whatever it always spoke - 'fitting,
+         welding', 'linebore', 'plasma' - and lands here as canonical codes.
+         Unknown words are dropped, never guessed into a skill. */
+      var skills = skillsCol!=null ? normSkills((r[skillsCol]||'').split(',')) : [];
       var existing = outByName[key];
       if(existing){
         existing.active = true; existing.source = 'sheet';
         if(pool) existing.pool = pool;
         if(skills.length) existing.skills = skills;
       } else {
-        var emp = { id: uid('emp'), name:name, pool: pool||'fab', skills: skills.length?skills:['fitting','welding'],
+        var emp = { id: uid('emp'), name:name, pool: pool||'fab', skills: skills.length?skills:['FIT','WELD'],
           otPolicy: pool==='fab'?'flex':'limited', active:true, startDate:null, source:'sheet' };
         out.push(emp); outByName[key]=emp;
       }
@@ -1989,13 +2083,16 @@
       safeGetJSON(K.manualOverrides, {}),
       safeGetJSON(K.publishedSchedule, null)
     ]).then(function(res){
-      STATE.employees=res[0]; STATE.jobs=res[1]; STATE.preferences=res[2]; STATE.pins=res[3];
+      /* Everything entering from Firestore is folded into the canonical
+         17-op vocabulary here, in one place. Old 7-skill documents keep
+         working; the next save writes them back in canonical form. */
+      STATE.employees=normEmployees(res[0]); STATE.jobs=normJobs(res[1]); STATE.preferences=res[2]; STATE.pins=res[3];
       STATE.restrictions=res[4]; STATE.calendar=res[5];
       STATE.weekStart = res[6] || mondayOnOrAfter(todayISO());
       STATE.adminPin = res[7];
       STATE.jobSource = res[8]; STATE.employeeSource = res[9];
       if(res[10]){ STATE.sheetWriteUrl = res[10].url; STATE.sheetWriteLastSentAt = res[10].lastSentAt; }
-      STATE.manualOverrides = res[11] || {};
+      STATE.manualOverrides = normOverrides(res[11] || {});
       if(res[12]){ STATE.publishStatus = 'ok'; STATE.publishedAt = res[12].updatedAt; }
     });
 
