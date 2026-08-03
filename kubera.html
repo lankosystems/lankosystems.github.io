@@ -69,7 +69,7 @@
   .wordmark .logo-img{ height:34px; width:auto; display:block; filter: drop-shadow(0 2px 0 var(--oxblood-deep)); }
   .wordmark .divider{ width:1.5px; height:26px; background: rgba(217,161,37,0.35); }
   .wordmark small{
-    font-family: var(--display-text); font-weight:600; font-size:15.6px; color: var(--paper-dim);
+    font-family: var(--display-text); font-weight:600; font-size:13px; color: var(--paper-dim);
     letter-spacing:2.5px; text-transform:uppercase; opacity:0.85;
   }
   .topbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -96,6 +96,9 @@
     background: radial-gradient(ellipse at top, rgba(110,36,18,0.06), transparent 60%), var(--paper);
   }
   .wrap{ max-width:1180px; margin:0 auto; }
+  /* Editors that carry a line-item table get more room, so Description
+     stops paying for every fixed column beside it. */
+  .wrap.wide{ max-width:1400px; }
 
   .section-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
   .section-head h1{ font-family:var(--display); font-size:22px; font-weight:700; letter-spacing:1.2px;
@@ -193,6 +196,15 @@
   .items .drag{ width:26px; color:#c0b7a2; cursor:grab; text-align:center; padding-top:13px; font-size:14px; }
   .items tr.dragging{ opacity:0.4; }
   .items tr.dragover td{ border-top:2px solid var(--gold); }
+  /* Roomy variant for the quote and pack list editors only: the narrow
+     columns give back what they never needed, and with .wrap.wide the
+     Description column ends up close to twice its old width. Shared
+     tables elsewhere (goods, estimator, settings) keep the stock sizes. */
+  .items.roomy .c-qty{ width:58px; }
+  .items.roomy .c-unit{ width:62px; }
+  .items.roomy .c-part{ width:118px; }
+  .items.roomy .c-price{ width:96px; }
+  .items.roomy .c-ext{ width:96px; }
   .totals{ margin-top:14px; margin-left:auto; width:320px; max-width:100%; }
   .totals .trow{ display:flex; justify-content:space-between; padding:5px 0; font-size:13.5px; }
   .totals .trow span:last-child{ font-family:var(--mono); }
@@ -320,10 +332,12 @@
   }
   .sheet + .sheet{ margin-top:22px; }
 
-  /* The current documents have no coloured frame; the dressier "formal" style keeps
-     one for quotes that go out as a proper proposal document. */
-  .frame{ padding:0 0 0.2in; min-height:10.1in; display:flex; flex-direction:column; }
-  .frame.formal{ border:1.5px solid #6D1708; padding:0.3in 0.34in 0.34in; }
+  /* Every document carries the maroon frame -- matched to Quote 26191 (Jul 2026),
+     which is how the real proposals go out. "Formal" now differs only by content
+     (terms, closing, signatures), not by dress. */
+  .frame{ border:2.5pt solid #6D1708; padding:0.24in 0.26in; min-height:9.55in;
+    display:flex; flex-direction:column; }
+  .frame.formal{ }
   .frame > .growth{ flex:1; }
 
   /* letterhead */
@@ -333,7 +347,9 @@
   .lh-strip .col.a b{ font-weight:600; }
   .lh-strip .col{ flex:1; }
   .lh-strip .col.a{ flex:0 0 2.1in; }
-  .lh-hr{ border-top:1px solid #1a1a1a; margin:9px 0 0; }
+  /* The real documents run straight from the letterhead into the title with no
+     rule -- the element stays for spacing only. */
+  .lh-hr{ border-top:none; margin:9px 0 0; }
   /* the heading on the real documents is a modest bold line, not display type */
   .doctitle{ font-family:"IBM Plex Sans",sans-serif; font-size:11pt; font-weight:700;
     letter-spacing:0.2px; color:#1a1a1a; margin:18px 0 8px; }
@@ -342,7 +358,8 @@
     letter-spacing:1.6px; color:#6D1708; }
 
   /* totals sit inside the item grid on the current documents */
-  table.doctable td.tlabel{ text-align:right; border:none; font-size:9pt; padding:4px 8px; }
+  table.doctable td.tlabel{ text-align:right; border:none; font-size:9pt; padding:4px 8px;
+    font-style:italic; }
   table.doctable td.tval{ text-align:right; font-family:"IBM Plex Mono",monospace;
     font-size:9pt; white-space:nowrap; }
   table.doctable tr.tgrand td{ font-weight:700; }
@@ -420,6 +437,11 @@
     font-family:"Big Shoulders",sans-serif; font-size:14pt; letter-spacing:0.8px; color:#6D1708; }
   .doctotals tr.grand td.v{ font-family:"Big Shoulders",sans-serif; }
   .doctotals .cur{ font-size:8pt; color:#8a7f68; letter-spacing:0.6px; }
+
+  /* product render, matching the image + caption on the July 2026 proposals */
+  .docimg{ margin-top:20px; text-align:center; }
+  .docimg img{ max-width:5.6in; max-height:3.6in; }
+  .docimg .cap{ font-size:9pt; margin-top:6px; color:#1a1a1a; }
 
   /* notes + terms */
   .docnote{ margin-top:16px; font-size:9pt; line-height:1.5; white-space:pre-wrap; }
@@ -824,6 +846,59 @@
   function quoteTax(q){ return (quoteSubtotal(q) + num(q.freight)) * num(q.taxRate) / 100; }
   function quoteTotal(q){ return quoteSubtotal(q) + num(q.freight) + quoteTax(q); }
 
+  /* Accepts a full Drive URL or a bare file id and returns the id, so the doc
+     sheet can embed the image through Drive's thumbnail endpoint. */
+  function driveImgId(v){
+    v = String(v||'').trim();
+    if(!v) return '';
+    var m = v.match(/\/d\/([A-Za-z0-9_-]{10,})/) || v.match(/[?&]id=([A-Za-z0-9_-]{10,})/);
+    if(m) return m[1];
+    return /^[A-Za-z0-9_-]{10,}$/.test(v) ? v : '';
+  }
+
+  /* ---------------- Odin handoff ----------------
+     "Award to Odin" appends a project stub to odin_state/projects. Kubera only
+     ever appends here; Odin owns everything after the handoff. The quote keeps
+     the project id in q.awarded so a second click cannot double-create, and the
+     read-modify-write also skips any stub already carrying this quoteId. */
+  function awardToOdin(q){
+    var T = q.estimate ? estimateTotals(q.estimate) : null;
+    var stub = {
+      id: uid('pj'), quoteId: q.id, quoteNum: String(q.num), rev: num(q.rev),
+      jobRef: q.jobRef || '', customerId: q.customerId || '',
+      customerName: custName(q.customerId), title: q.title || '',
+      currency: q.currency || 'CAD', value: quoteTotal(q),
+      poNo:'', dueDate:'', status:'awaiting',
+      items: (q.items||[]).filter(function(it){ return String(it.desc).trim() || String(it.partNo).trim(); })
+        .map(function(it){ return { id:uid('i'), qty:num(it.qty), unit:it.unit||'EA',
+          partNo:it.partNo||'', desc:it.desc||'', unitPrice:num(it.unitPrice) }; }),
+      estimateHours: T ? Math.round(T.hours*10)/10 : 0,
+      buys: (q.estimate && q.estimate.buys ? q.estimate.buys : []).map(function(b){
+        return { desc:b.desc||'', category:b.category||'', qty:num(b.qty)||1 }; }),
+      budget:{}, procurement:[],
+      awardedAt: Date.now(),
+      awardedBy: (firebase.auth().currentUser && firebase.auth().currentUser.email) || ''
+    };
+    var ref = firebaseDb.collection('odin_state').doc('projects');
+    lamp('saving','Saving');
+    return ref.get().then(function(snap){
+      var list = (snap.exists && Array.isArray(snap.data().value)) ? snap.data().value : [];
+      var dup = list.filter(function(p){ return p.quoteId === q.id; })[0];
+      if(dup) return dup.id;
+      list.push(stub);
+      return ref.set({ value:list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+        .then(function(){ return stub.id; });
+    }).then(function(pid){
+      lamp('on','Synced');
+      q.awarded = pid;
+      return saveQuotes(upsert(state.quotes, JSON.parse(JSON.stringify(q)))).then(function(){ return pid; });
+    }).catch(function(e){
+      console.error('award failed', e); lamp('off','Not saved');
+      toast('Could not hand this off to Odin. Check the connection and try again.', true);
+      return null;
+    });
+  }
+
   /* ---------------- seeds ----------------
      Customers are seeded from the names on the existing quotes and pack lists so
      the list is recognisable on day one. Contact details are left blank on purpose
@@ -1038,6 +1113,7 @@
       id: uid('q'), num:'', rev:0, parentNum:'', customerId:'', contact:'', contactEmail:'',
       date: today(), validDays: num(s.validDays) || 30,
       jobRef:'', rfqRef:'', title:'', scope:'',
+      imageId:'', imageCaption:'',
       items:[ blankItem() ],
       currency: s.currency || 'CAD',
       taxLabel: s.taxLabel || 'GST', taxRate: num(s.taxRate),
@@ -1342,7 +1418,7 @@
           return '<option value="'+c.id+'"'+(c.id===q.customerId?' selected':'')+'>'+esc(c.name)+'</option>';
         }).join('');
 
-    var h = '<div class="wrap">' +
+    var h = '<div class="wrap wide">' +
       '<div class="section-head">' +
         '<h1>' + (isNew ? (num(q.rev)>0 ? 'New revision' : 'New quote') : 'Quote ' + esc(q.num)) +
         (num(q.rev)>0 ? ' <span class="badge rev">Rev '+esc(q.rev)+'</span>' : '') + '</h1>' +
@@ -1353,6 +1429,9 @@
             (q.estimate ? 'Estimate' : 'Build up a price') + '</button>' +
           '<button class="btn dark" id="qSave">Save</button>' +
           '<button class="btn" id="qSavePdf">Save and open PDF view</button>' +
+          (q.status==='won' && !isNew ?
+            '<button class="btn dark" id="qAward"'+(q.awarded?' disabled':'')+'>' +
+            (q.awarded?'Awarded to Odin':'Award to Odin')+'</button>' : '') +
         '</div>' +
       '</div>' +
       (view.err ? '<div class="card" style="border-color:var(--rust);background:var(--rust-dim)"><div class="formerr">'+esc(view.err)+'</div></div>' : '') +
@@ -1378,6 +1457,9 @@
       '<div class="card"><h2>What it is</h2><div class="grid">' +
         field('Title', '<input data-f="title" value="'+esc(q.title)+'" placeholder="e.g. ST1030 raise anchor assembly">') +
         field('Scope / reference', '<textarea data-f="scope" placeholder="Drawing numbers, revision, a sentence on what is included">'+esc(q.scope)+'</textarea>') +
+        field('Product image', '<input data-f="imageId" value="'+esc(q.imageId||'')+'" placeholder="Google Drive link or file id">',
+              'Prints centred under the line items. Share the Drive file as \'Anyone with the link\'.') +
+        field('Image caption', '<input data-f="imageCaption" value="'+esc(q.imageCaption||'')+'" placeholder="e.g. Bucket-mounted Rammer Jammer">') +
       '</div></div>' +
 
       (q.estimate ? (function(){
@@ -1459,6 +1541,15 @@
     };
     document.getElementById('qSave').onclick = function(){ saveQuoteForm(false); };
     document.getElementById('qSavePdf').onclick = function(){ saveQuoteForm(true); };
+    var qaw = document.getElementById('qAward');
+    if(qaw && !q.awarded) qaw.onclick = function(){
+      confirmModal('Award to Odin',
+        'This starts project management for this quote in Odin: the line items, estimate hours and purchase list go across as a new project awaiting initiation. Kubera keeps the quote as Won.',
+        'Award it',
+        function(){ awardToOdin(q).then(function(pid){
+          if(pid){ toast('Handed to Odin. Open Odin to initiate the project.'); go('quotes','edit', q.id); }
+        }); });
+    };
     var del = document.getElementById('qDelete');
     if(del) del.onclick = function(){
       confirmModal('Delete this quote?', quoteLabel(q) + ' is removed for everyone. This cannot be undone.',
@@ -1470,7 +1561,7 @@
     };
 
     function renderItems(){
-      var t = '<table class="items"><thead><tr>' +
+      var t = '<table class="items roomy"><thead><tr>' +
         '<th></th><th class="c-qty">Qty</th><th class="c-unit">Unit</th><th class="c-part">Part no.</th>' +
         '<th>Description</th><th class="c-price">Unit price</th><th style="text-align:right">Amount</th><th></th>' +
         '</tr></thead><tbody>';
@@ -1732,7 +1823,7 @@
       sortedQuotes().filter(function(q){ return !p.customerId || q.customerId===p.customerId; })
         .map(function(q){ return '<option value="'+q.id+'"'+(q.id===p.quoteId?' selected':'')+'>'+esc(quoteLabel(q))+'</option>'; }).join('');
 
-    var h = '<div class="wrap">' +
+    var h = '<div class="wrap wide">' +
       '<div class="section-head">' +
         '<h1>' + (isNew ? 'New pack list' : 'Pack list ' + esc(p.jobNo||'')) + '</h1>' +
         '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
@@ -1836,7 +1927,7 @@
     }
 
     function renderPackItems(){
-      var t = '<table class="items"><thead><tr>' +
+      var t = '<table class="items roomy"><thead><tr>' +
         '<th></th><th class="c-qty">Ordered</th><th class="c-qty">Shipped</th><th class="c-unit">U/M</th><th class="c-part">Part no.</th>' +
         '<th>Description</th><th class="c-unit">Package</th><th class="c-del">B/O</th><th></th>' +
         '</tr></thead><tbody>';
@@ -4189,6 +4280,15 @@
     var rows = '', n = 0;
     (q.items||[]).forEach(function(it){
       if(!String(it.desc).trim() && !String(it.partNo).trim() && !num(it.unitPrice)) return;
+      /* A line carrying only a description -- no qty, part or price -- prints as
+         an unnumbered lead-in row, the way ***For Epiroc ST710*** sits above
+         item 1 on the real documents. Clear the qty on the line to get this. */
+      if(!num(it.qty) && !String(it.partNo||'').trim() && !num(it.unitPrice) && !it.noCharge){
+        rows += '<tr><td class="c"></td><td></td><td></td>' + (hasPart ? '<td></td>' : '') +
+          '<td><span class="idesc">'+esc(it.desc||'')+'</span></td>' +
+          '<td></td><td></td></tr>';
+        return;
+      }
       n++;
       rows += '<tr>' +
         '<td class="c">'+n+'</td>' +
@@ -4250,6 +4350,12 @@
         '<th class="col-price" style="text-align:right">Unit Price</th>' +
         '<th class="col-amt" style="text-align:right">Total</th>' +
       '</tr></thead><tbody>' + rows + totalRows + '</tbody></table>' +
+
+      (driveImgId(q.imageId) ?
+        '<div class="docimg"><img src="https://drive.google.com/thumbnail?id=' +
+          esc(driveImgId(q.imageId)) + '&sz=w900" alt="">' +
+          (q.imageCaption ? '<div class="cap">'+esc(q.imageCaption)+'</div>' : '') +
+        '</div>' : '') +
 
       (formal ? termsBlock(q.terms) : '') +
       (formal && q.closing ? '<div class="closing">'+esc(q.closing) +

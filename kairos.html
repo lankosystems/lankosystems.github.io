@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lanko Kairos Timeclock 26.6</title>
+<title>Lanko Kairos Timeclock 26.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -16,15 +16,15 @@
     --gold-light:   #E9C45F;
     --gold-dim:     #AD8007;
     --gold-muted:   #C7A15E;
-    --ink:          #1A1A1A;
-    --paper:        #EBEBEB;
-    --paper-dim:    #D6D6D6;
-    --card:         #F3F3F3;
+    --ink:          #241811;
+    --paper:        #F4EEE1;
+    --paper-dim:    #E6DCC5;
+    --card:         #FBF7EC;
     --olive:        #5B6B3F;
     --olive-dim:    #EEF1E4;
     --rust:         #A23B1E;
     --rust-dim:     #F7E6DE;
-    --line: rgba(26,26,26,0.14);
+    --line: rgba(36,24,17,0.14);
 
     --display: "Big Shoulders", sans-serif;
     --display-text: "Big Shoulders Text", sans-serif;
@@ -79,7 +79,7 @@
   .wordmark .logo-img{ height:34px; width:auto; display:block; filter: drop-shadow(0 2px 0 var(--oxblood-deep)); }
   .wordmark .divider{ width:1.5px; height:26px; background: rgba(217,161,37,0.35); }
   .wordmark small{
-    font-family: var(--display-text); font-weight:600; font-size:15.6px; color: var(--paper-dim);
+    font-family: var(--display-text); font-weight:600; font-size:13px; color: var(--paper-dim);
     letter-spacing:2.5px; text-transform:uppercase; opacity:0.85;
   }
   .topbar-right{ display:flex; align-items:center; gap:22px; }
@@ -87,7 +87,7 @@
   .headclock .time{ font-size:22px; font-weight:600; letter-spacing:0.5px;}
   .headclock .date{ font-size:12px; color: var(--gold-muted); letter-spacing:0.5px;}
   .gearbtn{
-    height:40px; padding:0 16px; border-radius:14px; border: 1.5px solid rgba(217,161,37,0.4);
+    height:40px; padding:0 16px; border-radius:10px; border: 1.5px solid rgba(217,161,37,0.4);
     background: rgba(0,0,0,0.15); color: var(--gold-muted); display:flex; align-items:center;
     gap:8px; justify-content:center; font-size:14px; font-family:var(--display-text); font-weight:700;
     letter-spacing:0.4px; text-transform:uppercase; cursor:pointer;
@@ -100,103 +100,47 @@
     background: radial-gradient(ellipse at top, rgba(110,36,18,0.06), transparent 60%), var(--paper);
   }
   .rack-heading{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
-  .build-banner{
-    background: var(--olive-dim); color: var(--olive); border:2px solid rgba(91,107,63,0.4);
-    border-left:8px solid var(--olive); border-radius:12px;
-    padding:20px 28px; margin-bottom:22px; font-family:var(--display-text); font-weight:800; font-size:19px;
-    letter-spacing:0.3px; text-align:center; line-height:1.4;
-    box-shadow: 0 10px 20px -10px rgba(91,107,63,0.45), 0 2px 4px rgba(26,26,26,0.1);
-  }
-  .build-banner .bb-icon{ font-size:26px; margin-right:8px; vertical-align:-4px; }
   .rack-heading h1{
     font-family:var(--display); font-size:19px; font-weight:700; letter-spacing:1.5px;
     text-transform:uppercase; color: var(--oxblood); margin:0;
   }
-  .rack-heading span{ font-family:var(--mono); font-size:13px; color:#6B6B6B; }
+  .rack-heading span{ font-family:var(--mono); font-size:13px; color:#7a6f5c; }
   .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:22px; }
 
-  /* ---------- name tiles: riveted chrome diamond-plate ----------
-     Three layers baked into one background-image list on .card: a diagonal
-     cross-hatch (the "diamond" ridges), a banded vertical sheen (the "chrome"),
-     and four corner rivets. A fifth fastener - a raised center bolt - is a real
-     pseudo-element (::before) so it can carry its own highlight/shadow and read
-     as genuinely domed rather than flat-printed. ::after lays a diagonal glint
-     over the top that sharpens on hover and dims on press, like light moving
-     across sheet metal as you reach for it. Status colors (olive=active tag/dot,
-     grey=idle) are untouched - the plate is decoration, the colors are the
-     actual status board and still need to read correctly at a glance. */
   .card{
-    position:relative; border-radius: 13px; padding: 20px 16px 16px;
+    position:relative; background: var(--card); border-radius: 8px; padding: 20px 16px 16px;
     min-height:150px;
-    background-color: #cfd0d2;
-    background-image:
-      repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0px, rgba(255,255,255,0.16) 1px, transparent 1px, transparent 9px),
-      repeating-linear-gradient(-45deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 9px),
-      linear-gradient(180deg, #f7f7f7 0%, #d7d8da 13%, #f1f2f2 26%, #b6b8ba 42%, #ececed 55%, #c3c5c7 70%, #f5f6f6 85%, #d3d4d6 100%),
-      radial-gradient(circle 6px at 16px 16px, #f7f7f7 0%, #cfd0d2 35%, #8b8d8f 72%, #6c6e70 86%, transparent 89%),
-      radial-gradient(circle 6px at calc(100% - 16px) 16px, #f7f7f7 0%, #cfd0d2 35%, #8b8d8f 72%, #6c6e70 86%, transparent 89%),
-      radial-gradient(circle 6px at 16px calc(100% - 16px), #f7f7f7 0%, #cfd0d2 35%, #8b8d8f 72%, #6c6e70 86%, transparent 89%),
-      radial-gradient(circle 6px at calc(100% - 16px) calc(100% - 16px), #f7f7f7 0%, #cfd0d2 35%, #8b8d8f 72%, #6c6e70 86%, transparent 89%);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -2px 3px rgba(0,0,0,0.22),
-      inset 2px 0 2px rgba(255,255,255,0.14), inset -2px 0 2px rgba(0,0,0,0.12),
-      0 10px 18px -8px rgba(26,26,26,0.32), 0 2px 4px rgba(26,26,26,0.16);
-    border:2px solid #7d7f81; cursor:pointer; display:flex; flex-direction:column; gap:10px;
-    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 10px 18px -8px rgba(36,24,17,0.28), 0 2px 4px rgba(36,24,17,0.12);
+    border:1px solid var(--line); cursor:pointer; display:flex; flex-direction:column; gap:10px;
+    transition: transform .15s ease, box-shadow .15s ease;
   }
   .card::before{
-    /* center-top bolt: a real dome, separate from the flush corner rivets */
-    content:""; position:absolute; top:9px; left:50%; width:16px; height:16px; margin-left:-8px;
-    border-radius:50%; z-index:1;
-    background: radial-gradient(circle at 32% 28%, #ffffff 0%, #e3e4e5 28%, #9a9c9e 64%, #6a6c6e 84%, #4d4f51 100%);
-    border:1px solid #555759;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.4);
+    content:""; position:absolute; top:10px; left:50%; width:14px; height:14px; margin-left:-7px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, rgba(0,0,0,0.32), rgba(0,0,0,0.12) 60%, transparent 70%), var(--paper);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.35);
   }
-  .card::after{
-    /* the glint - a soft diagonal highlight sweeping across the plate */
-    content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-    background: linear-gradient(115deg, transparent 28%, rgba(255,255,255,0.38) 42%, transparent 56%);
-    opacity:0.55; transition: opacity .15s ease;
-  }
-  .card:hover{ transform: translateY(-3px) scale(1.02); border-color:#9a9c9e;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.22),
-      inset 2px 0 2px rgba(255,255,255,0.16), inset -2px 0 2px rgba(0,0,0,0.12),
-      0 16px 26px -10px rgba(26,26,26,0.4), 0 2px 4px rgba(26,26,26,0.18);
-  }
-  .card:hover::after{ opacity:0.85; }
+  .card:nth-child(odd){ transform: rotate(-0.6deg); }
+  .card:nth-child(even){ transform: rotate(0.5deg); }
+  .card:hover{ transform: translateY(-3px) rotate(0deg) scale(1.02); box-shadow: 0 16px 26px -10px rgba(36,24,17,0.35); }
   .card:active{ transform: translateY(1px) scale(0.98); }
-  .card:active::after{ opacity:0.2; }
   .card .tag{
     position:absolute; top:-10px; right:14px; background: var(--olive); color:#fff;
     font-family:var(--display-text); font-weight:700; font-size:11px; letter-spacing:0.5px;
     text-transform:uppercase; padding:5px 10px 5px; border-radius:3px 3px 2px 2px;
-    border:1px solid rgba(0,0,0,0.25);
-    box-shadow:0 3px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
-    max-width:85%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; z-index:1;
+    box-shadow:0 3px 6px rgba(0,0,0,0.25); max-width:85%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .card .tag::after{ content:""; position:absolute; bottom:-5px; right:8px; width:0;height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:5px solid #45521f; }
-  .card .name{
-    font-family:var(--display); font-weight:700; font-size:22px; color: var(--ink); margin-top:6px; line-height:1.05;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.6), 0 -1px 1px rgba(0,0,0,0.3); position:relative; z-index:1;
-  }
-  .card .sub{ font-family:var(--mono); font-size:12px; color:#5a5c5e; display:flex; align-items:center; gap:6px; position:relative; z-index:1; font-weight:600; }
-  .card .dot{ width:7px;height:7px;border-radius:50%; background:#8b8d8f; flex-shrink:0; box-shadow: inset 0 1px 1px rgba(0,0,0,0.3); }
+  .card .name{ font-family:var(--display); font-weight:700; font-size:22px; color: var(--ink); margin-top:6px; line-height:1.05; }
+  .card .sub{ font-family:var(--mono); font-size:12px; color:#7a6f5c; display:flex; align-items:center; gap:6px; }
+  .card .dot{ width:7px;height:7px;border-radius:50%; background:#b9ae95; flex-shrink:0; }
   .card.active .dot{ background: var(--olive); box-shadow:0 0 0 3px var(--olive-dim); }
   .card .dashed{
-    margin-top:auto; border-top:1.5px dashed rgba(26,26,26,0.32); padding-top:8px; font-family:var(--display-text);
+    margin-top:auto; border-top:1.5px dashed var(--line); padding-top:8px; font-family:var(--display-text);
     font-size:11px; letter-spacing:1px; text-transform:uppercase; color: var(--gold-dim); font-weight:700;
-    position:relative; z-index:1;
   }
   .card.active .dashed{ color:var(--olive); }
-  .card.active{
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -2px 3px rgba(0,0,0,0.22),
-      inset 2px 0 2px rgba(255,255,255,0.14), inset -2px 0 2px rgba(0,0,0,0.12),
-      0 10px 18px -8px rgba(26,26,26,0.32), 0 2px 4px rgba(26,26,26,0.16),
-      0 0 0 2px var(--olive-dim), 0 0 16px -2px rgba(91,107,63,0.55);
-  }
-  .empty-state{ text-align:center; padding:50px 20px; color:#898989; font-family:var(--body); font-size:14px; }
+  .empty-state{ text-align:center; padding:50px 20px; color:#9a8f78; font-family:var(--body); font-size:14px; }
   .empty-state b{ display:block; font-family:var(--display); font-size:18px; color:var(--oxblood); margin-bottom:6px; }
 
   /* ---------- pin / setup / adminpin ---------- */
@@ -205,13 +149,13 @@
     background: radial-gradient(ellipse at top, rgba(110,36,18,0.06), transparent 60%), var(--paper);
   }
   .authcard{
-    background: var(--card); border-radius:18px; border:1px solid var(--line);
-    box-shadow: 0 18px 40px -14px rgba(26,26,26,0.32), 0 2px 4px rgba(26,26,26,0.1);
+    background: var(--card); border-radius:14px; border:1px solid var(--line);
+    box-shadow: 0 18px 40px -14px rgba(36,24,17,0.32), 0 2px 4px rgba(36,24,17,0.1);
     padding:32px 36px 30px; width:100%; max-width:400px; text-align:center; position:relative;
   }
-  .authcard .backlink{ position:absolute; top:16px; left:16px; font-family:var(--display-text); font-weight:700; font-size:13px; color:#898989; cursor:pointer; letter-spacing:0.3px; }
+  .authcard .backlink{ position:absolute; top:16px; left:16px; font-family:var(--display-text); font-weight:700; font-size:13px; color:#9a8f78; cursor:pointer; letter-spacing:0.3px; }
   .authcard h2{ font-family:var(--display); font-size:26px; font-weight:700; margin:6px 0 2px; color:var(--oxblood); }
-  .authcard p.sub{ font-size:13px; color:#6B6B6B; margin:0 0 22px; }
+  .authcard p.sub{ font-size:13px; color:#7a6f5c; margin:0 0 22px; }
   .dots{ display:flex; gap:14px; justify-content:center; margin-bottom:22px; }
   .dots .dot-slot{ width:16px;height:16px;border-radius:50%; border:2px solid var(--gold-dim); background:transparent; transition: background .1s; }
   .dots .dot-slot.filled{ background:var(--gold-dim); }
@@ -222,12 +166,12 @@
   .pinerr-msg{ min-height:18px; font-size:12px; color:var(--rust); margin:-14px 0 12px; font-weight:600; }
   .keypad{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
   .keypad button{
-    font-family:var(--display); font-size:24px; font-weight:700; padding:16px 0; border-radius:14px;
+    font-family:var(--display); font-size:24px; font-weight:700; padding:16px 0; border-radius:10px;
     border:1px solid var(--line); background: var(--paper); color: var(--ink);
-    box-shadow: 0 2px 0 rgba(26,26,26,0.08), 0 3px 6px rgba(26,26,26,0.08); cursor:pointer;
+    box-shadow: 0 2px 0 rgba(36,24,17,0.08), 0 3px 6px rgba(36,24,17,0.08); cursor:pointer;
   }
   .keypad button:active{ transform: translateY(1px); box-shadow:none; background:var(--paper-dim); }
-  .keypad button.wide{ font-size:16px; font-family:var(--display-text); font-weight:700; color:#797979; }
+  .keypad button.wide{ font-size:16px; font-family:var(--display-text); font-weight:700; color:#8a7f68; }
   .keypad button.zero{ grid-column: 2; }
 
   /* ---------- action / status view ---------- */
@@ -238,7 +182,7 @@
     position:relative;
     min-height:0; /* let this flex child actually shrink so its inner region can scroll */
   }
-  .action-view .backlink{ position:absolute; top:20px; left:26px; font-family:var(--display-text); font-weight:700; font-size:13px; color:#898989; cursor:pointer; z-index:2; }
+  .action-view .backlink{ position:absolute; top:20px; left:26px; font-family:var(--display-text); font-weight:700; font-size:13px; color:#9a8f78; cursor:pointer; z-index:2; }
   /* Scrollable middle region. The ::before/::after flex spacers center short content
      vertically the same way justify-content:center would, but - unlike justify-content:
      center - they shrink to nothing instead of clipping content when it's taller than the
@@ -251,12 +195,12 @@
   .action-view-scroll::before, .action-view-scroll::after{ content:""; flex:1 1 0; min-height:0; }
   .action-view .actionbtns{ flex-shrink:0; }
   .status-hero .greetname{ font-family:var(--display); font-size:36px; font-weight:800; color:var(--oxblood); margin:0; line-height:1.05; }
-  .status-hero .statusline{ font-family:var(--mono); font-size:15px; color:#4B4B4B; margin-top:8px; }
+  .status-hero .statusline{ font-family:var(--mono); font-size:15px; color:#57503f; margin-top:8px; }
   .status-hero .statusline b{ color:var(--olive); }
   .actionbtns{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
   .bigbtn{
-    font-family:var(--display-text); font-weight:700; font-size:16px; padding:18px 30px; border-radius:15px;
-    border:none; cursor:pointer; letter-spacing:0.3px; box-shadow:0 4px 0 rgba(0,0,0,0.15), 0 8px 16px -4px rgba(26,26,26,0.28);
+    font-family:var(--display-text); font-weight:700; font-size:16px; padding:18px 30px; border-radius:11px;
+    border:none; cursor:pointer; letter-spacing:0.3px; box-shadow:0 4px 0 rgba(0,0,0,0.15), 0 8px 16px -4px rgba(36,24,17,0.28);
   }
   .bigbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,0.15); }
   .bigbtn.primary{ background: var(--oxblood); color: var(--gold-light); }
@@ -264,13 +208,13 @@
   .bigbtn.secondary:active{ transform:translateY(1px); }
   .joblist{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px; max-width:760px; width:100%; flex-shrink:0; }
   .jobtile{
-    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 14px; cursor:pointer;
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 14px; cursor:pointer;
     text-align:left; font-family:var(--display-text); font-weight:700; font-size:15px; color:var(--ink);
-    box-shadow: 0 8px 14px -8px rgba(26,26,26,0.22); position:relative;
+    box-shadow: 0 8px 14px -8px rgba(36,24,17,0.22); position:relative;
   }
   .jobtile:active{ transform:scale(0.98); }
   .jobtile .jobsub{ display:block; font-family:var(--mono); font-weight:500; font-size:11px; color:var(--gold-dim); margin-top:5px; text-transform:uppercase; letter-spacing:0.5px; }
-  .jobtile .jobdesc{ display:block; font-family:var(--body); font-weight:400; font-size:12px; color:#6B6B6B; margin-top:4px; text-transform:none; letter-spacing:normal; line-height:1.35; }
+  .jobtile .jobdesc{ display:block; font-family:var(--body); font-weight:400; font-size:12px; color:#7a6f5c; margin-top:4px; text-transform:none; letter-spacing:normal; line-height:1.35; }
   .jobtile.suggested{ border-color:var(--gold); border-width:2px; background:linear-gradient(180deg, var(--card) 0%, rgba(222,165,9,0.08) 100%); }
   .jobtile .suggested-badge{
     position:absolute; top:-9px; right:10px; background:var(--gold); color:var(--oxblood-deep);
@@ -296,7 +240,7 @@
     background:var(--card); border:1.5px solid var(--line); border-radius:10px;
     padding:16px 16px; cursor:pointer; text-align:left;
     font-family:var(--display-text); font-weight:700; font-size:15px; color:var(--ink);
-    box-shadow: 0 8px 14px -8px rgba(26,26,26,0.22);
+    box-shadow: 0 8px 14px -8px rgba(36,24,17,0.22);
   }
   .tasktile:active{ transform:scale(0.98); }
   .tasktile.checked{ border-color:var(--olive); background:var(--olive-dim); }
@@ -310,7 +254,7 @@
   .bigbtn:disabled:active{ transform:none; }
 
   /* ---------- stamp overlay ---------- */
-  .stamp-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(26,26,26,0.35); z-index:50; }
+  .stamp-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background: rgba(36,24,17,0.35); z-index:50; }
   .stamp-box{
     border:6px solid var(--olive); color:var(--olive); font-family:var(--display); font-weight:800; font-size:40px;
     padding:18px 46px; border-radius:12px; background: rgba(251,247,236,0.96); transform: rotate(-6deg) scale(0.6);
@@ -320,31 +264,13 @@
   .stamp-box .stampsub{ display:block; font-family:var(--display-text); font-size:14px; letter-spacing:1px; margin-top:4px; font-weight:600; text-transform:none; }
   @keyframes stampPop{ 0%{ transform:rotate(-6deg) scale(0.6); opacity:0; } 60%{ transform:rotate(-6deg) scale(1.06); opacity:1; } 100%{ transform:rotate(-6deg) scale(1); opacity:1; } }
 
-  /* ---------- late arrival overlay ---------- */
-  .late-overlay{
-    position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; animation: lateGlow 1.1s ease-in-out infinite;
-  }
-  @keyframes lateGlow{ 0%,100%{ background: rgba(173,128,7,0.28); } 50%{ background: rgba(91,107,63,0.28); } }
-  .late-box{
-    background:var(--card); color:var(--ink); border:5px solid var(--olive); border-radius:16px;
-    padding:30px 42px; text-align:center; max-width:420px; animation: lateBob 1.4s ease-in-out infinite;
-    box-shadow: 0 0 0 6px rgba(91,107,63,0.15), 0 20px 50px rgba(0,0,0,0.35);
-  }
-  @keyframes lateBob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
-  .late-box .late-headline{ font-size:28px; letter-spacing:1px; font-family:var(--display); font-weight:800; color:var(--oxblood); }
-  .late-box .late-name{ font-size:26px; font-weight:700; font-family:var(--display); margin-top:10px; }
-  .late-box .late-time{ font-family:var(--mono); font-size:14px; color:#797979; margin-top:4px; }
-  .late-box .late-caption{ font-family:var(--display-text); font-size:15px; margin-top:14px; opacity:0.92; }
-  .late-box .late-dismiss{ margin-top:16px; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#8b8d8f; }
-
   /* ---------- admin ---------- */
   .admin-view{ flex:1; display:flex; flex-direction:column; overflow:hidden; }
   .admin-topbar{ display:flex; align-items:center; justify-content:space-between; padding:14px 26px; border-bottom:1px solid var(--line); background:var(--card); flex-shrink:0; flex-wrap:wrap; gap:10px; }
   .admin-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
   .admin-tabs button{
     font-family:var(--display-text); font-weight:700; font-size:13px; letter-spacing:0.4px; text-transform:uppercase;
-    padding:9px 16px; border-radius:8px; border:1px solid transparent; background:transparent; color:#797979; cursor:pointer;
+    padding:9px 16px; border-radius:8px; border:1px solid transparent; background:transparent; color:#8a7f68; cursor:pointer;
   }
   .admin-tabs button.active{ background:var(--oxblood); color:var(--gold-light); }
   .admin-exit{ font-family:var(--display-text); font-weight:700; font-size:13px; color:var(--oxblood); background:transparent; border:1px solid var(--line); padding:9px 14px; border-radius:8px; cursor:pointer; }
@@ -353,42 +279,32 @@
   .admin-section-head h2{ font-family:var(--display); font-size:20px; color:var(--oxblood); margin:0; }
   .addbtn{ font-family:var(--display-text); font-weight:700; font-size:13px; background:var(--gold); color:var(--oxblood-deep); border:none; padding:10px 16px; border-radius:8px; cursor:pointer; }
   .datatable{ width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden; box-shadow:0 1px 0 var(--line); }
-  .datatable th{ text-align:left; font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:#797979; padding:10px 14px; background:var(--paper-dim); border-bottom:1px solid var(--line); }
+  .datatable th{ text-align:left; font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:#8a7f68; padding:10px 14px; background:var(--paper-dim); border-bottom:1px solid var(--line); }
   .datatable td{ padding:11px 14px; font-size:14px; border-bottom:1px solid var(--line); vertical-align:middle; }
-  .datatable tr.inactive td{ color:#999999; }
+  .datatable tr.inactive td{ color:#a89e8a; }
   .badge{ display:inline-block; font-family:var(--display-text); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; padding:3px 9px; border-radius:20px; }
   .badge.active{ background:var(--olive-dim); color:var(--olive); }
-
-  /* ---------- time-off calendar ---------- */
-  .timeoff-cal{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
-  .timeoff-cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-family:var(--display); }
-  .timeoff-cal-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; }
-  .timeoff-cal-cell{ min-height:64px; border:1px solid var(--line); border-radius:6px; padding:4px; font-size:11px; background:var(--paper); }
-  .timeoff-cal-cell.head{ min-height:auto; border:none; background:transparent; text-align:center; font-weight:700; color:#797979; text-transform:uppercase; font-size:10px; padding:2px; }
-  .timeoff-cal-cell.empty{ border:none; background:transparent; }
-  .timeoff-cal-daynum{ font-family:var(--mono); color:#797979; margin-bottom:3px; }
-  .timeoff-chip{ color:#fff; font-size:10px; font-weight:700; border-radius:4px; padding:1px 5px; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .badge.inactive{ background:#eee; color:#999; }
-  .iconbtn{ border:none; background:transparent; cursor:pointer; font-size:13px; color:#797979; font-family:var(--display-text); font-weight:700; text-decoration:underline; padding:2px 6px; }
+  .iconbtn{ border:none; background:transparent; cursor:pointer; font-size:13px; color:#8a7f68; font-family:var(--display-text); font-weight:700; text-decoration:underline; padding:2px 6px; }
   .iconbtn.danger{ color:var(--rust); }
   .iconbtn:disabled{ color:#ccc; cursor:not-allowed; text-decoration:none; }
   .inlineform{ background:var(--paper-dim); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .field{ display:flex; flex-direction:column; gap:5px; }
-  .field label{ font-family:var(--display-text); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#797979; }
+  .field label{ font-family:var(--display-text); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#8a7f68; }
   .field input, .field select{ font-family:var(--body); font-size:14px; padding:9px 11px; border-radius:7px; border:1px solid var(--line); background:#fff; min-width:150px; }
   .field.err input{ border-color:var(--rust); }
   .formerr{ color:var(--rust); font-size:12px; font-weight:600; width:100%; }
   .formbtns{ display:flex; gap:8px; }
   .formbtns button{ font-family:var(--display-text); font-weight:700; font-size:13px; padding:9px 16px; border-radius:7px; border:none; cursor:pointer; }
   .formbtns .save{ background:var(--oxblood); color:var(--gold-light); }
-  .formbtns .cancel{ background:transparent; color:#797979; border:1px solid var(--line); }
+  .formbtns .cancel{ background:transparent; color:#8a7f68; border:1px solid var(--line); }
   .logfilters{ display:flex; gap:14px; align-items:flex-end; margin-bottom:18px; flex-wrap:wrap; }
   .summary-cards{ display:flex; gap:12px; margin:6px 0 26px; flex-wrap:wrap; }
   .summary-card{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 18px; min-width:150px; }
   .summary-card .n{ font-family:var(--display); font-size:24px; color:var(--oxblood); font-weight:800; }
-  .summary-card .l{ font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#797979; margin-top:2px; }
+  .summary-card .l{ font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#8a7f68; margin-top:2px; }
   .subhead{ font-family:var(--display-text); font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.4px; color:var(--oxblood); margin:0 0 10px; }
-  .settingsnote{ color:#797979; font-size:13px; max-width:480px; line-height:1.5; }
+  .settingsnote{ color:#8a7f68; font-size:13px; max-width:480px; line-height:1.5; }
 
   @media (max-width:700px){
     header.topbar{ padding:12px 16px; }
@@ -411,7 +327,7 @@
     <div class="wordmark">
       <img class="logo-img" src="data:image/png;base64,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" alt="Lanko">
       <span class="divider"></span>
-      <small>Kairos 26.6</small>
+      <small>Kairos 26.5</small>
     </div>
     <div class="topbar-right">
       <div class="headclock"><div class="time" id="hcTime">--:--</div><div class="date" id="hcDate">---</div></div>
@@ -474,92 +390,25 @@
 (function(){
   'use strict';
 
-  var K = { employees:'lanko_employees', jobs:'lanko_jobs', entries:'lanko_entries', adminPin:'lanko_admin_pin', jobSource:'lanko_job_source', employeeSource:'lanko_employee_source', taskSource:'lanko_task_source', tasks:'lanko_tasks', sheetWrite:'lanko_sheet_write', entriesArchive:'lanko_entries_archive', lateAlert:'lanko_late_alert_enabled', timeOff:'lanko_timeoff_requests', buildBanner:'lanko_build_banner' };
+  var K = { employees:'lanko_employees', jobs:'lanko_jobs', entries:'lanko_entries', adminPin:'lanko_admin_pin', jobSource:'lanko_job_source', officeJobSource:'lanko_office_job_source', employeeSource:'lanko_employee_source', taskSource:'lanko_task_source', tasks:'lanko_tasks', sheetWrite:'lanko_sheet_write' };
 
-  // The shop and office job sheets have been merged into one. There is now a single job
-  // source, and what decides who sees a job is column M (job status) rather than which
-  // sheet the row came from. Adjustable from the Jobs tab without another round of edits.
+  // Pre-wired to the sheets given at setup time. Both adjustable from their tabs without
+  // needing another round of edits (column numbers, header row, etc).
   var DEFAULT_JOB_SOURCE = {
-    inputUrl: 'https://docs.google.com/spreadsheets/d/1QsY7QmoY_po2aTCftNc2btWtjGXnvU7k4Q9FR2lQmsg/edit?gid=0#gid=0',
-    sheetId: '1QsY7QmoY_po2aTCftNc2btWtjGXnvU7k4Q9FR2lQmsg', gid: '0', directUrl: null,
-    columnIndex: 1, descColumnIndex: 2, afterHoursColumnIndex: 12, statusColumnIndex: 13,
-    hasHeader: true, lastSyncAt: null
+    inputUrl: 'https://docs.google.com/spreadsheets/d/1I0SFM2XNhXnB39Wb4hX44IjFTxxlP5CYP9zSVFwLlfs/edit?gid=0#gid=0',
+    sheetId: '1I0SFM2XNhXnB39Wb4hX44IjFTxxlP5CYP9zSVFwLlfs', gid: '0', directUrl: null,
+    columnIndex: 1, descColumnIndex: 2, afterHoursColumnIndex: 12, hasHeader: true, lastSyncAt: null
   };
-  /* Job status, from column M. "A" is active, "P" is prospective, and more letters are
-     expected later - which is why nothing here enumerates them. The fab crew sees only
-     ACTIVE_JOB_STATUS; office staff see the whole list. Anything unrecognised therefore
-     stops reaching the floor by default, which is the safe direction for a new letter
-     nobody has taught the app about yet.
-
-     A BLANK status is treated as active on purpose. Strictly the sheet says only "A"
-     reaches the floor, but a half-filled column would then empty the shop-floor job list
-     and the crew could not clock in at all - a much worse failure than a prospective job
-     appearing where it shouldn't. Blank rows are badged "Status unset" on the Jobs tab so
-     the gaps are visible. Flip this to false once column M is known to be fully filled. */
-  var ACTIVE_JOB_STATUS = 'A';
-  var BLANK_STATUS_MEANS_ACTIVE = true;
-  /* Every tablet already has a saved lanko_job_source pointing at the pre-merge shop
-     sheet, and a saved doc always wins over the default above - so without this the merge
-     would deploy and appear to do nothing at all, tablets quietly syncing the old sheet
-     forever. Repoints anything still on the old sheet, and fills in the status column for
-     a source that predates it. Runs once; after that the saved doc already matches. */
-  var LEGACY_SHOP_SHEET_ID = '1I0SFM2XNhXnB39Wb4hX44IjFTxxlP5CYP9zSVFwLlfs';
-  function migrateJobSourceToMergedSheet(src){
-    /* A disconnect writes null deliberately, and safeGetJSON hands that null straight
-       back rather than the default. Treating it as "missing" would re-connect the sheet
-       on every boot and quietly overrule the admin who turned it off. */
-    if(!src) return { src: src, changed: false };
-    if(src.sheetId === LEGACY_SHOP_SHEET_ID){
-      /* Column numbers came from the old sheet's layout, so they are not carried over. */
-      return { src: Object.assign({}, DEFAULT_JOB_SOURCE, { lastSyncAt: null }), changed: true };
-    }
-    if(src.sheetId === DEFAULT_JOB_SOURCE.sheetId && !(src.statusColumnIndex > 0)){
-      return { src: Object.assign({}, src, { statusColumnIndex: DEFAULT_JOB_SOURCE.statusColumnIndex }), changed: true };
-    }
-    return { src: src, changed: false };
-  }
-  function jobStatusCode(job){
-    return (job && job.status != null) ? String(job.status).trim().toUpperCase() : '';
-  }
-  function isFabVisible(job){
-    var code = jobStatusCode(job);
-    if(code === '') return BLANK_STATUS_MEANS_ACTIVE;
-    return code === ACTIVE_JOB_STATUS;
-  }
-  function jobStatusLabel(job){
-    var code = jobStatusCode(job);
-    if(code === '') return 'Status unset';
-    if(code === 'A') return 'Active';
-    if(code === 'P') return 'Prospective';
-    return code;
-  }
-  /* Job numbers arrive in whatever order the sheet is sorted in, but the floor expects
-     them ascending. They are numeric with the occasional suffix, so compare the leading
-     number and fall back to a natural compare when two share it. Anything with no digits
-     at all sorts last rather than to the top, so a stray text row can't head the list. */
-  function jobNumberValue(name){
-    var m = String(name == null ? '' : name).match(/\d+/);
-    return m ? parseInt(m[0], 10) : Number.MAX_SAFE_INTEGER;
-  }
-  /* Matching by exact name string is fragile against exactly the kind of mess a real
-     spreadsheet accumulates over months: a leading zero that parseInt quietly drops
-     ("099001" and "99001" are the same job to a person, different strings to ===), stray
-     whitespace, or a description that got typed into the number column once and stuck.
-     A job's real identity here is its number, so two names are the same job whenever they
-     parse to the same number - regardless of what text surrounds it. Only a name with no
-     number in it at all (a manual job like "Internal R&D") falls back to matching on the
-     trimmed, lowercased string, since there's no number to key on. */
-  function jobIdentityKey(name){
-    var num = jobNumberValue(name);
-    return num !== Number.MAX_SAFE_INTEGER ? ('n:'+num) : ('x:'+String(name||'').trim().toLowerCase());
-  }
-  function sortJobsAscending(list){
-    return list.slice().sort(function(a, b){
-      var av = jobNumberValue(a.name), bv = jobNumberValue(b.name);
-      if(av !== bv) return av - bv;
-      return String(a.name).localeCompare(String(b.name), undefined, {numeric:true, sensitivity:'base'});
-    });
-  }
+  // Office employees (Jay, plus whoever else gets marked "Office" later) pick from this
+  // entirely separate job list instead of the shop one - it's expected to hold both
+  // active jobs and prospective/quote jobs for office-side time tracking. Column numbers
+  // for description/after-hours/quote aren't specified yet, so they start unconfigured
+  // (blank) - set them from the Jobs tab once the sheet's layout is known.
+  var DEFAULT_OFFICE_JOB_SOURCE = {
+    inputUrl: 'https://docs.google.com/spreadsheets/d/1QsY7QmoY_po2aTCftNc2btWtjGXnvU7k4Q9FR2lQmsg/edit?usp=drivesdk',
+    sheetId: '1QsY7QmoY_po2aTCftNc2btWtjGXnvU7k4Q9FR2lQmsg', gid: '0', directUrl: null,
+    columnIndex: 1, descColumnIndex: 0, afterHoursColumnIndex: 0, quoteColumnIndex: 0, hasHeader: true, lastSyncAt: null
+  };
   var DEFAULT_EMPLOYEE_SOURCE = {
     inputUrl: 'https://docs.google.com/spreadsheets/d/1SgssZOxz7aQ4YpsU12eUcgJBd7_lDbGrFbDvUBI17eE/edit?usp=drivesdk',
     sheetId: '1SgssZOxz7aQ4YpsU12eUcgJBd7_lDbGrFbDvUBI17eE', gid: '0', directUrl: null,
@@ -594,11 +443,6 @@
 
   var STATE = {
     employees:[], jobs:[], entries:[], adminPin:null, tasks:[],
-    entryArchiveManifest:null, entryArchive:null, rolloffBusy:false, rolloffMsg:null,
-    lateAlertEnabled:true, lateAlert:null, lateAlertTimeoutId:null, audioCtx:null,
-    timeOffRequests:[], timeOffFormError:null, timeOffSavedMsg:null,
-    buildBannerActive:false,
-    timeOffCalMonth:null, timeOffActor:null, timeOffCounterOpenId:null, timeOffCounterError:null,
     view:'loading',
     selectedEmployeeId:null,
     pinBuffer:'', pinError:false, pinAttempts:0,
@@ -607,7 +451,7 @@
     adminPinBuffer:'', adminPinError:false,
     adminTab:'employees',
     employeeFormOpen:false, editingEmployeeId:null, employeeFormError:null,
-    jobFormOpen:false, editingJobId:null, jobFormError:null, jobMergeBusy:false, jobMergeMsg:null,
+    jobFormOpen:false, editingJobId:null, jobFormError:null,
     taskFormOpen:false, editingTaskId:null, taskFormError:null,
     editingEntryId:null, logEditError:null,
     logFrom:null, logTo:null,
@@ -617,6 +461,7 @@
     busy:false,
     pendingAction:null, selectedTasks:[], pendingTaskNames:null,
     jobSource:null, jobSourceFormOpen:false, jobSourceError:null, jobSyncStatus:'idle', jobSyncError:null,
+    officeJobSource:null, officeJobSourceFormOpen:false, officeJobSourceError:null, officeJobSyncStatus:'idle', officeJobSyncError:null,
     employeeSource:null, employeeSourceFormOpen:false, employeeSourceError:null, empSyncStatus:'idle', empSyncError:null,
     taskSource:null, taskSourceFormOpen:false, taskSourceError:null, taskSyncStatus:'idle', taskSyncError:null,
     manualEntryError:null, manualEntrySavedName:null,
@@ -648,208 +493,6 @@
     var d = new Date(iso);
     function pad(n){ return String(n).padStart(2,'0'); }
     return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
-  }
-
-  /* ---------------- late arrival pick-me-up (just for fun - fully admin-switchable) ----------------
-     Fires once, on the FIRST clock-in of the calendar day, if that clock-in lands after 7:15am
-     local time. Deliberately keyed off "first entry today" rather than "any clock-in after
-     7:15am" - the same check by time-of-day alone would also catch an ordinary post-lunch
-     return, which has nothing to do with arriving late. It never fires twice in one day and
-     never fires on a transfer or an afternoon clock-in.
-
-     Started as a ribbing bit and got walked back to encouragement plus a clean joke instead -
-     same trigger, same overlay, same toggle, just kinder content. Still built to be easy to
-     walk back again: one toggle in Settings turns it off with no code change, and the overlay
-     itself is dismissable with a tap so it never holds up the line if a few people clock in
-     back-to-back. */
-  var LATE_CUTOFF_MIN = 7*60 + 15; // 7:15am, in minutes since midnight
-  var LATE_ENCOURAGEMENT = [
-    'Glad you made it in. Why did the scarecrow win an award? He was outstanding in his field.',
-    'Everyone has one of those mornings. What do you call a fish with no eyes? A fsh.',
-    'You\u2019re here, that\u2019s what counts. Why don\u2019t skeletons fight each other? They don\u2019t have the guts.',
-    'Coffee first, shift second \u2014 fair trade. Why did the bicycle fall over? It was two-tired.',
-    'Good to see you. What did the ocean say to the beach? Nothing, it just waved.',
-    'Rough start, good finish. That\u2019s the plan anyway. Why can\u2019t you give Elsa a balloon? She\u2019ll let it go.'
-  ];
-  function isLateArrival(iso){
-    var d = new Date(iso);
-    return (d.getHours()*60 + d.getMinutes()) > LATE_CUTOFF_MIN;
-  }
-  function isFirstEntryToday(employeeId, iso){
-    var key = dateKeyLocal(new Date(iso));
-    return !STATE.entries.some(function(en){
-      return en.employeeId === employeeId && dateKeyLocal(new Date(en.clockIn)) === key;
-    });
-  }
-  function getAudioCtx(){
-    if(!STATE.audioCtx){
-      var Ctor = window.AudioContext || window.webkitAudioContext;
-      if(!Ctor) return null;
-      STATE.audioCtx = new Ctor();
-    }
-    if(STATE.audioCtx.state === 'suspended') STATE.audioCtx.resume();
-    return STATE.audioCtx;
-  }
-  /* A warm four-note rising chime into a sustained major chord, entirely synthesized - no
-     audio file, so nothing to fetch and nothing to fail loading on a shop tablet. Triangle
-     and sine waves throughout for a softer timbre than the old klaxon+trombone had; this is
-     a welcome now, not a foghorn. Runs about 5.4s inside the 6s overlay window. */
-  function playLateSound(){
-    var ctx = getAudioCtx();
-    if(!ctx) return;
-    var master = ctx.createGain();
-    master.gain.value = 0.18;
-    master.connect(ctx.destination);
-    STATE.lateAlertAudioNodes = [master];
-    var t0 = ctx.currentTime;
-
-    function tone(freq, start, dur, type, peak, glideTo){
-      var osc = ctx.createOscillator(), g = ctx.createGain();
-      osc.type = type; osc.frequency.setValueAtTime(freq, t0+start);
-      if(glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t0+start+dur);
-      g.gain.setValueAtTime(0, t0+start);
-      g.gain.linearRampToValueAtTime(peak, t0+start+0.04);
-      g.gain.linearRampToValueAtTime(0, t0+start+dur);
-      osc.connect(g); g.connect(master);
-      osc.start(t0+start); osc.stop(t0+start+dur+0.02);
-      STATE.lateAlertAudioNodes.push(osc, g);
-    }
-    // rising "doo-doo-doo-DOO" - C5, E5, G5, C6
-    tone(523.25, 0.00, 0.18, 'triangle', 0.8);
-    tone(659.25, 0.18, 0.18, 'triangle', 0.8);
-    tone(783.99, 0.36, 0.18, 'triangle', 0.8);
-    tone(1046.50, 0.54, 0.42, 'triangle', 0.9);
-    // warm sustained chord fade - C5+E5+G5 together, soft sine, holds then fades
-    tone(523.25, 1.4, 3.4, 'sine', 0.42);
-    tone(659.25, 1.4, 3.4, 'sine', 0.34);
-    tone(783.99, 1.4, 3.4, 'sine', 0.34);
-  }
-  function stopLateSound(){
-    (STATE.lateAlertAudioNodes||[]).forEach(function(n){ try{ n.stop && n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
-    STATE.lateAlertAudioNodes = [];
-  }
-  function showLateAlert(emp, clockInIso){
-    STATE.lateAlert = {
-      name: emp.name, time: fmtTime(clockInIso),
-      caption: LATE_ENCOURAGEMENT[Math.floor(Math.random()*LATE_ENCOURAGEMENT.length)]
-    };
-    render();
-    playLateSound();
-    STATE.lateAlertTimeoutId = setTimeout(dismissLateAlert, 6000);
-  }
-  function dismissLateAlert(){
-    if(STATE.lateAlertTimeoutId){ clearTimeout(STATE.lateAlertTimeoutId); STATE.lateAlertTimeoutId=null; }
-    stopLateSound();
-    STATE.lateAlert = null;
-    resetToRack();
-  }
-
-  /* ---------------- time-off requests ----------------
-     One array-in-a-doc, like jobs/tasks/employees - consistent with how everything else in
-     this app is stored, and small enough (a shop this size won't accumulate thousands of
-     these) that it doesn't need its own chunking like the entries archive does.
-
-     Status moves one way through a small set of states:
-       pending -> approved | rejected | countered
-       countered -> approved (employee accepts the new dates) | declined (employee doesn't)
-     A countered request is NOT on the calendar yet - only 'approved' is. When a counter is
-     accepted, the request's own from/to are overwritten with the countered dates and the
-     status becomes 'approved', so the calendar only ever has to read one field per request
-     rather than needing to know which dates are the "current" ones.
-
-     Admin identity: there's no per-admin login in Kairos, just the one shared admin PIN -
-     the same gap K5 already hit for manual time entries. Same fix here: whoever is acting
-     has to pick their name before a decision is recorded, so approvals/rejections/counters
-     carry a real name instead of nobody. */
-  var TIME_OFF_TYPES = [
-    {code:'vacation', label:'Vacation'}, {code:'sick', label:'Sick'},
-    {code:'personal', label:'Personal'}, {code:'other', label:'Other'}
-  ];
-  var TIME_OFF_ADMIN_ACTORS = ['Travis','Ivan']; // placeholder until Kairos has real per-admin login
-  function timeOffTypeLabel(code){ var t=TIME_OFF_TYPES.find(function(x){return x.code===code;}); return t?t.label:code; }
-  function ymdToDate(ymd){ var p=(ymd||'').split('-').map(Number); return new Date(p[0], (p[1]||1)-1, p[2]||1); }
-  function fmtYmd(ymd){ return ymdToDate(ymd).toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'}); }
-  function fmtYmdRange(from,to){ return from===to ? fmtYmd(from) : (fmtYmd(from)+' \u2013 '+fmtYmd(to)); }
-  function ymdNights(from,to){ return Math.round((ymdToDate(to)-ymdToDate(from))/86400000)+1; }
-  function todayYmd(){ return dateKeyLocal(new Date()); }
-
-  function submitTimeOffRequest(emp, from, to, type, note){
-    var req = {
-      id:uid('pto'), employeeId:emp.id, employeeName:emp.name,
-      from:from, to:to, type:type, note:(note||'').trim(),
-      status:'pending', createdAt:new Date().toISOString(),
-      decidedAt:null, decidedBy:null, adminNote:null,
-      counterFrom:null, counterTo:null, counterNote:null, employeeResponse:null
-    };
-    return mutateLocal(K.timeOff, STATE.timeOffRequests, function(list){ return list.concat([req]); })
-      .then(function(updated){
-        STATE.timeOffRequests = updated;
-        // Fire-and-forget, matching the K4 design: the Firestore record above is the
-        // employee's actual proof the request exists, since a no-cors POST can't be
-        // confirmed from the tablet. This depends on lanko-sheet-bridge.gs already
-        // handling a 'sendEmail' type the way the operations spec describes - that file
-        // isn't part of this project, so this is written to the documented contract but
-        // not re-verified against the live script this session.
-        pushToSheet({
-          type:'sendEmail', to:'info@lankosystems.com',
-          subject:'Time-off request - '+emp.name,
-          body: emp.name+' requested '+timeOffTypeLabel(type).toLowerCase()+' time off, '+
-                fmtYmdRange(from,to)+(note?('. Note: '+note):'')+'.'
-        });
-        return req;
-      });
-  }
-  function decideTimeOff(id, patch){
-    return mutateLocal(K.timeOff, STATE.timeOffRequests, function(list){
-      return list.map(function(r){ return r.id===id ? Object.assign({}, r, patch, {decidedAt:new Date().toISOString()}) : r; });
-    }).then(function(updated){ STATE.timeOffRequests = updated; return updated; });
-  }
-  function employeeRespondToCounter(id, accept){
-    return mutateLocal(K.timeOff, STATE.timeOffRequests, function(list){
-      return list.map(function(r){
-        if(r.id!==id) return r;
-        if(accept) return Object.assign({}, r, {from:r.counterFrom, to:r.counterTo, status:'approved', employeeResponse:'accepted'});
-        return Object.assign({}, r, {status:'declined', employeeResponse:'declined'});
-      });
-    }).then(function(updated){ STATE.timeOffRequests = updated; return updated; });
-  }
-  /* Calendar reads only this - approved time off, using whichever from/to are current
-     (already resolved for an accepted counter, since acceptance overwrites them above). */
-  function approvedTimeOffCoveringMonth(year, month0){
-    var monthStart = dateKeyLocal(new Date(year, month0, 1));
-    var monthEnd = dateKeyLocal(new Date(year, month0+1, 0));
-    return STATE.timeOffRequests.filter(function(r){
-      return r.status==='approved' && r.from<=monthEnd && r.to>=monthStart;
-    });
-  }
-  function addMonths(d, n){ return new Date(d.getFullYear(), d.getMonth()+n, 1); }
-  /* Kairos has one shared admin PIN, not per-admin login - the same gap K5 hit for manual
-     entries. Whoever is acting has to be picked explicitly before a decision is recorded,
-     or an approval/rejection/counter would carry no real identity at all. */
-  function requireTimeOffActor(){
-    if(STATE.timeOffActor) return true;
-    alert('Pick who\u2019s deciding (Travis or Ivan) before approving, rejecting, or suggesting different dates.');
-    return false;
-  }
-  function onTimeOffAdminReject(id){
-    if(!requireTimeOffActor()) return;
-    var r = STATE.timeOffRequests.find(function(x){ return x.id===id; });
-    var note = prompt('Optional note for '+(r?r.employeeName:'the employee')+' about why this was rejected (leave blank to skip):', '');
-    if(note===null) return; // they backed out of the prompt entirely, nothing should happen
-    decideTimeOff(id, {status:'rejected', decidedBy:STATE.timeOffActor, adminNote:note.trim()||null}).then(render);
-  }
-  function onTimeOffAdminCounterSubmit(id){
-    if(!requireTimeOffActor()) return;
-    var from = document.getElementById('timeOffCounterFrom_'+id).value;
-    var to = document.getElementById('timeOffCounterTo_'+id).value;
-    var note = document.getElementById('timeOffCounterNote_'+id).value;
-    if(!from || !to){ STATE.timeOffCounterError='Pick both dates.'; render(); return; }
-    if(to < from){ STATE.timeOffCounterError='End date can\u2019t be before the start date.'; render(); return; }
-    STATE.timeOffCounterError = null;
-    decideTimeOff(id, {
-      status:'countered', decidedBy:STATE.timeOffActor,
-      counterFrom:from, counterTo:to, counterNote:note.trim()||null, employeeResponse:'pending'
-    }).then(function(){ STATE.timeOffCounterOpenId=null; render(); });
   }
 
   /* ---------------- payroll time rules ----------------
@@ -1083,133 +726,6 @@
       return STATE.entries; // best-effort fallback so a caller's .then() doesn't throw
     });
   }
-  /* ---------------- K7: time entry roll-off archive ----------------
-     lanko_entries is a single document and Firestore caps a document at 1 MiB. At
-     roughly 282 bytes per entry across 12 crew that cap arrives inside a year, and
-     the failure mode is the worst one available: writes stop succeeding and nobody
-     on the floor is told. So entries older than the retention window move into
-     numbered archive documents that Kairos reads only when history is asked for.
-
-     Three deliberate choices:
-
-     - This does not run automatically at boot. Twelve tablets waking at 6am would
-       all try to archive the same entries at once.
-     - It does not write back the list it read. It writes the archive first, then
-       removes the archived ids inside a transaction that re-reads the live list.
-       Pruning from the list we read would silently drop any clock-in that landed
-       while the archive was being written.
-     - Archive-then-prune means a failure between the two leaves entries in both
-       places. That is duplication, which is visible and fixable. The other order
-       would risk loss, which is neither.
-
-     ENTRY_RETENTION_DAYS is the one number to change once the payroll retention
-     rule is confirmed. Nothing else depends on its value. */
-  var ENTRY_RETENTION_DAYS = 90;
-  var ENTRY_ARCHIVE_CHUNK = 400;
-  var DOC_CAP_BYTES = 1048576;
-
-  function entriesDocBytes(){
-    try { return JSON.stringify({ value: STATE.entries }).length; } catch(e){ return 0; }
-  }
-  function entriesFillPct(){ return Math.round((entriesDocBytes() / DOC_CAP_BYTES) * 1000) / 10; }
-  /* Months of headroom at the rate this document has actually grown, not at a
-     guessed bytes-per-entry. Needs a first and last dated entry to say anything. */
-  function entriesHeadroomMonths(){
-    var dated = (STATE.entries||[]).map(function(en){ return new Date(en.clockIn).getTime(); })
-      .filter(function(t){ return !isNaN(t); }).sort(function(a,b){ return a-b; });
-    if(dated.length < 20) return null;
-    var spanDays = (dated[dated.length-1] - dated[0]) / 86400000;
-    if(spanDays < 14) return null;
-    var bytesPerDay = entriesDocBytes() / spanDays;
-    if(bytesPerDay <= 0) return null;
-    return Math.round(((DOC_CAP_BYTES - entriesDocBytes()) / bytesPerDay) / 30.44);
-  }
-  function rolloffCutoffMs(){ return Date.now() - (ENTRY_RETENTION_DAYS * 86400000); }
-  /* Buckets on clockIn, the same field the Daily Log, the payroll week window and
-     the sheet's Date column bucket on, so "older than 90 days" means one thing
-     everywhere. An entry with no clockIn is never archived: it cannot be dated,
-     and guessing would move it out of a payroll week it may belong to. An entry
-     still on the clock is never archived either, however old it looks. */
-  function isArchivable(en){
-    if(!en || !en.clockIn || !en.clockOut) return false;
-    var t = new Date(en.clockIn).getTime();
-    return !isNaN(t) && t < rolloffCutoffMs();
-  }
-  function archivableEntries(){ return (STATE.entries||[]).filter(isArchivable); }
-
-  /* buildSheetRows only ever sees STATE.entries, so an archived entry can never be
-     pushed to the workbook again. The workbook is meant to be the permanent home for
-     old hours, which makes "archived but never pushed" a permanent hole in payroll
-     history rather than a recoverable mistake - and there is no per-entry pushed
-     marker to check, only one global lastSentAt. So compare against that: if the
-     last push predates the newest entry about to leave, some of it never arrived. */
-  function rolloffSheetGap(){
-    var due = archivableEntries();
-    if(!due.length) return null;
-    var newest = due.reduce(function(m, en){
-      var t = new Date(en.clockIn).getTime();
-      return (!isNaN(t) && t > m) ? t : m;
-    }, 0);
-    if(!STATE.sheetWriteLastSentAt){
-      return 'Nothing has been sent to the workbook yet. Archiving now would leave these weeks out of it permanently &mdash; the entries stay readable in Kairos history, but payroll would have no record.';
-    }
-    var sent = new Date(STATE.sheetWriteLastSentAt).getTime();
-    if(isNaN(sent) || sent < newest){
-      return 'The workbook was last sent hours up to ' + fmtDateShort(STATE.sheetWriteLastSentAt) +
-        ', but entries as recent as ' + fmtDateShort(new Date(newest).toISOString()) + ' are due to be archived. ' +
-        'Send to the workbook first &mdash; once an entry is archived it drops out of the sheet push for good.';
-    }
-    return null;
-  }
-
-  function loadEntryArchive(){
-    if(STATE.entryArchive) return Promise.resolve(STATE.entryArchive);
-    var man = STATE.entryArchiveManifest;
-    if(!man || !man.chunks) return Promise.resolve([]);
-    var gets = [];
-    for(var i=0;i<man.chunks;i++) gets.push(safeGetJSON(K.entriesArchive + '_' + i, []));
-    return Promise.all(gets).then(function(parts){
-      STATE.entryArchive = parts.reduce(function(a,b){ return a.concat(Array.isArray(b)?b:[]); }, []);
-      return STATE.entryArchive;
-    });
-  }
-
-  /* Append-only. New chunks are written past the end of the existing ones and only
-     the manifest moves, so a roll-off can never rewrite history that is already
-     stored, and a partly filled last chunk is harmless. */
-  function runEntryRolloff(){
-    var toArchive = archivableEntries();
-    if(!toArchive.length) return Promise.resolve({ moved:0, kept:0 });
-    var man = STATE.entryArchiveManifest || { chunks:0, count:0, v:1 };
-    var base = man.chunks;
-    var chunks = [];
-    for(var i=0;i<toArchive.length;i+=ENTRY_ARCHIVE_CHUNK) chunks.push(toArchive.slice(i, i+ENTRY_ARCHIVE_CHUNK));
-    var nextMan = { chunks: base + chunks.length, count: man.count + toArchive.length, v:1,
-      lastRolloffAt: new Date().toISOString(), retentionDays: ENTRY_RETENTION_DAYS };
-
-    return Promise.all(chunks.map(function(c, i){ return safeSetJSON(K.entriesArchive + '_' + (base + i), c); }))
-      .then(function(rs){
-        if(!rs.every(Boolean)) throw new Error('An archive chunk did not write. Nothing was removed from the live entries.');
-        return safeSetJSON(K.entriesArchive, nextMan);
-      })
-      .then(function(ok){
-        if(!ok) throw new Error('The archive index did not write. Nothing was removed from the live entries.');
-        var ids = {};
-        toArchive.forEach(function(en){ ids[en.id] = true; });
-        return mutateEntries(function(remote){
-          return (remote||[]).filter(function(en){ return !ids[en.id]; });
-        }).then(function(updated){
-          /* mutateEntries swallows a failed transaction and hands back the list it
-             started with, so success is confirmed by looking, not by not throwing. */
-          var leftover = (updated||[]).filter(function(en){ return ids[en.id]; }).length;
-          if(leftover) throw new Error('Entries were archived but ' + leftover + ' could not be removed from the live document. They are stored safely; run this again.');
-          STATE.entries = updated;
-          STATE.entryArchiveManifest = nextMan;
-          STATE.entryArchive = null;
-          return { moved: toArchive.length, kept: updated.length };
-        });
-      });
-  }
   /* ---------------- Google Sheet sync (jobs + employees) ---------------- */
   function parseCSV(text){
     var rows = [], row = [], field = '', inQuotes = false;
@@ -1249,7 +765,6 @@
       if(colMap.description!=null) item.description = (r[colMap.description]||'').trim();
       if(colMap.afterHours!=null) item.afterHours = /^(y|yes|true|1)$/i.test((r[colMap.afterHours]||'').trim());
       if(colMap.quote!=null) item.quote = /^(y|yes|true|1)$/i.test((r[colMap.quote]||'').trim());
-      if(colMap.status!=null) item.status = (r[colMap.status]||'').trim().toUpperCase();
       if(colMap.pin!=null){
         var rawPin = (r[colMap.pin]||'').trim();
         item.pin = /^\d{4}$/.test(rawPin) ? rawPin : null;
@@ -1297,13 +812,8 @@
       }
       window[cbName] = function(data){ finish(true, data); };
       scriptEl = document.createElement('script');
-      /* headers=0 matters. Without it Google guesses how many header rows the sheet has,
-         and when it guesses 1 it removes that row from table.rows before we ever see it -
-         then rowsToRecords slices a row off as well, and the FIRST REAL JOB silently
-         disappears. Pinning headers=0 makes Google return every row and leaves the single
-         strip to our own hasHeader setting, which is the one the Jobs tab controls. */
       scriptEl.src = 'https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?gid='+(gid||'0')+
-        '&headers=0&tqx=responseHandler:'+cbName+'&_ts='+Date.now();
+        '&tqx=responseHandler:'+cbName+'&_ts='+Date.now();
       scriptEl.onerror = function(){ finish(false, new Error('script load error')); };
       document.head.appendChild(scriptEl);
     });
@@ -1313,11 +823,7 @@
     return data.table.rows.map(function(r){
       return (r.c||[]).map(function(cell){
         if(cell==null) return '';
-        /* Prefer the raw value for numbers. The formatted string is what the sheet
-           displays, so a job-number column with a thousands separator hands back
-           "99,001" and nothing ever matches it again. Text cells still use the
-           formatted value, which is what dates and the like need. */
-        var v = (typeof cell.v === 'number') ? cell.v : ((cell.f!=null) ? cell.f : cell.v);
+        var v = (cell.f!=null) ? cell.f : cell.v;
         return (v==null) ? '' : String(v);
       });
     });
@@ -1358,123 +864,39 @@
       });
   }
 
-  // Reconciles jobs pulled from the sheet against the current list. Matches existing
-  // sheet-sourced jobs by name (case-insensitive) to keep their id stable for reporting,
-  // adds any new names, updates description/after-hours/status when those columns are
-  // configured, and deactivates sheet-sourced jobs no longer present in the sheet.
-  // Manually added jobs (source !== 'sheet') are never touched by this.
-  // The shop and office sheets were merged, so the old per-audience scoping is gone: one
-  // sheet, one list, and who sees what is decided by status at display time. Jobs still
-  // carrying an audience tag from before the merge are cleaned as they are re-synced.
-  function reconcileJobsFromSheet(list, rows){
+  // Reconciles jobs pulled from a sheet against the current list, scoped to one audience
+  // ('shop' or 'office') so the shop and office sync pipelines never interfere with each
+  // other even though both write into the same STATE.jobs list. Matches existing
+  // sheet-sourced jobs of that audience by name (case-insensitive) to keep their id
+  // stable for reporting, adds any new names, updates description/after-hours/quote when
+  // those columns are configured, and deactivates sheet-sourced jobs of that audience no
+  // longer present. Manually added jobs (source !== 'sheet') are never touched by this.
+  // Legacy jobs synced before the shop/office split have no audience field - they're
+  // treated as 'shop' so existing shop sync behavior is unaffected.
+  function reconcileJobsFromSheet(list, rows, audience){
     var out = list.map(function(j){ return Object.assign({}, j); });
-    /* Keyed to a LIST per name, not a single job. Before the shop/office merge, two
-       independent syncs could each create their own job record for the same job number
-       (one tagged audience:'shop', one tagged audience:'office') - that's not
-       hypothetical, it's the normal result of two syncs running for months against
-       overlapping job numbers. A plain name->job map would let the second one silently
-       overwrite the first in this lookup, so only one of the pair would ever receive
-       fresh data again - the other would sit frozen with whatever status it last had,
-       which is exactly the "row shows the wrong status" bug this replaced. */
-    var byName = {};
-    out.forEach(function(j){
-      var key = jobIdentityKey(j.name);
-      (byName[key] = byName[key] || []).push(j);
-    });
+    var outByName = {};
+    out.forEach(function(j){ if((j.audience||'shop')===audience) outByName[j.name.toLowerCase()] = j; });
     var seen = {};
     rows.forEach(function(r){
-      var key = jobIdentityKey(r.name);
+      var key = r.name.toLowerCase();
       seen[key] = true;
-      var matches = byName[key];
-      if(matches && matches.length){
-        matches.forEach(function(existing){
-          existing.active = true; existing.source = 'sheet';
-          /* Matched by number now, not exact string, so the name itself is refreshed too -
-             this is what actually cleans up a name that picked up stray text or a leading
-             zero from an old sync, rather than leaving it frozen forever. */
-          existing.name = r.name;
-          if(existing.audience) delete existing.audience;
-          if(r.description!=null) existing.description = r.description;
-          if(r.afterHours!=null) existing.afterHoursAllowed = r.afterHours;
-          if(r.status!=null) existing.status = r.status;
-        });
+      var existing = outByName[key];
+      if(existing){
+        existing.active = true; existing.source = 'sheet'; existing.audience = audience;
+        if(r.description!=null) existing.description = r.description;
+        if(r.afterHours!=null) existing.afterHoursAllowed = r.afterHours;
+        if(r.quote!=null) existing.isQuote = r.quote;
       } else {
-        var job = {id:uid('job'), name:r.name, active:true, source:'sheet',
-          description:r.description||'', afterHoursAllowed: r.afterHours||false,
-          status: r.status||''};
-        out.push(job); byName[key]=[job];
+        var job = {id:uid('job'), name:r.name, active:true, source:'sheet', audience:audience,
+          description:r.description||'', afterHoursAllowed: r.afterHours||false, isQuote: r.quote||false};
+        out.push(job); outByName[key]=job;
       }
     });
     out.forEach(function(j){
-      if(j.source==='sheet' && !seen[jobIdentityKey(j.name)]) j.active = false;
+      if(j.source==='sheet' && (j.audience||'shop')===audience && !seen[j.name.toLowerCase()]) j.active = false;
     });
     return out;
-  }
-
-  /* ---------------- merging duplicate job numbers ----------------
-     Left over from the shop/office two-sheet era: one job number, two job objects,
-     different ids. The sync fix stops them going stale, but there are still two rows
-     for one job number - this is the actual merge, on request rather than automatic,
-     because it has to touch entries.
-
-     The part that matters: entries reference a job by id (entry.jobId), not by name.
-     Deleting a duplicate without repointing its entries first would leave payroll
-     history pointing at a job that no longer exists. So the survivor in each duplicate
-     group is whichever id already has the most entries attached - that keeps the
-     MINORITY of entries needing to move, and it's a real, checkable number rather than
-     a guess (there's no created-at on a job to sort by "oldest" instead).
-
-     Order matters for the same reason K7's roll-off writes the archive before pruning
-     the live entries: repoint entries onto the survivor FIRST, and only remove the
-     duplicate job objects after that succeeds. If the second step never runs, the
-     result is two rows for a job number the sync now already reconciles - a rerun of
-     this fixes it. Reversed, a failure between the two steps would leave entries
-     pointing at a job id that was already deleted, which is a real loss, not a
-     cosmetic one. */
-  function planJobMerges(){
-    var groups = {};
-    STATE.jobs.forEach(function(j){
-      var key = jobIdentityKey(j.name);
-      (groups[key] = groups[key] || []).push(j);
-    });
-    var plans = [];
-    Object.keys(groups).forEach(function(key){
-      var group = groups[key];
-      if(group.length < 2) return;
-      var counts = {};
-      group.forEach(function(j){ counts[j.id] = 0; });
-      STATE.entries.forEach(function(en){ if(counts.hasOwnProperty(en.jobId)) counts[en.jobId]++; });
-      var ranked = group.slice().sort(function(a,b){
-        if(counts[b.id] !== counts[a.id]) return counts[b.id] - counts[a.id];
-        var scoreA = (a.active?2:0) + (a.description?1:0), scoreB = (b.active?2:0) + (b.description?1:0);
-        return scoreB - scoreA;
-      });
-      var survivor = ranked[0], losers = ranked.slice(1);
-      plans.push({
-        name: survivor.name, survivorId: survivor.id, loserIds: losers.map(function(j){ return j.id; }),
-        entriesMoved: losers.reduce(function(sum,l){ return sum + counts[l.id]; }, 0)
-      });
-    });
-    return plans;
-  }
-  function runJobMerge(){
-    var plans = planJobMerges();
-    if(!plans.length) return Promise.resolve({merged:0, entriesMoved:0});
-    var survivorForLoser = {};
-    plans.forEach(function(p){ p.loserIds.forEach(function(lid){ survivorForLoser[lid] = p.survivorId; }); });
-    return mutateEntries(function(list){
-      return list.map(function(en){
-        return survivorForLoser[en.jobId] ? Object.assign({}, en, {jobId: survivorForLoser[en.jobId]}) : en;
-      });
-    }).then(function(updatedEntries){
-      STATE.entries = updatedEntries;
-      var loserIdSet = {};
-      plans.forEach(function(p){ p.loserIds.forEach(function(lid){ loserIdSet[lid]=true; }); });
-      return mutateLocal(K.jobs, STATE.jobs, function(list){ return list.filter(function(j){ return !loserIdSet[j.id]; }); });
-    }).then(function(updatedJobs){
-      STATE.jobs = updatedJobs;
-      return { merged: plans.length, entriesMoved: plans.reduce(function(s,p){ return s+p.entriesMoved; }, 0) };
-    });
   }
   function syncJobsFromSheet(manualTrigger){
     if(!STATE.jobSource) return Promise.resolve();
@@ -1485,35 +907,49 @@
     var colMap = { name: Math.max(0,(js.columnIndex||1)-1) };
     if(js.descColumnIndex>0) colMap.description = js.descColumnIndex-1;
     if(js.afterHoursColumnIndex>0) colMap.afterHours = js.afterHoursColumnIndex-1;
-    if(js.statusColumnIndex>0) colMap.status = js.statusColumnIndex-1;
     return fetchSheetRows(js, colMap).then(function(result){
       if(result.error){
         STATE.jobSyncStatus='error'; STATE.jobSyncError=result.error;
         maybeRenderAfterBackgroundSync(manualTrigger);
         return;
       }
-      return mutateLocal(K.jobs, STATE.jobs, function(list){ return reconcileJobsFromSheet(list, result.rows); })
+      return mutateLocal(K.jobs, STATE.jobs, function(list){ return reconcileJobsFromSheet(list, result.rows, 'shop'); })
         .then(function(updated){
           STATE.jobs = updated;
           STATE.jobSyncStatus = 'ok'; STATE.jobSyncError = null;
           STATE.jobSource = Object.assign({}, STATE.jobSource, {lastSyncAt: new Date().toISOString()});
           return safeSetJSON(K.jobSource, STATE.jobSource);
         })
-        /* Duplicates left over from the two-sheet era (or reintroduced by a stale tablet's
-           own write) get cleaned up automatically here, every sync, using the exact same
-           safe merge - entries repointed first, duplicate rows removed only after that
-           succeeds. No confirm dialog, because this now runs unattended every 2 minutes;
-           the manual "Merge duplicate job numbers" button stays for on-demand cleanup, but
-           routine dedup no longer waits on anyone clicking it. */
-        .then(function(){ return runJobMerge().catch(function(e){ console.error('auto job merge failed', e); }); })
-        .then(function(result){
-          if(result && result.merged){
-            if(STATE.adminTab==='jobs') render(); // reflect the cleanup live if someone's looking at it
-          }
+        .then(function(){ maybeRenderAfterBackgroundSync(manualTrigger); });
+    });
+  }
+  function syncOfficeJobsFromSheet(manualTrigger){
+    if(!STATE.officeJobSource) return Promise.resolve();
+    var js = STATE.officeJobSource;
+    if(!js.directUrl && !js.sheetId) return Promise.resolve();
+    STATE.officeJobSyncStatus = 'syncing';
+    if(manualTrigger) render();
+    var colMap = { name: Math.max(0,(js.columnIndex||1)-1) };
+    if(js.descColumnIndex>0) colMap.description = js.descColumnIndex-1;
+    if(js.afterHoursColumnIndex>0) colMap.afterHours = js.afterHoursColumnIndex-1;
+    if(js.quoteColumnIndex>0) colMap.quote = js.quoteColumnIndex-1;
+    return fetchSheetRows(js, colMap).then(function(result){
+      if(result.error){
+        STATE.officeJobSyncStatus='error'; STATE.officeJobSyncError=result.error;
+        maybeRenderAfterBackgroundSync(manualTrigger);
+        return;
+      }
+      return mutateLocal(K.jobs, STATE.jobs, function(list){ return reconcileJobsFromSheet(list, result.rows, 'office'); })
+        .then(function(updated){
+          STATE.jobs = updated;
+          STATE.officeJobSyncStatus = 'ok'; STATE.officeJobSyncError = null;
+          STATE.officeJobSource = Object.assign({}, STATE.officeJobSource, {lastSyncAt: new Date().toISOString()});
+          return safeSetJSON(K.officeJobSource, STATE.officeJobSource);
         })
         .then(function(){ maybeRenderAfterBackgroundSync(manualTrigger); });
     });
   }
+
   // Same idea for employees. If the sheet provides a pin column and it's a valid 4-digit
   // value, it's used; otherwise new employees get the shared DEFAULT_EMPLOYEE_PIN and are
   // flagged needsPinSetup so they're walked through choosing their own PIN the first time
@@ -1636,20 +1072,13 @@
       safeGetJSON(K.tasks, []),
       safeGetJSON(K.sheetWrite, null),
       safeGetJSON(K.taskSource, DEFAULT_TASK_SOURCE),
-      safeGetJSON(K.entriesArchive, null),
-      safeGetJSON(K.lateAlert, true),
-      safeGetJSON(K.timeOff, [])
+      safeGetJSON(K.officeJobSource, DEFAULT_OFFICE_JOB_SOURCE)
     ]).then(function(res){
-      STATE.entryArchiveManifest = res[9];
-      STATE.lateAlertEnabled = res[10];
-      STATE.timeOffRequests = res[11];
       STATE.employees = res[0]; STATE.jobs = res[1]; STATE.entries = res[2]; STATE.adminPin = res[3];
-      var jsMig = migrateJobSourceToMergedSheet(res[4]);
-      STATE.jobSource = jsMig.src;
-      if(jsMig.changed) safeSetJSON(K.jobSource, STATE.jobSource);
-      STATE.employeeSource = res[5]; STATE.tasks = res[6];
+      STATE.jobSource = res[4]; STATE.employeeSource = res[5]; STATE.tasks = res[6];
       if(res[7]){ STATE.sheetWriteUrl = res[7].url; STATE.sheetWriteLastSentAt = res[7].lastSentAt; }
       STATE.taskSource = res[8];
+      STATE.officeJobSource = res[9];
     });
   }
   function refreshPublicData(){
@@ -1674,31 +1103,12 @@
       case 'action': stage.innerHTML = renderAction(); break;
       case 'manualentry': stage.innerHTML = renderManualEntry(); break;
       case 'myhistory': stage.innerHTML = renderMyHistory(); break;
-      case 'timeoff': stage.innerHTML = renderTimeOffRequest(); break;
       case 'tasks': stage.innerHTML = renderTaskSelect(); break;
       case 'adminpin': stage.innerHTML = renderAdminPin(); break;
       case 'admin': stage.innerHTML = renderAdmin(); break;
-      default: stage.innerHTML = '<div class="center-stage"><div style="text-align:center;color:#797979;font-family:var(--display-text);font-weight:700;">Loading&hellip;</div></div>';
+      default: stage.innerHTML = '<div class="center-stage"><div style="text-align:center;color:#8a7f68;font-family:var(--display-text);font-weight:700;">Loading&hellip;</div></div>';
     }
     renderStampOverlay();
-    renderLateOverlay();
-  }
-  function renderLateOverlay(){
-    var existing = document.getElementById('lateOverlay');
-    if(existing) existing.remove();
-    if(!STATE.lateAlert) return;
-    var wrap = document.createElement('div');
-    wrap.id = 'lateOverlay';
-    wrap.className = 'late-overlay';
-    wrap.setAttribute('data-action', 'dismiss-late-alert');
-    var la = STATE.lateAlert;
-    wrap.innerHTML = '<div class="late-box">'+
-      '<div class="late-headline">&#128075; Glad You\u2019re Here!</div>'+
-      '<div class="late-name">'+esc(la.name)+'</div>'+
-      '<div class="late-time">Clocked in '+esc(la.time)+'</div>'+
-      '<div class="late-caption">'+esc(la.caption)+'</div>'+
-      '<div class="late-dismiss">Tap anywhere to dismiss</div></div>';
-    document.getElementById('app').appendChild(wrap);
   }
   function renderStampOverlay(){
     var existing = document.getElementById('stampOverlay');
@@ -1736,9 +1146,7 @@
         '<div class="dashed">'+dashed+'</div></div>';
     }).join('');
 
-    return '<main class="rack">'+
-      (STATE.buildBannerActive ? '<div class="build-banner"><span class="bb-icon">&#10024;</span>Lanko Kairos has expanded \u2014 check for more options.</div>' : '')+
-      '<div class="rack-heading"><h1>Tap your name to clock in or out</h1>'+
+    return '<main class="rack"><div class="rack-heading"><h1>Tap your name to clock in or out</h1>'+
       '<span>'+activeEmployees.length+' on the team &middot; '+activeCount+' active now</span></div>'+
       '<div class="grid">'+cards+'</div></main>';
   }
@@ -1832,20 +1240,15 @@
     var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
     if(!emp){ STATE.view='rack'; return renderRack(); }
     var open = STATE.entries.find(function(en){ return en.employeeId===emp.id && !en.clockOut; });
-    /* One merged job list. Office staff get all of it; the fab crew get only the jobs
-       column M marks active, so prospective work never reaches a shop tablet. */
-    var isOffice = (emp.employeeType==='office');
-    var activeJobs = sortJobsAscending(STATE.jobs.filter(function(j){
-      return j.active && (isOffice || isFabVisible(j));
-    }));
+    var empAudience = (emp.employeeType==='office') ? 'office' : 'shop';
+    var activeJobs = STATE.jobs.filter(function(j){ return j.active && (j.audience||'shop')===empAudience; });
     var manualEntryBtn = emp.canManualEntry ? '<button class="bigbtn secondary" data-action="open-manual-entry">Log time for a crew member</button>' : '';
     var historyBtn = '<button class="bigbtn secondary" data-action="open-history">View my history</button>';
-    var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff">Request time off</button>';
 
     if(activeJobs.length===0){
       return '<div class="action-view"><span class="backlink" data-action="action-cancel">&larr; Back</span>'+
         '<div class="action-view-scroll"><div class="empty-state"><b>No jobs set up</b>Ask an admin to add jobs before clocking in.</div></div>'+
-        '<div class="actionbtns">'+historyBtn+timeOffBtn+manualEntryBtn+'</div>'+
+        '<div class="actionbtns">'+historyBtn+manualEntryBtn+'</div>'+
         '</div>';
     }
 
@@ -1880,7 +1283,7 @@
             (j.description?'<span class="jobdesc">'+esc(j.description)+'</span>':'')+
             '<span class="jobsub">Clock in</span></div>';
         }).join('')+'</div></div>'+
-        '<div class="actionbtns">'+historyBtn+timeOffBtn+manualEntryBtn+'</div>'+
+        '<div class="actionbtns">'+historyBtn+manualEntryBtn+'</div>'+
         '</div>';
     }
 
@@ -1904,13 +1307,12 @@
       lunchBanner+
       '<div class="status-hero"><p class="greetname">'+esc(emp.name)+'</p>'+
       '<p class="statusline">On <b>'+esc(open.jobName)+'</b> since '+fmtTime(open.clockIn)+'</p>'+
-      (currentJob && currentJob.description ? '<p class="statusline" style="margin-top:4px;font-size:13px;color:#797979;">'+esc(currentJob.description)+'</p>' : '')+
+      (currentJob && currentJob.description ? '<p class="statusline" style="margin-top:4px;font-size:13px;color:#8a7f68;">'+esc(currentJob.description)+'</p>' : '')+
       '</div>'+
       '<div class="actionbtns">'+
         '<button class="bigbtn secondary" data-action="show-transfer">Transfer to another job</button>'+
         '<button class="bigbtn primary" data-action="do-clockout">'+(lunchDue?'Clock Out for Lunch':'Clock out')+'</button>'+
         historyBtn+
-        timeOffBtn+
         manualEntryBtn+
       '</div></div></div>';
   }
@@ -1926,8 +1328,7 @@
     if(!emp || !emp.canManualEntry){ STATE.view='rack'; return renderRack(); }
     var crewOptions = STATE.employees.filter(function(e){ return e.active; })
       .sort(function(a,b){ return a.name.localeCompare(b.name); });
-    /* Logging time for a crew member, so this follows the fab crew's own visibility. */
-    var shopJobs = sortJobsAscending(STATE.jobs.filter(function(j){ return j.active && isFabVisible(j); }));
+    var shopJobs = STATE.jobs.filter(function(j){ return j.active && (j.audience||'shop')==='shop'; });
     var nowVal = toLocalInputVal(new Date().toISOString());
     return '<div class="action-view"><span class="backlink" data-action="manualentry-back">&larr; Back</span>'+
       '<div class="action-view-scroll">'+
@@ -1967,7 +1368,6 @@
       clockIn:clockIn, clockOut:clockOut, completedTasks:[], enteredBy: loggedBy ? loggedBy.name : null };
     mutateEntries(function(list){ return list.concat([entry]); }).then(function(updated){
       STATE.entries = updated; STATE.manualEntryError=null; STATE.manualEntrySavedName=emp.name; render();
-      pushDayForEmployee(emp.id, clockIn);
     });
   }
 
@@ -1980,67 +1380,6 @@
     return STATE.entries.filter(function(en){ return en.employeeId===empId && new Date(en.clockIn) >= since; })
       .sort(function(a,b){ return new Date(b.clockIn)-new Date(a.clockIn); });
   }
-  function timeOffStatusBadge(r){
-    var map = {
-      pending:  ['Pending review', 'var(--gold-dim)', 'var(--card)'],
-      approved: ['Approved', '#fff', 'var(--olive)'],
-      rejected: ['Not approved', '#fff', 'var(--rust)'],
-      countered:['Alternate dates suggested', '#fff', 'var(--gold-dim)'],
-      declined: ['Counter declined', '#fff', '#8b8d8f']
-    };
-    var m = map[r.status] || [r.status, '#333', '#eee'];
-    return '<span class="badge" style="color:'+m[1]+';background:'+m[2]+';">'+esc(m[0])+'</span>';
-  }
-  function renderTimeOffRequest(){
-    var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
-    if(!emp){ STATE.view='rack'; return renderRack(); }
-    var mine = STATE.timeOffRequests.filter(function(r){ return r.employeeId===emp.id; })
-      .sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
-
-    var typeOptions = TIME_OFF_TYPES.map(function(t){ return '<option value="'+t.code+'">'+t.label+'</option>'; }).join('');
-    var formHtml = '<div class="inlineform" style="max-width:560px;width:100%;">'+
-      '<div class="field"><label>From</label><input id="timeOffFromInput" type="date" value="'+esc(todayYmd())+'"></div>'+
-      '<div class="field"><label>To</label><input id="timeOffToInput" type="date" value="'+esc(todayYmd())+'"></div>'+
-      '<div class="field" style="min-width:140px;"><label>Type</label><select id="timeOffTypeInput">'+typeOptions+'</select></div>'+
-      '<div class="field" style="flex:1;min-width:220px;"><label>Note (optional)</label>'+
-      '<input id="timeOffNoteInput" type="text" placeholder="Anything your admin should know"></div>'+
-      (STATE.timeOffFormError?'<div class="formerr">'+esc(STATE.timeOffFormError)+'</div>':'')+
-      '<div class="formbtns"><button class="save" data-action="timeoff-submit">Submit request</button></div></div>';
-
-    var rows = mine.map(function(r){
-      var counterBlock = '';
-      if(r.status==='countered'){
-        counterBlock = '<div style="margin-top:6px;padding:8px 10px;background:var(--card);border:1px solid var(--line);border-radius:8px;">'+
-          '<b>Suggested instead:</b> '+esc(fmtYmdRange(r.counterFrom, r.counterTo))+
-          (r.counterNote?('<div style="margin-top:2px;color:#797979;">'+esc(r.counterNote)+'</div>'):'')+
-          '<div class="formbtns" style="margin-top:8px;">'+
-            '<button class="save" data-action="timeoff-accept-counter" data-id="'+r.id+'">Accept these dates</button>'+
-            '<button class="cancel" data-action="timeoff-decline-counter" data-id="'+r.id+'">Decline</button>'+
-          '</div></div>';
-      } else if(r.status==='rejected' && r.adminNote){
-        counterBlock = '<div style="margin-top:6px;font-size:13px;color:#797979;">'+esc(r.adminNote)+'</div>';
-      }
-      return '<div style="padding:12px 0;border-top:1px solid var(--line);">'+
-        '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">'+
-          '<div><b>'+esc(fmtYmdRange(r.from,r.to))+'</b> &middot; '+esc(timeOffTypeLabel(r.type))+
-          ' <span style="color:#797979;">('+ymdNights(r.from,r.to)+' day'+(ymdNights(r.from,r.to)===1?'':'s')+')</span></div>'+
-          timeOffStatusBadge(r)+
-        '</div>'+
-        (r.note?'<div style="margin-top:4px;color:#797979;font-size:13px;">'+esc(r.note)+'</div>':'')+
-        counterBlock+
-      '</div>';
-    }).join('');
-
-    return '<div class="action-view"><span class="backlink" data-action="timeoff-cancel">&larr; Back</span>'+
-      '<div class="action-view-scroll">'+
-      '<div class="status-hero"><p class="greetname">Request time off</p><p class="statusline">'+esc(emp.name)+'</p></div>'+
-      (STATE.timeOffSavedMsg?'<div class="formerr" style="color:var(--olive);font-weight:600;">&#10003; '+esc(STATE.timeOffSavedMsg)+'</div>':'')+
-      formHtml+
-      '<div class="admin-section-head" style="margin-top:24px;"><h2>Your requests</h2></div>'+
-      (rows || '<div class="empty-state">No requests yet.</div>')+
-      '</div></div>';
-  }
-
   function renderMyHistory(){
     var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
     if(!emp){ STATE.view='rack'; return renderRack(); }
@@ -2075,7 +1414,7 @@
       return '<div style="padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;">'+
         '<div style="display:flex;justify-content:space-between;gap:10px;font-weight:600;">'+
         '<span>'+fmtDateShort(en.clockIn)+' — '+esc(en.jobName)+'</span><span style="white-space:nowrap;">'+hoursStr+'</span></div>'+
-        '<div style="font-size:13px;color:#797979;margin-top:2px;">'+fmtTime(en.clockIn)+' – '+(en.clockOut?fmtTime(en.clockOut):'active')+'</div>'+
+        '<div style="font-size:13px;color:#8a7f68;margin-top:2px;">'+fmtTime(en.clockIn)+' – '+(en.clockOut?fmtTime(en.clockOut):'active')+'</div>'+
         flagRow+
         '</div>';
     }).join('');
@@ -2107,21 +1446,6 @@
       (rows || '<div class="empty-state">No clocked time in this range.</div>')+
       emailSection+
       '</div></div>';
-  }
-  function onTimeOffSubmit(){
-    var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
-    if(!emp){ return; }
-    var from = document.getElementById('timeOffFromInput').value;
-    var to = document.getElementById('timeOffToInput').value;
-    var type = document.getElementById('timeOffTypeInput').value;
-    var note = document.getElementById('timeOffNoteInput').value;
-    if(!from || !to){ STATE.timeOffFormError='Pick both a start and end date.'; render(); return; }
-    if(to < from){ STATE.timeOffFormError='End date can\u2019t be before the start date.'; render(); return; }
-    STATE.timeOffFormError=null;
-    submitTimeOffRequest(emp, from, to, type, note).then(function(){
-      STATE.timeOffSavedMsg = 'Request sent. You\u2019ll see a decision here once an admin reviews it.';
-      render();
-    });
   }
   function onHistoryFlagSubmit(entryId){
     var noteEl = document.getElementById('historyFlagNoteInput');
@@ -2260,14 +1584,9 @@
     var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
     var job = STATE.jobs.find(function(j){ return j.id===jobId; });
     if(!emp||!job){ STATE.busy=false; return; }
-    var nowIso = new Date().toISOString();
-    var entry = { id:uid('ent'), employeeId:emp.id, employeeName:emp.name, jobId:job.id, jobName:job.name, clockIn:nowIso, clockOut:null, completedTasks:[] };
-    // Checked against the list as it stands right now, before this entry joins it - otherwise
-    // the new entry would always match itself and "first entry today" would mean nothing.
-    var flagLate = STATE.lateAlertEnabled && isFirstEntryToday(emp.id, nowIso) && isLateArrival(nowIso);
+    var entry = { id:uid('ent'), employeeId:emp.id, employeeName:emp.name, jobId:job.id, jobName:job.name, clockIn:new Date().toISOString(), clockOut:null, completedTasks:[] };
     mutateEntries(function(list){ return list.concat([entry]); }).then(function(updated){
-      STATE.entries = updated; STATE.busy=false;
-      if(flagLate) showLateAlert(emp, nowIso); else showStamp('in', 'Clocked in', job.name);
+      STATE.entries = updated; STATE.busy=false; showStamp('in', 'Clocked in', job.name);
     });
   }
   function doTransfer(newJobId, completedTasks){
@@ -2284,7 +1603,6 @@
       return updated;
     }).then(function(updated){
       STATE.entries = updated; STATE.busy=false; showStamp('transfer', 'Transferred', job.name);
-      pushDayForEmployee(emp.id, now);
     });
   }
   function doClockOut(completedTasks){
@@ -2298,7 +1616,6 @@
       });
     }).then(function(updated){
       STATE.entries = updated; STATE.busy=false; showStamp('out', 'Clocked out', null);
-      pushDayForEmployee(emp.id, now);
     });
   }
 
@@ -2374,13 +1691,12 @@
 
   function renderAdmin(){
     return '<div class="admin-view"><div class="admin-topbar">'+
-      '<div class="admin-tabs">'+tabBtn('employees','Employees')+tabBtn('jobs','Jobs')+tabBtn('tasks','Tasks')+tabBtn('timeoff','Time Off')+tabBtn('log','Daily Log')+tabBtn('settings','Settings')+'</div>'+
-      '<button class="admin-exit" data-action="exit-admin">Exit to Kairos 26.6</button>'+
+      '<div class="admin-tabs">'+tabBtn('employees','Employees')+tabBtn('jobs','Jobs')+tabBtn('tasks','Tasks')+tabBtn('log','Daily Log')+tabBtn('settings','Settings')+'</div>'+
+      '<button class="admin-exit" data-action="exit-admin">Exit to Kairos 26.5</button>'+
       '</div><div class="admin-body">'+
       (STATE.adminTab==='employees'?renderEmployeesTab():
        STATE.adminTab==='jobs'?renderJobsTab():
        STATE.adminTab==='tasks'?renderTasksTab():
-       STATE.adminTab==='timeoff'?renderTimeOffAdminTab():
        STATE.adminTab==='log'?renderLogTab():renderSettingsTab())+
       '</div></div>';
   }
@@ -2398,13 +1714,13 @@
         '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
         '<input id="empSourceHeaderCheckbox" type="checkbox" style="width:auto;" '+(es && es.hasHeader===false?'':'checked')+'> First row is a header</label></div>'+
         (STATE.employeeSourceError?'<div class="formerr">'+esc(STATE.employeeSourceError)+'</div>':'')+
-        '<div class="formerr" style="color:#797979;font-weight:500;">If no PIN column is set, new people from the sheet start on the shared default PIN ('+DEFAULT_EMPLOYEE_PIN+') and are prompted to set their own the first time they log in.</div>'+
+        '<div class="formerr" style="color:#8a7f68;font-weight:500;">If no PIN column is set, new people from the sheet start on the shared default PIN ('+DEFAULT_EMPLOYEE_PIN+') and are prompted to set their own the first time they log in.</div>'+
         '<div class="formbtns"><button class="save" data-action="empsource-save">Save &amp; Sync</button>'+
         '<button class="cancel" data-action="empsource-setup-cancel">Cancel</button></div></div>';
     }
     if(!es){
       return '<div class="inlineform" style="align-items:center;">'+
-        '<div style="flex:1;font-size:13px;color:#797979;min-width:220px;">Keep your roster in sync with a Google Sheet instead of adding people one by one.</div>'+
+        '<div style="flex:1;font-size:13px;color:#8a7f68;min-width:220px;">Keep your roster in sync with a Google Sheet instead of adding people one by one.</div>'+
         '<button class="addbtn" data-action="empsource-setup-open">Connect a Google Sheet</button></div>';
     }
     var statusText = STATE.empSyncStatus==='syncing' ? 'Syncing&hellip;' :
@@ -2413,7 +1729,7 @@
     return '<div class="inlineform" style="align-items:center;">'+
       '<div style="flex:1;min-width:220px;">'+
       '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);">Synced from Google Sheet</div>'+
-      '<div style="font-size:12px;color:'+(STATE.empSyncStatus==='error'?'var(--rust)':'#797979')+';margin-top:2px;">'+statusText+'</div></div>'+
+      '<div style="font-size:12px;color:'+(STATE.empSyncStatus==='error'?'var(--rust)':'#8a7f68')+';margin-top:2px;">'+statusText+'</div></div>'+
       '<button class="iconbtn" data-action="empsource-sync-now">Sync now</button>'+
       '<button class="iconbtn" data-action="empsource-setup-open">Edit</button>'+
       '<button class="iconbtn danger" data-action="empsource-disconnect">Disconnect</button></div>';
@@ -2480,18 +1796,15 @@
         '<input id="jobSourceDescColInput" type="text" inputmode="numeric" value="'+(js&&js.descColumnIndex?js.descColumnIndex:'')+'" placeholder="blank = none"></div>'+
         '<div class="field" style="min-width:70px;"><label>After-hours col # (opt.)</label>'+
         '<input id="jobSourceAfterHoursColInput" type="text" inputmode="numeric" value="'+(js&&js.afterHoursColumnIndex?js.afterHoursColumnIndex:'')+'" placeholder="blank = none"></div>'+
-        '<div class="field" style="min-width:70px;"><label>Status col # (opt.)</label>'+
-        '<input id="jobSourceStatusColInput" type="text" inputmode="numeric" value="'+(js&&js.statusColumnIndex?js.statusColumnIndex:'')+'" placeholder="blank = none"></div>'+
         '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
         '<input id="jobSourceHeaderCheckbox" type="checkbox" style="width:auto;" '+(js && js.hasHeader===false?'':'checked')+'> First row is a header</label></div>'+
         (STATE.jobSourceError?'<div class="formerr">'+esc(STATE.jobSourceError)+'</div>':'')+
-        '<div class="formerr" style="color:#797979;font-weight:500;">Status column: A for active, P for prospective. Only active jobs reach the shop-floor tablets; office staff see the whole list. Blank counts as active.</div>'+
         '<div class="formbtns"><button class="save" data-action="jobsource-save">Save &amp; Sync</button>'+
         '<button class="cancel" data-action="jobsource-setup-cancel">Cancel</button></div></div>';
     }
     if(!js){
       return '<div class="inlineform" style="align-items:center;">'+
-        '<div style="flex:1;font-size:13px;color:#797979;min-width:220px;">Keep your active job list in sync with a Google Sheet instead of adding jobs one by one.</div>'+
+        '<div style="flex:1;font-size:13px;color:#8a7f68;min-width:220px;">Keep your active job list in sync with a Google Sheet instead of adding jobs one by one.</div>'+
         '<button class="addbtn" data-action="jobsource-setup-open">Connect a Google Sheet</button></div>';
     }
     var statusText = STATE.jobSyncStatus==='syncing' ? 'Syncing&hellip;' :
@@ -2500,40 +1813,55 @@
     return '<div class="inlineform" style="align-items:center;">'+
       '<div style="flex:1;min-width:220px;">'+
       '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);">Synced from Google Sheet</div>'+
-      '<div style="font-size:12px;color:'+(STATE.jobSyncStatus==='error'?'var(--rust)':'#797979')+';margin-top:2px;">'+statusText+'</div></div>'+
+      '<div style="font-size:12px;color:'+(STATE.jobSyncStatus==='error'?'var(--rust)':'#8a7f68')+';margin-top:2px;">'+statusText+'</div></div>'+
       '<button class="iconbtn" data-action="jobsource-sync-now">Sync now</button>'+
       '<button class="iconbtn" data-action="jobsource-setup-open">Edit</button>'+
       '<button class="iconbtn danger" data-action="jobsource-disconnect">Disconnect</button></div>';
   }
 
+  function renderOfficeJobSourcePanel(){
+    var js = STATE.officeJobSource;
+    if(STATE.officeJobSourceFormOpen){
+      return '<div class="inlineform">'+
+        '<div class="field" style="min-width:280px;flex:1;"><label>Google Sheet link</label>'+
+        '<input id="officeJobSourceUrlInput" type="text" value="'+(js?esc(js.inputUrl||''):'')+'" placeholder="Paste the sheet URL"></div>'+
+        '<div class="field" style="min-width:70px;"><label>Name column #</label>'+
+        '<input id="officeJobSourceColInput" type="text" inputmode="numeric" value="'+(js?js.columnIndex:1)+'"></div>'+
+        '<div class="field" style="min-width:70px;"><label>Desc. column # (opt.)</label>'+
+        '<input id="officeJobSourceDescColInput" type="text" inputmode="numeric" value="'+(js&&js.descColumnIndex?js.descColumnIndex:'')+'" placeholder="blank = none"></div>'+
+        '<div class="field" style="min-width:70px;"><label>After-hours col # (opt.)</label>'+
+        '<input id="officeJobSourceAfterHoursColInput" type="text" inputmode="numeric" value="'+(js&&js.afterHoursColumnIndex?js.afterHoursColumnIndex:'')+'" placeholder="blank = none"></div>'+
+        '<div class="field" style="min-width:70px;"><label>Quote/prospective col # (opt.)</label>'+
+        '<input id="officeJobSourceQuoteColInput" type="text" inputmode="numeric" value="'+(js&&js.quoteColumnIndex?js.quoteColumnIndex:'')+'" placeholder="blank = none"></div>'+
+        '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
+        '<input id="officeJobSourceHeaderCheckbox" type="checkbox" style="width:auto;" '+(js && js.hasHeader===false?'':'checked')+'> First row is a header</label></div>'+
+        (STATE.officeJobSourceError?'<div class="formerr">'+esc(STATE.officeJobSourceError)+'</div>':'')+
+        '<div class="formerr" style="color:#8a7f68;font-weight:500;">Mark the quote/prospective column with Y for rows that are quotes rather than active jobs, so office time on them is tracked separately.</div>'+
+        '<div class="formbtns"><button class="save" data-action="officejobsource-save">Save &amp; Sync</button>'+
+        '<button class="cancel" data-action="officejobsource-setup-cancel">Cancel</button></div></div>';
+    }
+    if(!js){
+      return '<div class="inlineform" style="align-items:center;">'+
+        '<div style="flex:1;font-size:13px;color:#8a7f68;min-width:220px;">Keep the office job/quote list in sync with a separate Google Sheet.</div>'+
+        '<button class="addbtn" data-action="officejobsource-setup-open">Connect a Google Sheet</button></div>';
+    }
+    var statusText = STATE.officeJobSyncStatus==='syncing' ? 'Syncing&hellip;' :
+      STATE.officeJobSyncStatus==='error' ? ('&#9888; '+esc(STATE.officeJobSyncError||'Sync error')) :
+      (js.lastSyncAt ? ('&#10003; Last synced '+fmtTime(js.lastSyncAt)+' on '+fmtDateShort(js.lastSyncAt)) : 'Not synced yet');
+    return '<div class="inlineform" style="align-items:center;">'+
+      '<div style="flex:1;min-width:220px;">'+
+      '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);">Synced from Google Sheet</div>'+
+      '<div style="font-size:12px;color:'+(STATE.officeJobSyncStatus==='error'?'var(--rust)':'#8a7f68')+';margin-top:2px;">'+statusText+'</div></div>'+
+      '<button class="iconbtn" data-action="officejobsource-sync-now">Sync now</button>'+
+      '<button class="iconbtn" data-action="officejobsource-setup-open">Edit</button>'+
+      '<button class="iconbtn danger" data-action="officejobsource-disconnect">Disconnect</button></div>';
+  }
+
   function renderJobsTab(){
-    var list = sortJobsAscending(STATE.jobs).sort(function(a,b){ return (b.active-a.active); });
+    var list = STATE.jobs.slice().sort(function(a,b){ return (b.active-a.active) || a.name.localeCompare(b.name); });
     var formOpen = STATE.jobFormOpen;
     var editing = STATE.editingJobId ? STATE.jobs.find(function(j){ return j.id===STATE.editingJobId; }) : null;
-    var editStatus = editing ? (jobStatusCode(editing) || ACTIVE_JOB_STATUS) : ACTIVE_JOB_STATUS;
-
-    /* Left over from the shop/office two-sheet era: a job number that existed in both old
-       sheets got two separate job records, one per audience. Both now sync correctly, but
-       there are still two rows for one job number until someone deactivates the older of
-       the pair - that's a manual call (which one has the entries worth keeping attached to
-       it), not something to silently merge automatically. */
-    var nameCounts = {};
-    list.forEach(function(j){ if(j.active) nameCounts[jobIdentityKey(j.name)] = (nameCounts[jobIdentityKey(j.name)]||0)+1; });
-    var dupeNames = Object.keys(nameCounts).filter(function(k){ return nameCounts[k]>1; });
-    var mergePlans = dupeNames.length ? planJobMerges() : [];
-    var dupeWarning = dupeNames.length
-      ? '<div class="formerr" style="margin-bottom:14px;">'+
-        '<div>'+dupeNames.length+' job number'+(dupeNames.length===1?'':'s')+' still show'+(dupeNames.length===1?'s':'')+
-        ' as more than one row: '+mergePlans.map(function(p){ return esc(p.name); }).join(', ')+
-        '. Both rows stay correctly synced now, but merging collapses each pair into one, moving '+
-        mergePlans.reduce(function(s,p){return s+p.entriesMoved;},0)+' time entr'+
-        (mergePlans.reduce(function(s,p){return s+p.entriesMoved;},0)===1?'y':'ies')+' onto whichever id already has the most history.</div>'+
-        (STATE.jobMergeMsg?'<div style="margin-top:6px;font-weight:700;color:'+(STATE.jobMergeMsg.ok?'var(--olive)':'var(--rust)')+';">'+esc(STATE.jobMergeMsg.text)+'</div>':'')+
-        '<div class="formbtns" style="margin-top:8px;">'+
-          '<button class="save" data-action="admin-merge-duplicate-jobs" '+(STATE.jobMergeBusy?'disabled':'')+'>'+
-            (STATE.jobMergeBusy?'Merging&hellip;':'Merge duplicate job numbers')+'</button>'+
-        '</div></div>'
-      : '';
+    var editAudience = editing ? (editing.audience||'shop') : 'shop';
 
     var formHtml = '';
     if(formOpen){
@@ -2542,11 +1870,13 @@
         '<input id="jobNameInput" type="text" value="'+(editing?esc(editing.name):'')+'" placeholder="e.g. Site 12 — Roofing"></div>'+
         '<div class="field" style="flex:1;min-width:220px;"><label>Description (optional)</label>'+
         '<input id="jobDescInput" type="text" value="'+(editing?esc(editing.description||''):'')+'" placeholder="e.g. 412 Elm St — enter via side gate"></div>'+
-        '<div class="field" style="min-width:140px;"><label>Status</label>'+
-        '<select id="jobStatusInput"><option value="A" '+(editStatus==='A'?'selected':'')+'>Active &mdash; shop floor sees it</option>'+
-        '<option value="P" '+(editStatus==='P'?'selected':'')+'>Prospective &mdash; office only</option></select></div>'+
+        '<div class="field" style="min-width:120px;"><label>Audience</label>'+
+        '<select id="jobAudienceInput"><option value="shop" '+(editAudience==='shop'?'selected':'')+'>Shop</option>'+
+        '<option value="office" '+(editAudience==='office'?'selected':'')+'>Office</option></select></div>'+
         '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
         '<input id="jobAfterHoursInput" type="checkbox" style="width:auto;" '+(editing&&editing.afterHoursAllowed?'checked':'')+'> Allow after-hours work</label></div>'+
+        '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
+        '<input id="jobIsQuoteInput" type="checkbox" style="width:auto;" '+(editing&&editing.isQuote?'checked':'')+'> Prospective job / quote (office only)</label></div>'+
         (STATE.jobFormError?'<div class="formerr">'+esc(STATE.jobFormError)+'</div>':'')+
         '<div class="formbtns"><button class="save" data-action="admin-job-save" data-id="'+(editing?editing.id:'')+'">Save</button>'+
         '<button class="cancel" data-action="admin-job-cancel-form">Cancel</button></div></div>';
@@ -2555,15 +1885,12 @@
     var rows = list.map(function(job){
       var hasEntries = STATE.entries.some(function(en){ return en.jobId===job.id; });
       var fromSheet = job.source==='sheet';
-      var statusCode = jobStatusCode(job);
-      var statusUnset = statusCode === '';
-      var fabSees = isFabVisible(job);
+      var audience = job.audience||'shop';
       return '<tr class="'+(job.active?'':'inactive')+'"><td>'+esc(job.name)+
-        (job.description?'<div style="font-size:12px;color:#797979;margin-top:2px;">'+esc(job.description)+'</div>':'')+
+        (job.description?'<div style="font-size:12px;color:#8a7f68;margin-top:2px;">'+esc(job.description)+'</div>':'')+
         (job.afterHoursAllowed?'<div style="font-size:12px;color:var(--rust);margin-top:2px;font-weight:600;">After-hours allowed</div>':'')+
         (job.isQuote?'<div style="font-size:12px;color:var(--gold-dim);margin-top:2px;font-weight:600;">Quote / prospective</div>':'')+'</td>'+
-        '<td><span class="badge" style="background:'+(statusUnset?'#DEDEDE':(fabSees?'var(--olive-dim)':'#eee'))+';color:'+(statusUnset?'var(--rust)':(fabSees?'var(--olive)':'#666'))+';">'+esc(jobStatusLabel(job))+'</span>'+
-        (statusUnset?'<div style="font-size:11px;color:var(--rust);margin-top:2px;">Column M blank &mdash; treated as active</div>':'')+'</td>'+
+        '<td><span class="badge" style="background:'+(audience==='office'?'var(--olive-dim)':'#eee')+';color:'+(audience==='office'?'var(--olive)':'#666')+';">'+(audience==='office'?'Office':'Shop')+'</span></td>'+
         '<td><span class="badge" style="background:'+(fromSheet?'var(--olive-dim)':'#eee')+';color:'+(fromSheet?'var(--olive)':'#999')+';">'+(fromSheet?'Sheet':'Manual')+'</span></td>'+
         '<td><span class="badge '+(job.active?'active':'inactive')+'">'+(job.active?'Active':'Inactive')+'</span></td>'+
         '<td><button class="iconbtn" data-action="admin-job-edit" data-id="'+job.id+'">Edit</button>'+
@@ -2572,12 +1899,13 @@
     }).join('');
 
     return '<div class="admin-section-head"><h2>Jobs</h2>'+(!formOpen?'<button class="addbtn" data-action="admin-job-new">+ Add job manually</button>':'')+'</div>'+
-      dupeWarning+
-      '<div class="subhead">Job list &mdash; one sheet for shop and office</div>'+
+      '<div class="subhead">Shop jobs</div>'+
       renderJobSourcePanel()+
+      '<div class="subhead">Office jobs &amp; quotes</div>'+
+      renderOfficeJobSourcePanel()+
       formHtml+
       (list.length===0?'<div class="empty-state"><b>No jobs yet</b>Connect a Google Sheet above, or add jobs manually.</div>':
-        '<table class="datatable"><thead><tr><th>Job number</th><th>Job status</th><th>Source</th><th>Active</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>');
+        '<table class="datatable"><thead><tr><th>Job name</th><th>Audience</th><th>Source</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>');
   }
 
   function renderTaskSourcePanel(){
@@ -2596,7 +1924,7 @@
     }
     if(!ts){
       return '<div class="inlineform" style="align-items:center;">'+
-        '<div style="flex:1;font-size:13px;color:#797979;min-width:220px;">Keep your task checklist in sync with a Google Sheet instead of adding tasks one by one.</div>'+
+        '<div style="flex:1;font-size:13px;color:#8a7f68;min-width:220px;">Keep your task checklist in sync with a Google Sheet instead of adding tasks one by one.</div>'+
         '<button class="addbtn" data-action="tasksource-setup-open">Connect a Google Sheet</button></div>';
     }
     var statusText = STATE.taskSyncStatus==='syncing' ? 'Syncing&hellip;' :
@@ -2605,7 +1933,7 @@
     return '<div class="inlineform" style="align-items:center;">'+
       '<div style="flex:1;min-width:220px;">'+
       '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);">Synced from Google Sheet</div>'+
-      '<div style="font-size:12px;color:'+(STATE.taskSyncStatus==='error'?'var(--rust)':'#797979')+';margin-top:2px;">'+statusText+'</div></div>'+
+      '<div style="font-size:12px;color:'+(STATE.taskSyncStatus==='error'?'var(--rust)':'#8a7f68')+';margin-top:2px;">'+statusText+'</div></div>'+
       '<button class="iconbtn" data-action="tasksource-sync-now">Sync now</button>'+
       '<button class="iconbtn" data-action="tasksource-setup-open">Edit</button>'+
       '<button class="iconbtn danger" data-action="tasksource-disconnect">Disconnect</button></div>';
@@ -2666,7 +1994,7 @@
     }
     if(!STATE.sheetWriteUrl){
       return '<div class="inlineform" style="align-items:center;">'+
-        '<div style="flex:1;font-size:13px;color:#797979;min-width:220px;">Send this same data straight into a Google Sheet instead of (or in addition to) downloading a CSV.</div>'+
+        '<div style="flex:1;font-size:13px;color:#8a7f68;min-width:220px;">Send this same data straight into a Google Sheet instead of (or in addition to) downloading a CSV.</div>'+
         '<button class="addbtn" style="background:var(--card);color:var(--oxblood);border:1px solid var(--line);" data-action="sheetwrite-setup-open">Connect a Google Sheet</button></div>';
     }
     var statusText = STATE.sheetWriteStatus==='sending' ? 'Sending&hellip;' :
@@ -2675,102 +2003,10 @@
     return '<div class="inlineform" style="align-items:center;">'+
       '<div style="flex:1;min-width:220px;">'+
       '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);">Send to Google Sheet</div>'+
-      '<div style="font-size:12px;color:'+(STATE.sheetWriteStatus==='error'?'var(--rust)':'#797979')+';margin-top:2px;">'+statusText+'</div></div>'+
+      '<div style="font-size:12px;color:'+(STATE.sheetWriteStatus==='error'?'var(--rust)':'#8a7f68')+';margin-top:2px;">'+statusText+'</div></div>'+
       '<button class="addbtn" data-action="sheetwrite-send">Send this range</button>'+
       '<button class="iconbtn" data-action="sheetwrite-setup-open">Edit</button>'+
       '<button class="iconbtn danger" data-action="sheetwrite-disconnect">Disconnect</button></div>';
-  }
-
-  var TIME_OFF_TYPE_COLOR = {vacation:'var(--olive)', sick:'var(--rust)', personal:'var(--gold-dim)', other:'#8b8d8f'};
-  function timeOffCalMonthDate(){ return STATE.timeOffCalMonth || new Date(new Date().getFullYear(), new Date().getMonth(), 1); }
-  function renderTimeOffActorPicker(){
-    return '<div style="margin-bottom:16px;">'+
-      '<span style="font-family:var(--display-text);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#797979;margin-right:10px;">Acting as</span>'+
-      TIME_OFF_ADMIN_ACTORS.map(function(name){
-        return '<button class="iconbtn" style="'+(STATE.timeOffActor===name?'background:var(--oxblood);color:#fff;':'')+'" data-action="timeoff-set-actor" data-id="'+esc(name)+'">'+esc(name)+'</button>';
-      }).join('')+
-      (!STATE.timeOffActor?'<span style="color:var(--rust);font-size:12px;margin-left:8px;">Pick who\u2019s deciding before approving, rejecting, or countering.</span>':'')+
-      '</div>';
-  }
-  function renderTimeOffCalendar(){
-    var monthDate = timeOffCalMonthDate();
-    var year = monthDate.getFullYear(), month0 = monthDate.getMonth();
-    var approved = approvedTimeOffCoveringMonth(year, month0);
-    var firstWeekday = new Date(year, month0, 1).getDay();
-    var daysInMonth = new Date(year, month0+1, 0).getDate();
-    var cells = [];
-    for(var i=0;i<firstWeekday;i++) cells.push('<div class="timeoff-cal-cell empty"></div>');
-    for(var d=1; d<=daysInMonth; d++){
-      var ymd = dateKeyLocal(new Date(year, month0, d));
-      var chips = approved.filter(function(r){ return r.from<=ymd && r.to>=ymd; })
-        .map(function(r){
-          var first = r.employeeName.split(' ')[0];
-          return '<div class="timeoff-chip" style="background:'+(TIME_OFF_TYPE_COLOR[r.type]||'#8b8d8f')+';" title="'+esc(r.employeeName+' - '+timeOffTypeLabel(r.type))+'">'+esc(first)+'</div>';
-        }).join('');
-      cells.push('<div class="timeoff-cal-cell"><div class="timeoff-cal-daynum">'+d+'</div>'+chips+'</div>');
-    }
-    var weekHead = ['S','M','T','W','T','F','S'].map(function(w){ return '<div class="timeoff-cal-cell head">'+w+'</div>'; }).join('');
-    return '<div class="timeoff-cal">'+
-      '<div class="timeoff-cal-nav">'+
-        '<button class="iconbtn" data-action="timeoff-cal-prev">&larr;</button>'+
-        '<b>'+esc(monthDate.toLocaleDateString([], {month:'long', year:'numeric'}))+'</b>'+
-        '<button class="iconbtn" data-action="timeoff-cal-next">Next &rarr;</button>'+
-      '</div>'+
-      '<div class="timeoff-cal-grid">'+weekHead+cells.join('')+'</div>'+
-      (approved.length===0?'<p class="settingsnote" style="margin-top:10px;">No approved time off on the calendar this month.</p>':'')+
-      '</div>';
-  }
-  function renderTimeOffCounterForm(r){
-    return '<div class="inlineform" style="margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:8px;">'+
-      '<div class="field"><label>New from</label><input id="timeOffCounterFrom_'+r.id+'" type="date" value="'+esc(r.from)+'"></div>'+
-      '<div class="field"><label>New to</label><input id="timeOffCounterTo_'+r.id+'" type="date" value="'+esc(r.to)+'"></div>'+
-      '<div class="field" style="flex:1;min-width:200px;"><label>Note to employee (optional)</label>'+
-      '<input id="timeOffCounterNote_'+r.id+'" type="text" placeholder="Why the different dates"></div>'+
-      (STATE.timeOffCounterError?'<div class="formerr">'+esc(STATE.timeOffCounterError)+'</div>':'')+
-      '<div class="formbtns">'+
-        '<button class="save" data-action="timeoff-admin-counter-submit" data-id="'+r.id+'">Send suggested dates</button>'+
-        '<button class="cancel" data-action="timeoff-admin-counter-cancel">Cancel</button>'+
-      '</div></div>';
-  }
-  function renderTimeOffQueueRow(r, decided){
-    var actionsHtml = '';
-    if(!decided){
-      if(STATE.timeOffCounterOpenId===r.id){
-        actionsHtml = renderTimeOffCounterForm(r);
-      } else {
-        actionsHtml = '<div class="formbtns" style="margin-top:8px;">'+
-          '<button class="save" data-action="timeoff-admin-approve" data-id="'+r.id+'">Approve</button>'+
-          '<button class="cancel" data-action="timeoff-admin-reject" data-id="'+r.id+'">Reject</button>'+
-          '<button class="iconbtn" data-action="timeoff-admin-counter-open" data-id="'+r.id+'">Suggest different dates</button>'+
-        '</div>';
-      }
-    } else if(r.decidedBy || r.decidedAt){
-      actionsHtml = '<div style="font-size:12px;color:#797979;margin-top:4px;">'+
-        (r.decidedBy?('by '+esc(r.decidedBy)+' &middot; '):'')+ (r.decidedAt?fmtDateShort(r.decidedAt):'')+
-        (r.adminNote?(' &mdash; '+esc(r.adminNote)):'')+'</div>';
-    }
-    return '<div style="padding:12px 0;border-top:1px solid var(--line);">'+
-      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">'+
-        '<div><b>'+esc(r.employeeName)+'</b> &middot; '+esc(fmtYmdRange(r.from,r.to))+
-        ' <span style="color:#797979;">('+esc(timeOffTypeLabel(r.type))+', '+ymdNights(r.from,r.to)+' day'+(ymdNights(r.from,r.to)===1?'':'s')+')</span></div>'+
-        timeOffStatusBadge(r)+
-      '</div>'+
-      (r.note?'<div style="margin-top:4px;color:#797979;font-size:13px;">'+esc(r.note)+'</div>':'')+
-      actionsHtml+
-    '</div>';
-  }
-  function renderTimeOffAdminTab(){
-    var pending = STATE.timeOffRequests.filter(function(r){ return r.status==='pending'; })
-      .sort(function(a,b){ return a.createdAt.localeCompare(b.createdAt); });
-    var decided = STATE.timeOffRequests.filter(function(r){ return r.status!=='pending'; })
-      .sort(function(a,b){ return (b.decidedAt||b.createdAt).localeCompare(a.decidedAt||a.createdAt); });
-    return '<div class="admin-section-head"><h2>Time Off</h2></div>'+
-      renderTimeOffActorPicker()+
-      renderTimeOffCalendar()+
-      '<div class="admin-section-head" style="margin-top:24px;"><h2>Awaiting a decision ('+pending.length+')</h2></div>'+
-      (pending.length ? pending.map(function(r){ return renderTimeOffQueueRow(r, false); }).join('') : '<div class="empty-state">Nothing pending.</div>')+
-      '<div class="admin-section-head" style="margin-top:24px;"><h2>History</h2></div>'+
-      (decided.length ? decided.map(function(r){ return renderTimeOffQueueRow(r, true); }).join('') : '<div class="empty-state">No decisions yet.</div>');
   }
 
   function renderLogTab(){
@@ -2790,7 +2026,7 @@
         flaggedEntries.map(function(en){
           return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #f0c987;">'+
             '<div style="font-size:13px;"><b>'+esc(en.employeeName)+'</b> — '+fmtDateShort(en.clockIn)+', '+esc(en.jobName)+
-            '<div style="color:#797979;margin-top:2px;">"'+esc(en.flagNote||'')+'"</div></div>'+
+            '<div style="color:#8a7f68;margin-top:2px;">"'+esc(en.flagNote||'')+'"</div></div>'+
             '<div style="white-space:nowrap;"><button class="iconbtn" data-action="log-edit" data-id="'+en.id+'">Edit entry</button>'+
             '<button class="iconbtn" data-action="log-resolve-flag" data-id="'+en.id+'">Resolve</button></div></div>';
         }).join('')+
@@ -2827,7 +2063,7 @@
       if(p.quoteMs>0) regStr += ' <span style="color:var(--gold-dim);font-weight:600;">(quote)</span>';
       var ahStr = p.afterHoursMs>0 ? fmtDuration(p.afterHoursMs) : '—';
       var taskStr = (en.completedTasks && en.completedTasks.length) ? esc(en.completedTasks.join(', ')) : '<span style="color:#c4bba5;">—</span>';
-      var enteredByStr = en.enteredBy ? '<div style="font-size:11px;color:#797979;margin-top:2px;">via '+esc(en.enteredBy)+'</div>' : '';
+      var enteredByStr = en.enteredBy ? '<div style="font-size:11px;color:#8a7f68;margin-top:2px;">via '+esc(en.enteredBy)+'</div>' : '';
       var flagStr = en.flagged ? '<div style="font-size:11px;color:var(--rust);font-weight:600;margin-top:2px;">&#9873; '+esc(en.flagNote||'Flagged')+'</div>' : '';
       return '<tr'+(en.flagged?' style="background:#fff8ec;"':'')+'><td>'+fmtDateShort(en.clockIn)+'</td><td>'+esc(en.employeeName)+enteredByStr+'</td><td>'+esc(en.jobName)+'</td>'+
         '<td>'+fmtTime(en.clockIn)+'</td><td>'+(en.clockOut?fmtTime(en.clockOut):'— active')+'</td><td>'+regStr+'</td><td>'+ahStr+'</td>'+
@@ -2860,64 +2096,7 @@
       '<div class="field"><label>Confirm PIN</label><input id="newAdminPin2" type="text" inputmode="numeric" maxlength="4" placeholder="4 digits"></div>'+
       (STATE.settingsError?'<div class="formerr">'+esc(STATE.settingsError)+'</div>':'')+
       '<div class="formbtns"><button class="save" data-action="admin-save-pin">Save PIN</button></div></div>'+
-      '<p class="settingsnote">This PIN protects the Employees, Jobs and Daily Log screens. Employee PINs are separate and are set per person on the Employees tab.</p>'+
-      renderLateAlertSection()+
-      renderStorageSection();
-  }
-
-  /* One switch, no code change needed to kill it. It's a for-fun feature aimed at whoever's
-     clocking in, on a shared tablet other people can see - worth being able to turn off in one
-     tap if it ever stops landing well for someone. */
-  function renderLateAlertSection(){
-    return '<div class="admin-section-head" style="margin-top:28px;"><h2>Late arrival pick-me-up</h2></div>'+
-      '<p class="settingsnote">Plays a 6-second welcome, a joke, and a chime the first time someone clocks in after 7:15am. '+
-        'Doesn\u2019t trigger on lunch returns or transfers &mdash; only the first clock-in of the day.</p>'+
-      '<div class="formbtns" style="margin-top:8px;">'+
-        '<button class="'+(STATE.lateAlertEnabled?'save':'cancel')+'" data-action="toggle-late-alert">'+
-          (STATE.lateAlertEnabled ? 'On \u2014 tap to turn off' : 'Off \u2014 tap to turn on')+
-        '</button></div>';
-  }
-
-  /* The point of showing the gauge is that the cap has no other warning. Firestore
-     simply refuses the write, Kairos reports a failed sync, and the day's hours are
-     gone. A number on screen is what turns that into something someone notices. */
-  function renderStorageSection(){
-    var pct = entriesFillPct();
-    var months = entriesHeadroomMonths();
-    var due = archivableEntries().length;
-    var gap = rolloffSheetGap();
-    var man = STATE.entryArchiveManifest;
-    var barColour = pct >= 75 ? 'var(--rust)' : pct >= 50 ? '#b8860b' : 'var(--olive)';
-
-    var headroom = months === null
-      ? 'Not enough dated history yet to project a fill date.'
-      : months <= 2
-        ? '<b style="color:var(--rust);">Roughly ' + months + ' month' + (months===1?'':'s') + ' of room left.</b> Roll off now.'
-        : 'Roughly ' + months + ' months of room left at the current rate.';
-
-    return '<div class="admin-section-head" style="margin-top:28px;"><h2>Time entry storage</h2></div>'+
-      '<p class="settingsnote">All time entries live in one Firestore document, and Firestore refuses any document over 1 MB. '+
-        'When that happens clock-ins stop saving and the tablet only reports a sync problem, so this is worth watching.</p>'+
-      '<div style="margin:12px 0 6px;font-weight:700;">'+ (STATE.entries||[]).length +' entries &middot; '+ Math.round(entriesDocBytes()/1024) +' KB of 1024 KB ('+ pct +'%)</div>'+
-      '<div style="height:12px;border-radius:6px;background:#e8e3d6;overflow:hidden;max-width:420px;">'+
-        '<div style="height:100%;width:'+ Math.min(100, pct) +'%;background:'+ barColour +';"></div></div>'+
-      '<p class="settingsnote">'+ headroom +'</p>'+
-      '<p class="settingsnote">Entries finish their working life here and then move to dated archive documents. '+
-        'Kairos reads those only when someone asks for history &mdash; payroll and the Daily Log are unaffected. '+
-        'The keeping period is currently <b>'+ ENTRY_RETENTION_DAYS +' days</b>'+
-        (man && man.retentionDays && man.retentionDays !== ENTRY_RETENTION_DAYS ? ' (last roll-off used '+ man.retentionDays +')' : '') +'.</p>'+
-      (man && man.count ? '<p class="settingsnote"><b>'+ man.count +'</b> entries already archived across '+ man.chunks +' document'+(man.chunks===1?'':'s')+
-        (man.lastRolloffAt ? ', last run '+ fmtDateShort(man.lastRolloffAt) : '') +'.</p>' : '')+
-      (STATE.rolloffMsg ? '<div class="'+(STATE.rolloffMsg.ok?'settingsnote':'formerr')+'" style="margin-top:8px;font-weight:700;">'+ esc(STATE.rolloffMsg.text) +'</div>' : '')+
-      (gap ? '<div class="formerr" style="margin-top:10px;">'+ gap +'</div>' : '')+
-      '<div class="formbtns" style="margin-top:12px;">'+
-        (gap
-          ? '<button class="save" data-action="admin-run-rolloff-anyway" '+(STATE.rolloffBusy?'disabled':'')+'>'+
-              (STATE.rolloffBusy ? 'Moving&hellip;' : 'Archive '+ due +' anyway')+'</button>'
-          : '<button class="save" data-action="admin-run-rolloff" '+(STATE.rolloffBusy || !due ? 'disabled' : '')+'>'+
-              (STATE.rolloffBusy ? 'Moving&hellip;' : due ? 'Move '+ due +' entr'+(due===1?'y':'ies') +' to the archive' : 'Nothing older than '+ ENTRY_RETENTION_DAYS +' days')+
-            '</button>')+
-        '</div>';
+      '<p class="settingsnote">This PIN protects the Employees, Jobs and Daily Log screens. Employee PINs are separate and are set per person on the Employees tab.</p>';
   }
 
   /* ---------------- admin actions ---------------- */
@@ -3008,12 +2187,13 @@
   function onAdminJobSave(editId){
     var name = document.getElementById('jobNameInput').value.trim();
     var description = document.getElementById('jobDescInput').value.trim();
-    var status = document.getElementById('jobStatusInput').value === 'P' ? 'P' : 'A';
+    var audience = document.getElementById('jobAudienceInput').value === 'office' ? 'office' : 'shop';
     var afterHoursAllowed = document.getElementById('jobAfterHoursInput').checked;
+    var isQuote = document.getElementById('jobIsQuoteInput').checked;
     if(!name){ STATE.jobFormError='Enter a job name.'; render(); return; }
     mutateLocal(K.jobs, STATE.jobs, function(list){
-      if(editId) return list.map(function(j){ return j.id===editId?Object.assign({}, j, {name:name, description:description, status:status, afterHoursAllowed:afterHoursAllowed}):j; });
-      return list.concat([{id:uid('job'), name:name, description:description, status:status, afterHoursAllowed:afterHoursAllowed, active:true, source:'manual'}]);
+      if(editId) return list.map(function(j){ return j.id===editId?Object.assign({}, j, {name:name, description:description, audience:audience, afterHoursAllowed:afterHoursAllowed, isQuote:isQuote}):j; });
+      return list.concat([{id:uid('job'), name:name, description:description, audience:audience, afterHoursAllowed:afterHoursAllowed, isQuote:isQuote, active:true, source:'manual'}]);
     }).then(function(updated){
       STATE.jobs = updated; STATE.jobFormOpen=false; STATE.editingJobId=null; STATE.jobFormError=null; render();
     });
@@ -3028,25 +2208,6 @@
     if(!confirm('Delete this job? This cannot be undone.')) return;
     mutateLocal(K.jobs, STATE.jobs, function(list){ return list.filter(function(j){ return j.id!==id; }); })
       .then(function(updated){ STATE.jobs = updated; render(); });
-  }
-  function onAdminMergeDuplicateJobs(){
-    var plans = planJobMerges();
-    if(!plans.length) return;
-    var summary = plans.map(function(p){
-      return p.name+' ('+(p.loserIds.length+1)+' rows \u2192 1'+(p.entriesMoved?', '+p.entriesMoved+' entr'+(p.entriesMoved===1?'y':'ies')+' moved':'')+')';
-    }).join('\n');
-    if(!confirm('Merge these job numbers?\n\n'+summary+'\n\nThis rewrites which job id some time entries point to. It cannot be undone.')) return;
-    STATE.jobMergeBusy = true; STATE.jobMergeMsg = null; render();
-    runJobMerge().then(function(r){
-      STATE.jobMergeBusy = false;
-      STATE.jobMergeMsg = { ok:true, text: 'Merged '+r.merged+' job number'+(r.merged===1?'':'s')+'. '+r.entriesMoved+' time entr'+(r.entriesMoved===1?'y':'ies')+' moved.' };
-      render();
-    }).catch(function(e){
-      console.error('job merge failed', e);
-      STATE.jobMergeBusy = false;
-      STATE.jobMergeMsg = { ok:false, text:'The merge did not finish. Nothing should have moved \u2014 check the Daily Log before retrying.' };
-      render();
-    });
   }
 
   function onAdminTaskSave(editId){
@@ -3074,7 +2235,6 @@
     var colRaw = document.getElementById('jobSourceColInput').value.trim();
     var descColRaw = document.getElementById('jobSourceDescColInput').value.trim();
     var afterHoursColRaw = document.getElementById('jobSourceAfterHoursColInput').value.trim();
-    var statusColRaw = document.getElementById('jobSourceStatusColInput').value.trim();
     var hasHeader = document.getElementById('jobSourceHeaderCheckbox').checked;
     var parsed = parseSheetInput(url);
     if(!parsed){ STATE.jobSourceError = "That doesn't look like a Google Sheets link."; render(); return; }
@@ -3084,9 +2244,7 @@
     if(!descCol || descCol<1) descCol = 0;
     var afterHoursCol = parseInt(afterHoursColRaw, 10);
     if(!afterHoursCol || afterHoursCol<1) afterHoursCol = 0;
-    var statusCol = parseInt(statusColRaw, 10);
-    if(!statusCol || statusCol<1) statusCol = 0;
-    STATE.jobSource = Object.assign({ inputUrl:url, columnIndex:col, descColumnIndex:descCol, afterHoursColumnIndex:afterHoursCol, statusColumnIndex:statusCol, hasHeader:hasHeader, lastSyncAt:null }, parsed);
+    STATE.jobSource = Object.assign({ inputUrl:url, columnIndex:col, descColumnIndex:descCol, afterHoursColumnIndex:afterHoursCol, hasHeader:hasHeader, lastSyncAt:null }, parsed);
     STATE.jobSourceError = null;
     STATE.jobSourceFormOpen = false;
     safeSetJSON(K.jobSource, STATE.jobSource).then(function(){
@@ -3098,6 +2256,37 @@
     if(!confirm('Stop syncing jobs from this Google Sheet? Jobs already on the list will stay as they are.')) return;
     STATE.jobSource = null; STATE.jobSyncStatus='idle'; STATE.jobSyncError=null;
     safeSetJSON(K.jobSource, null).then(render);
+  }
+
+  function onOfficeJobSourceSave(){
+    var url = document.getElementById('officeJobSourceUrlInput').value.trim();
+    var colRaw = document.getElementById('officeJobSourceColInput').value.trim();
+    var descColRaw = document.getElementById('officeJobSourceDescColInput').value.trim();
+    var afterHoursColRaw = document.getElementById('officeJobSourceAfterHoursColInput').value.trim();
+    var quoteColRaw = document.getElementById('officeJobSourceQuoteColInput').value.trim();
+    var hasHeader = document.getElementById('officeJobSourceHeaderCheckbox').checked;
+    var parsed = parseSheetInput(url);
+    if(!parsed){ STATE.officeJobSourceError = "That doesn't look like a Google Sheets link."; render(); return; }
+    var col = parseInt(colRaw, 10);
+    if(!col || col<1) col = 1;
+    var descCol = parseInt(descColRaw, 10);
+    if(!descCol || descCol<1) descCol = 0;
+    var afterHoursCol = parseInt(afterHoursColRaw, 10);
+    if(!afterHoursCol || afterHoursCol<1) afterHoursCol = 0;
+    var quoteCol = parseInt(quoteColRaw, 10);
+    if(!quoteCol || quoteCol<1) quoteCol = 0;
+    STATE.officeJobSource = Object.assign({ inputUrl:url, columnIndex:col, descColumnIndex:descCol, afterHoursColumnIndex:afterHoursCol, quoteColumnIndex:quoteCol, hasHeader:hasHeader, lastSyncAt:null }, parsed);
+    STATE.officeJobSourceError = null;
+    STATE.officeJobSourceFormOpen = false;
+    safeSetJSON(K.officeJobSource, STATE.officeJobSource).then(function(){
+      render();
+      syncOfficeJobsFromSheet(true);
+    });
+  }
+  function onOfficeJobSourceDisconnect(){
+    if(!confirm('Stop syncing office jobs from this Google Sheet? Jobs already on the list will stay as they are.')) return;
+    STATE.officeJobSource = null; STATE.officeJobSyncStatus='idle'; STATE.officeJobSyncError=null;
+    safeSetJSON(K.officeJobSource, null).then(render);
   }
 
   function onLogSaveEdit(id){
@@ -3113,95 +2302,19 @@
       return list.map(function(en){ return en.id===id ? Object.assign({}, en, {jobId:job.id, jobName:job.name, clockIn:clockIn, clockOut:clockOut}) : en; });
     }).then(function(updated){
       STATE.entries = updated; STATE.editingEntryId=null; STATE.logEditError=null; render();
-      sweepToSheet();
     });
   }
   function onLogDelete(id){
     if(!confirm('Delete this time entry? This cannot be undone.')) return;
     mutateEntries(function(list){ return list.filter(function(en){ return en.id!==id; }); })
-      .then(function(updated){ STATE.entries = updated; render(); sweepToSheet(); });
+      .then(function(updated){ STATE.entries = updated; render(); });
   }
   function onLogResolveFlag(id){
     mutateEntries(function(list){
       return list.map(function(en){ return en.id===id ? Object.assign({}, en, {flagged:false, flagNote:null, flaggedAt:null, flaggedBy:null}) : en; });
-    }).then(function(updated){ STATE.entries = updated; render(); sweepToSheet(); });
+    }).then(function(updated){ STATE.entries = updated; render(); });
   }
   var EXPORT_HEADER = ['Date','Employee','Job','Clock In','Clock Out','Regular Hours','After-Hours','Quote Hours','Entered By','Tasks Completed'];
-
-  /* ---------------- Google Sheet push ----------------
-     The workbook is the payroll and job-costing side of the house; Firestore stays the
-     system of record. Three things shape this code and none of them are obvious:
-
-     1. mode:'no-cors' means the tablet can NEVER read the response, so it cannot know
-        whether a push landed. Rather than pretend otherwise, every row carries its entry
-        id and the Apps Script upserts on it - so resending is free and harmless. Pushing
-        on clock-out gives freshness; the periodic sweep below gives correctness, and is
-        what repairs a push that shop wifi swallowed.
-     2. computePayableMap rounds the LAST clock-out of a day and subtracts the lunch
-        window, so one entry's hours change when a later entry the same day appears.
-        Pushing a single entry would therefore write numbers that later go stale, so we
-        always push that person's whole day and let the upsert correct the earlier rows.
-     3. Still-open entries are skipped entirely. A half-finished shift in a payroll tab is
-        worse than a missing one; it gets written when it closes. */
-  var SHEET_HEADER = ['Entry ID','Date','Employee','Job','Clock In','Clock Out',
-    'Regular Hours','After-Hours','Quote Hours','Entered By','Tasks Completed','Flagged'];
-  var SWEEP_DAYS = 14;
-  var SWEEP_INTERVAL_MS = 15*60*1000;
-
-  function buildSheetRows(entries){
-    var payable = computePayableMap();
-    return entries.filter(function(en){ return !!en.clockOut; }).map(function(en){
-      var p = payable[en.id] || {regularMs:0, afterHoursMs:0, quoteMs:0};
-      return [en.id, dateKeyLocal(new Date(en.clockIn)), en.employeeName, en.jobName,
-        fmtTime(en.clockIn), fmtTime(en.clockOut),
-        msToHoursStr(p.regularMs), msToHoursStr(p.afterHoursMs), msToHoursStr(p.quoteMs),
-        en.enteredBy||'', (en.completedTasks||[]).join('; '), en.flagged?1:0];
-    });
-  }
-  // Fire-and-forget by design - see note 1 above. Never rejects, so a dead sheet link can
-  // never block or break a clock-out; the shop floor keeps working regardless.
-  function pushToSheet(payload){
-    if(!STATE.sheetWriteUrl || typeof fetch === 'undefined') return Promise.resolve(false);
-    return fetch(STATE.sheetWriteUrl, {
-      method: 'POST', mode: 'no-cors', credentials: 'include',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).then(function(){ return true; })
-      .catch(function(err){ console.error('sheet push failed', err); return false; });
-  }
-  function pushDayForEmployee(empId, whenISO){
-    if(!STATE.sheetWriteUrl) return Promise.resolve(false);
-    var key = dateKeyLocal(new Date(whenISO));
-    var rows = buildSheetRows(STATE.entries.filter(function(en){
-      return en.employeeId===empId && dateKeyLocal(new Date(en.clockIn))===key;
-    }));
-    if(!rows.length) return Promise.resolve(false);
-    return pushToSheet({ type:'upsertEntries', rows: rows });
-  }
-  /* Reconcile the trailing window: the script deletes any in-window sheet row whose id is
-     absent from this payload, which is how an entry deleted or re-dated in the Daily Log
-     stops being paid. That deletion is exactly why the empty guard below matters - sweeping
-     before Firestore has loaded would send zero rows and wipe two weeks of payroll. */
-  function sweepToSheet(){
-    if(!STATE.sheetWriteUrl) return Promise.resolve(false);
-    if(!STATE.entries || !STATE.entries.length) return Promise.resolve(false);
-    var now = new Date();
-    var fromKey = dateKeyLocal(new Date(now.getTime() - SWEEP_DAYS*86400000));
-    var toKey = dateKeyLocal(now);
-    // YYYY-MM-DD sorts lexicographically, so plain string compares are safe here.
-    var rows = buildSheetRows(STATE.entries.filter(function(en){
-      var k = dateKeyLocal(new Date(en.clockIn));
-      return k >= fromKey && k <= toKey;
-    }));
-    return pushToSheet({ type:'syncEntries', from: fromKey, to: toKey, rows: rows })
-      .then(function(ok){
-        if(ok){
-          STATE.sheetWriteLastSentAt = new Date().toISOString();
-          safeSetJSON(K.sheetWrite, {url: STATE.sheetWriteUrl, lastSentAt: STATE.sheetWriteLastSentAt});
-        }
-        return ok;
-      });
-  }
   function buildExportRows(){
     var payable = computePayableMap();
     return getFilteredEntries().map(function(en){
@@ -3209,6 +2322,20 @@
       return [fmtDateShort(en.clockIn), en.employeeName, en.jobName, fmtTime(en.clockIn), en.clockOut?fmtTime(en.clockOut):'active',
         en.clockOut ? msToHoursStr(p.regularMs) : '', p.afterHoursMs>0?msToHoursStr(p.afterHoursMs):'0.00',
         p.quoteMs>0?msToHoursStr(p.quoteMs):'0.00', en.enteredBy||'', (en.completedTasks||[]).join('; ')];
+    });
+  }
+  // Row shape for the lanko-sheet-bridge Apps Script (not the human-readable CSV
+  // export): [entryId, clockInISO, employee, job, inTime, outTime, regHrs, ahHrs,
+  // quoteHrs, enteredBy, tasks, flagged]. Dates must stay real ISO strings - the
+  // script's toDate() keys off the 'YYYY-MM-DD' prefix - rather than the
+  // display-formatted strings buildExportRows produces for the CSV.
+  function buildSheetSyncRows(){
+    var payable = computePayableMap();
+    return getFilteredEntries().map(function(en){
+      var p = payable[en.id] || {regularMs:0, afterHoursMs:0, quoteMs:0};
+      return [en.id, en.clockIn, en.employeeName, en.jobName, fmtTime(en.clockIn), en.clockOut?fmtTime(en.clockOut):'',
+        en.clockOut ? (p.regularMs/3600000) : 0, p.afterHoursMs/3600000, p.quoteMs/3600000,
+        en.enteredBy||'', (en.completedTasks||[]).join('; '), !!en.flagged];
     });
   }
   function onLogExport(){
@@ -3240,15 +2367,8 @@
   }
   function onSendToSheet(){
     if(!STATE.sheetWriteUrl) return;
-    // Sends the Daily Log's own date range as a reconcile, so the button now means
-    // "make the sheet match Kairos for these dates" rather than "append these rows
-    // again" - pressing it twice is a no-op instead of a duplicate payroll week.
-    var rows = buildSheetRows(getFilteredEntries());
-    if(rows.length===0){ alert('No completed entries in the selected date range to send.'); return; }
-    // Mirror getFilteredEntries' own fallback exactly. The window tells the script which
-    // rows it may delete, so a window wider than the rows actually sent would quietly
-    // delete real shifts.
-    var sendFrom = STATE.logFrom || todayStr(), sendTo = STATE.logTo || todayStr();
+    var rows = buildSheetSyncRows();
+    if(rows.length===0){ alert('No entries in the selected date range to send.'); return; }
     if(typeof fetch === 'undefined'){
       STATE.sheetWriteStatus='error'; STATE.sheetWriteError="This tablet's browser doesn't support sending data."; render(); return;
     }
@@ -3274,8 +2394,7 @@
       mode: 'no-cors',
       credentials: 'include',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ type:'syncEntries', from: sendFrom, to: sendTo,
-        header: SHEET_HEADER, rows: rows })
+      body: JSON.stringify({ type: 'syncEntries', from: STATE.logFrom, to: STATE.logTo, rows: rows })
     }).then(function(){
       STATE.sheetWriteStatus = 'ok'; STATE.sheetWriteError = null;
       STATE.sheetWriteLastSentAt = new Date().toISOString();
@@ -3306,11 +2425,6 @@
     switch(action){
       case 'open-employee': STATE.selectedEmployeeId=id; STATE.pinBuffer=''; STATE.pinError=false; STATE.pinAttempts=0; STATE.view='pin'; render(); break;
       case 'open-gear': STATE.adminPinBuffer=''; STATE.adminPinError=false; STATE.view='adminpin'; render(); break;
-      case 'dismiss-late-alert': dismissLateAlert(); break;
-      case 'toggle-late-alert':
-        STATE.lateAlertEnabled = !STATE.lateAlertEnabled;
-        safeSetJSON(K.lateAlert, STATE.lateAlertEnabled); render();
-        break;
 
       case 'pin-digit': onPinDigit(id); break;
       case 'pin-back': STATE.pinBuffer=STATE.pinBuffer.slice(0,-1); STATE.pinError=false; render(); break;
@@ -3337,29 +2451,6 @@
       case 'history-flag-cancel': STATE.historyFlagOpenId=null; STATE.historyFlagError=null; render(); break;
       case 'history-flag-submit': onHistoryFlagSubmit(id); break;
       case 'history-flag-withdraw': onHistoryFlagWithdraw(id); break;
-      case 'open-timeoff': STATE.view='timeoff'; STATE.timeOffFormError=null; STATE.timeOffSavedMsg=null; render(); break;
-      case 'timeoff-cancel': STATE.view='action'; render(); break;
-      case 'timeoff-submit': onTimeOffSubmit(); break;
-      case 'timeoff-accept-counter':
-        employeeRespondToCounter(id, true).then(function(){ STATE.timeOffSavedMsg='Dates confirmed.'; render(); });
-        break;
-      case 'timeoff-decline-counter':
-        employeeRespondToCounter(id, false).then(function(){ STATE.timeOffSavedMsg='Counter-offer declined.'; render(); });
-        break;
-      case 'timeoff-set-actor': STATE.timeOffActor = id; render(); break;
-      case 'timeoff-cal-prev': STATE.timeOffCalMonth = addMonths(timeOffCalMonthDate(), -1); render(); break;
-      case 'timeoff-cal-next': STATE.timeOffCalMonth = addMonths(timeOffCalMonthDate(), 1); render(); break;
-      case 'timeoff-admin-approve':
-        if(!requireTimeOffActor()) break;
-        decideTimeOff(id, {status:'approved', decidedBy:STATE.timeOffActor, adminNote:null}).then(render);
-        break;
-      case 'timeoff-admin-reject': onTimeOffAdminReject(id); break;
-      case 'timeoff-admin-counter-open':
-        if(!requireTimeOffActor()) break;
-        STATE.timeOffCounterOpenId = id; STATE.timeOffCounterError=null; render();
-        break;
-      case 'timeoff-admin-counter-cancel': STATE.timeOffCounterOpenId=null; STATE.timeOffCounterError=null; render(); break;
-      case 'timeoff-admin-counter-submit': onTimeOffAdminCounterSubmit(id); break;
       case 'history-email-open': STATE.historyEmailFormOpen=true; STATE.historyEmailStatus='idle'; STATE.historyEmailError=null; render(); break;
       case 'history-email-cancel': STATE.historyEmailFormOpen=false; STATE.historyEmailError=null; render(); break;
       case 'history-email-send': onEmailHistory(); break;
@@ -3375,24 +2466,7 @@
       case 'adminpin-cancel': STATE.view='rack'; render(); break;
 
       case 'exit-admin': resetToRack(); break;
-      case 'admin-tab': STATE.adminTab=id; STATE.employeeFormOpen=false; STATE.jobFormOpen=false; STATE.taskFormOpen=false; STATE.editingEntryId=null; STATE.rolloffMsg=null; STATE.timeOffCounterOpenId=null; STATE.timeOffCounterError=null; render(); break;
-      case 'admin-run-rolloff':
-      case 'admin-run-rolloff-anyway':
-        if(STATE.rolloffBusy) break;
-        STATE.rolloffBusy = true; STATE.rolloffMsg = null; render();
-        runEntryRolloff().then(function(r){
-          STATE.rolloffBusy = false;
-          STATE.rolloffMsg = r.moved
-            ? { ok:true, text: r.moved + ' entr' + (r.moved===1?'y':'ies') + ' moved to the archive. ' + r.kept + ' still live.' }
-            : { ok:true, text: 'Nothing was old enough to move.' };
-          render();
-        }).catch(function(e){
-          console.error('roll-off failed', e);
-          STATE.rolloffBusy = false;
-          STATE.rolloffMsg = { ok:false, text: (e && e.message) ? e.message : 'The roll-off did not finish. Nothing was removed from the live entries.' };
-          render();
-        });
-        break;
+      case 'admin-tab': STATE.adminTab=id; STATE.employeeFormOpen=false; STATE.jobFormOpen=false; STATE.taskFormOpen=false; STATE.editingEntryId=null; render(); break;
 
       case 'admin-emp-new': STATE.employeeFormOpen=true; STATE.editingEmployeeId=null; STATE.employeeFormError=null; render(); break;
       case 'admin-emp-edit': STATE.employeeFormOpen=true; STATE.editingEmployeeId=id; STATE.employeeFormError=null; render(); break;
@@ -3408,7 +2482,6 @@
       case 'admin-job-save': onAdminJobSave(id||null); break;
       case 'admin-job-toggle-active': onAdminJobToggle(id); break;
       case 'admin-job-delete': onAdminJobDelete(id); break;
-      case 'admin-merge-duplicate-jobs': onAdminMergeDuplicateJobs(); break;
 
       case 'admin-task-new': STATE.taskFormOpen=true; STATE.editingTaskId=null; STATE.taskFormError=null; render(); break;
       case 'admin-task-edit': STATE.taskFormOpen=true; STATE.editingTaskId=id; STATE.taskFormError=null; render(); break;
@@ -3423,6 +2496,11 @@
       case 'jobsource-sync-now': syncJobsFromSheet(true); break;
       case 'jobsource-disconnect': onJobSourceDisconnect(); break;
 
+      case 'officejobsource-setup-open': STATE.officeJobSourceFormOpen=true; STATE.officeJobSourceError=null; render(); break;
+      case 'officejobsource-setup-cancel': STATE.officeJobSourceFormOpen=false; STATE.officeJobSourceError=null; render(); break;
+      case 'officejobsource-save': onOfficeJobSourceSave(); break;
+      case 'officejobsource-sync-now': syncOfficeJobsFromSheet(true); break;
+      case 'officejobsource-disconnect': onOfficeJobSourceDisconnect(); break;
 
       case 'empsource-setup-open': STATE.employeeSourceFormOpen=true; STATE.employeeSourceError=null; render(); break;
       case 'empsource-setup-cancel': STATE.employeeSourceFormOpen=false; STATE.employeeSourceError=null; render(); break;
@@ -3520,6 +2598,7 @@
   }
   function startOfficeJobSourceSync(){
     setInterval(function(){
+      if(STATE.officeJobSource) syncOfficeJobsFromSheet(false);
     }, 120000);
   }
   function startEmployeeSourceSync(){
@@ -3531,85 +2610,6 @@
     setInterval(function(){
       if(STATE.taskSource) syncTasksFromSheet(false);
     }, 120000);
-  }
-
-  /* ---------------- hourly auto-refresh ----------------
-     A full reload is the one guaranteed way to clear out anything a tablet has had
-     sitting stale in memory since boot - the job list, the employee roster, all of it.
-     But firing on a blind timer would occasionally land mid-PIN-entry or halfway through
-     a time-off form, which is worse than the staleness it's fixing. So this checks rather
-     than forces: every 30s, if an hour has passed AND the tablet is sitting idle on the
-     rack screen with no overlay showing and no save in flight, reload. If someone's
-     mid-task when the hour ticks over, it just waits and checks again - it will still
-     catch the next idle moment, usually within seconds on a shop floor. */
-  var REFRESH_INTERVAL_MS = 60 * 60 * 1000;
-  var pageLoadedAt = Date.now();
-  function isSafeToAutoRefresh(){
-    return STATE.view === 'rack' && !STATE.stamp && !STATE.lateAlert && !STATE.busy;
-  }
-  function startHourlyAutoRefresh(){
-    setInterval(function(){
-      if(Date.now() - pageLoadedAt < REFRESH_INTERVAL_MS) return;
-      if(!isSafeToAutoRefresh()) return;
-      location.reload();
-    }, 30000);
-  }
-
-  /* ---------------- new-build watch ----------------
-     The hourly refresh above handles data going stale. This handles CODE going stale -
-     a tablet left open from before an upload keeps running the old JavaScript
-     indefinitely, including whatever sync logic that old build had (or didn't have).
-     There is no one driving out to every tablet after every upload, so the tablet has to
-     notice on its own.
-
-     BUILD_ID is a hash of the file's own contents, injected as the last step of packaging
-     a build - not a version number I have to remember to bump by hand, which is exactly
-     the kind of manual step that gets skipped under time pressure. Any change anywhere in
-     the file changes the hash automatically.
-
-     Every 5 minutes, fetch the live page fresh (cache-busted so a browser or CDN cache
-     can't hand back yesterday's copy) and compare its embedded BUILD_ID to this tablet's
-     own. A mismatch means a new version has been uploaded since this tablet last loaded -
-     reload, but only once it's actually safe to, using the exact same idle check as the
-     hourly refresh. A failed fetch (offline, tablet Wi-Fi hiccup) just skips that round
-     and tries again in 5 minutes; it never treats "couldn't check" as "must reload." */
-  var BUILD_ID = 'sha256-fc7ba217b018f168'; // replaced with a real content hash when packaged
-  function checkForNewBuild(){
-    var bustUrl = location.href.split('#')[0].split('?')[0] + '?_v=' + Date.now();
-    fetch(bustUrl, { cache:'no-store' })
-      .then(function(r){ return r.ok ? r.text() : null; })
-      .then(function(html){
-        if(!html) return;
-        var m = html.match(/var BUILD_ID = '([^']+)'/);
-        if(m && m[1] && m[1] !== BUILD_ID && isSafeToAutoRefresh()) location.reload();
-      })
-      .catch(function(){ /* offline or blocked this round - try again next interval */ });
-  }
-  function startBuildUpdateWatch(){
-    setInterval(checkForNewBuild, 5 * 60 * 1000);
-  }
-
-  /* ---------------- "just updated" banner ----------------
-     Shows on the rack screen for 24 hours after a new build first appears, so the crew
-     knows this isn't the same screen they saw yesterday - useful right after a rollout,
-     especially since the tablet may have updated itself with nobody around to announce it.
-
-     The window is anchored in Firestore, not on the device, and keyed to BUILD_ID rather
-     than a date someone has to remember to set: whichever tablet notices a BUILD_ID it
-     hasn't seen recorded yet writes the start time once, and every other tablet - whenever
-     it happens to reload, minutes or hours apart - reads that same start time and agrees
-     on the same 24-hour window. No manual step, and it re-arms itself automatically for
-     every future build the same way. */
-  var BUILD_BANNER_WINDOW_MS = 24 * 60 * 60 * 1000;
-  function checkBuildBanner(){
-    return safeGetJSON(K.buildBanner, null).then(function(rec){
-      if(rec && rec.buildId === BUILD_ID) return rec;
-      var fresh = { buildId: BUILD_ID, shownSince: new Date().toISOString() };
-      return safeSetJSON(K.buildBanner, fresh).then(function(){ return fresh; });
-    }).then(function(rec){
-      var ageMs = Date.now() - new Date(rec.shownSince).getTime();
-      STATE.buildBannerActive = rec.buildId === BUILD_ID && ageMs >= 0 && ageMs < BUILD_BANNER_WINDOW_MS;
-    }).catch(function(e){ console.error('build banner check failed', e); });
   }
 
   function boot(){
@@ -3637,16 +2637,10 @@
       startOfficeJobSourceSync();
       startEmployeeSourceSync();
       startTaskSourceSync();
-      startHourlyAutoRefresh();
-      startBuildUpdateWatch();
-      checkBuildBanner().then(function(){ if(STATE.view==='rack') render(); });
       if(STATE.jobSource) syncJobsFromSheet(false);
+      if(STATE.officeJobSource) syncOfficeJobsFromSheet(false);
       if(STATE.employeeSource) syncEmployeesFromSheet(false);
       if(STATE.taskSource) syncTasksFromSheet(false);
-      // One sweep at boot catches anything the tablet failed to push while it was asleep
-      // or offline, then a slow repeating one keeps the window honest through the day.
-      sweepToSheet();
-      setInterval(function(){ sweepToSheet(); }, SWEEP_INTERVAL_MS);
     });
   }
 
