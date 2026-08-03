@@ -496,6 +496,7 @@
     historyRangeDays:14, historyFlagOpenId:null, historyFlagError:null,
     historyEmailFormOpen:false, historyEmailInput:null, historyEmailStatus:'idle', historyEmailError:null,
     minervaSchedule:null, // published by Minerva (the scheduling app) -- read-only, used to suggest a job at clock-in
+    minervaEmployees:null, // Minerva's roster, read-only -- pools decide who sees the office task tiles
     lastInteractionAt: Date.now()
   };
 
@@ -730,7 +731,26 @@
       STATE.minervaSchedule = (snap.exists && snap.data().value) ? snap.data().value : null;
       if(STATE.view==='action') render();
     }, function(e){ console.error('minerva schedule listener error (non-fatal, suggestions just stay off)', e); });
+    /* Pools are Minerva's to define - Kairos only inherits. draftorder is the
+       office group; fab and assembly are the floor. Matching is by name,
+       same convention as the schedule suggestions above. */
+    minervaDoc('lb_employees').onSnapshot(function(snap){
+      STATE.minervaEmployees = (snap.exists && snap.data().value) ? snap.data().value : null;
+      if(STATE.view==='action') render();
+    }, function(e){ console.error('minerva roster listener error (non-fatal, office tasks just stay hidden)', e); });
   }
+  function minervaPoolFor(name){
+    var list = STATE.minervaEmployees;
+    if(!list || !name) return null;
+    var key = String(name).trim().toLowerCase();
+    var m = list.find(function(e){ return String(e.name||'').trim().toLowerCase() === key; });
+    return m ? (m.pool || null) : null;
+  }
+  /* Drafting, Ordering and Admin belong to the office (draftorder) pool only.
+     Anyone unmatched in Minerva's roster is treated as floor - the tablets
+     live on the floor, and office staff are always on the roster. */
+  var OFFICE_TASK_WORDS = { draft:1, drafting:1, order:1, ordering:1, admin:1, administration:1, office:1 };
+  function isOfficeTask(name){ return !!OFFICE_TASK_WORDS[String(name||'').trim().toLowerCase()]; }
   function todayISODate(){
     var d = new Date();
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1598,6 +1618,10 @@
     var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
     var open = emp ? STATE.entries.find(function(en){ return en.employeeId===emp.id && !en.clockOut; }) : null;
     var activeTasks = STATE.tasks.filter(function(t){ return t.active; });
+    var pool = emp ? minervaPoolFor(emp.name) : null;
+    if(pool !== 'draftorder'){
+      activeTasks = activeTasks.filter(function(t){ return !isOfficeTask(t.name); });
+    }
     var jobLabel = open ? open.jobName : '';
 
     if(activeTasks.length===0){
