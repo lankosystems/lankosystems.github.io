@@ -179,6 +179,10 @@
   .plate.minerva .deity{ color:var(--steel); }
   .plate.kubera{ border-top-color:var(--gold-dim); }
   .plate.kubera .deity{ color:var(--gold-dim); }
+  .plate.odin{ border-top-color:var(--oxblood); }
+  .plate.odin .deity{ color:var(--oxblood); }
+  .plate.iris{ border-top-color:var(--rust); }
+  .plate.iris .deity{ color:var(--rust); }
 
   /* ---------- ledgers ---------- */
   .ledgers{ display:grid; grid-template-columns:1.15fr 1fr; gap:14px; align-items:start; }
@@ -480,7 +484,7 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.2';
+  var APP_VERSION = '26.3';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
@@ -489,13 +493,17 @@
   var SOURCES = {
     kairos: { collection:'kairos_state',  employees:'lanko_employees', entries:'lanko_entries' },
     minerva:{ collection:'minerva_state', schedule:'lb_published_schedule' },
-    kubera: { collection:'mercury_state', quotes:'mc_quotes' }
+    kubera: { collection:'mercury_state', quotes:'mc_quotes' },
+    odin:   { collection:'odin_state',    projects:'projects' },
+    iris:   { collection:'iris_state',    receipts:'receipts' }
   };
 
   var APPS = [
-    { id:'kairos',  deity:'Kairos',  role:'Timeclock',     href:'kairos.html',  version:'26.5' },
-    { id:'minerva', deity:'Minerva', role:'Planner',       href:'minerva.html', version:'26.2' },
-    { id:'kubera',  deity:'Kubera',  role:'Quote Builder', href:'kubera.html',  version:'26.3' }
+    { id:'kairos',  deity:'Kairos',  role:'Timeclock',       href:'kairos.html',  version:'26.7' },
+    { id:'minerva', deity:'Minerva', role:'Planner',         href:'minerva.html', version:'26.2' },
+    { id:'kubera',  deity:'Kubera',  role:'Quote Builder',   href:'kubera.html',  version:'26.5' },
+    { id:'odin',    deity:'Odin',    role:'Projects',        href:'odin.html',    version:'26.2' },
+    { id:'iris',    deity:'Iris',    role:'Ship &amp; Receive', href:'iris.html', version:'26.1' }
   ];
 
   /* Each field has three meaningful states, and the panels below rely on the
@@ -504,6 +512,7 @@
      "we could not look" never gets rendered as "there is nothing there". */
   var DATA = {
     employees:null, entries:null, schedule:null, quotes:null,
+    projects:null, receipts:null,
     err:{}
   };
   var live = 0, failed = 0;
@@ -710,6 +719,7 @@
     function vit(bad, loading, value){ return bad ? 'n/a' : loading ? '--' : value; }
     var eBad = !!DATA.err.timeclock, rBad = !!DATA.err.roster;
     var mBad = !!DATA.err.planner,   qBad = !!DATA.err.quotes;
+    var pBad = !!DATA.err.projects,  yBad = !!DATA.err.receiving;
     return {
       kairos: [
         ['On the clock',  vit(eBad, DATA.entries===null, String(open.length))],
@@ -726,12 +736,143 @@
         ['Value out',        vit(qBad, DATA.quotes===null, money(pipe.sent.v))],
         [qBad ? 'Sign in for these' : 'Drafts open',
                              vit(qBad, DATA.quotes===null, String(pipe.draft.n))]
+      ],
+      odin: [
+        ['Open projects', vit(pBad, DATA.projects===null, String(openProjects().length))],
+        ['Ops blocked',   vit(pBad, DATA.projects===null, String(openProjects().reduce(function(a,p){ return a + projBlockedOps(p).length; }, 0)))],
+        ['Ready to ship', vit(pBad, DATA.projects===null, String((DATA.projects||[]).filter(function(p){ return p.status==='ship'; }).length))]
+      ],
+      iris: [
+        ['Expected in',   vit(pBad || yBad, DATA.projects===null || DATA.receipts===null, String(inboundLines().length))],
+        ['Problem flags', vit(yBad, DATA.receipts===null, String(flaggedReceipts(14).length))],
+        ['Received, 7d',  vit(yBad, DATA.receipts===null, String((DATA.receipts||[]).filter(function(r){ return r.kind!=='ship' && num(r.at) >= Date.now()-7*86400000; }).length))]
       ]
     };
   }
 
+  /* ---------------- Odin + Iris roll-ups ----------------
+     Same discipline as the quote pipeline: read the documents those apps
+     write and never invent state. An operation counts as blocked while any
+     procurement line naming it is not fully received - the receipts from
+     iris_state settle that, exactly the way Odin computes it. */
+  function openProjects(){
+    return (DATA.projects || []).filter(function(p){
+      return p.status !== 'closed' && p.status !== 'shipped';
+    });
+  }
+  function yardReceivedQty(lineId){
+    return (DATA.receipts || []).filter(function(r){ return r.kind !== 'ship' && r.lineId === lineId; })
+      .reduce(function(a, r){ return a + num(r.qty); }, 0);
+  }
+  function lineOutstanding(l){
+    if(l.status === 'received') return false;
+    return yardReceivedQty(l.id) < num(l.qty || 1);
+  }
+  function projBlockedOps(p){
+    var b = {};
+    (p.procurement || []).forEach(function(l){
+      if(lineOutstanding(l)) (l.blocks || []).forEach(function(op){ b[op] = true; });
+    });
+    return Object.keys(b);
+  }
+  var STAGE_LABEL = { awaiting:'Awaiting', initiated:'Initiated', procurement:'Procurement',
+    ready:'Ready', production:'Production', ship:'To ship', shipped:'Shipped', closed:'Closed' };
+  var STAGE_PILL = { awaiting:'lost', initiated:'sent', procurement:'sent',
+    ready:'won', production:'won', ship:'draft', shipped:'draft', closed:'draft' };
+  function inboundLines(){
+    var out = [];
+    openProjects().forEach(function(p){
+      (p.procurement || []).forEach(function(l){
+        if(l.status !== 'ordered' && l.status !== 'confirmed') return;
+        if(!lineOutstanding(l)) return;
+        out.push({ job: p.jobRef || p.quoteNum || '', desc: l.desc || '', eta: l.eta || '' });
+      });
+    });
+    out.sort(function(a, b){ return (a.eta || '9999') < (b.eta || '9999') ? -1 : 1; });
+    return out;
+  }
+  function flaggedReceipts(days){
+    var cutoff = Date.now() - days * 86400000;
+    return (DATA.receipts || []).filter(function(r){
+      return r.kind !== 'ship' && r.flag && num(r.at) >= cutoff;
+    });
+  }
+
+  function renderJobs(){
+    var h = '<div class="ledger"><div class="eyebrow">Jobs in motion &middot; Odin<span class="rule"></span></div>';
+    if(DATA.err.projects){
+      h += '<div class="empty"><b>Projects unavailable</b>Aengus could not read odin_state. ' +
+        'Open Odin directly to check.</div>';
+      return h + '</div>';
+    }
+    if(DATA.projects === null){ return h + '<div class="empty">Reading the projects&hellip;</div></div>'; }
+    var open = openProjects();
+    if(!open.length){
+      h += '<div class="empty"><b>No jobs in motion</b>' +
+        'Mark a quote Won in Kubera and award it to Odin; it shows up here.</div>';
+      return h + '</div>';
+    }
+    open.sort(function(a, b){ return (a.dueDate || '9999') < (b.dueDate || '9999') ? -1 : 1; });
+    h += '<table class="rows"><thead><tr><th>Job</th><th>Customer</th><th>Stage</th>' +
+      '<th>Due</th><th style="text-align:right">Blocked</th></tr></thead><tbody>';
+    open.slice(0, 8).forEach(function(p){
+      var blocked = projBlockedOps(p);
+      h += '<tr><td class="mono">' + esc(p.jobRef || p.quoteNum || '') + '</td>' +
+        '<td class="name">' + esc(p.customerName || '') + '</td>' +
+        '<td><span class="pill ' + (STAGE_PILL[p.status] || 'draft') + '">' +
+          esc(STAGE_LABEL[p.status] || p.status) + '</span></td>' +
+        '<td class="mono">' + esc(p.dueDate || '') + '</td>' +
+        '<td class="right">' + (blocked.length ?
+          '<span class="stale" title="' + esc(blocked.join(', ')) + '">' + blocked.length + ' ops</span>' :
+          '&mdash;') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    if(open.length > 8) h += '<div class="foot">' + (open.length - 8) + ' more in Odin.</div>';
+    return h + '</div>';
+  }
+
+  function renderYard(){
+    var h = '<div class="ledger"><div class="eyebrow">The yard &middot; Iris<span class="rule"></span></div>';
+    if(DATA.err.projects || DATA.err.receiving){
+      h += '<div class="empty"><b>Receiving unavailable</b>Aengus could not read what the yard is expecting.</div>';
+      return h + '</div>';
+    }
+    if(DATA.projects === null || DATA.receipts === null){
+      return h + '<div class="empty">Reading the yard&hellip;</div></div>';
+    }
+    var inbound = inboundLines();
+    var flags = flaggedReceipts(14);
+    if(!inbound.length && !flags.length){
+      h += '<div class="empty"><b>Nothing inbound</b>' +
+        'When Odin marks a purchase Ordered, the yard sees it in Iris and it shows here.</div>';
+      return h + '</div>';
+    }
+    var today = dateKey(new Date());
+    if(inbound.length){
+      h += '<table class="rows"><thead><tr><th>Job</th><th>Arriving</th>' +
+        '<th style="text-align:right">ETA</th></tr></thead><tbody>';
+      inbound.slice(0, 6).forEach(function(l){
+        var late = l.eta && l.eta < today;
+        h += '<tr><td class="mono">' + esc(l.job) + '</td>' +
+          '<td class="name">' + esc(l.desc) + '</td>' +
+          '<td class="right mono">' + (l.eta ?
+            (late ? '<span class="stale">' + esc(l.eta) + '</span>' : esc(l.eta)) :
+            '&mdash;') + '</td></tr>';
+      });
+      h += '</tbody></table>';
+      if(inbound.length > 6) h += '<div class="foot">' + (inbound.length - 6) + ' more expected.</div>';
+    }
+    if(flags.length){
+      h += '<div class="foot"><span class="stale">&#9888; ' + flags.length +
+        ' receipt' + (flags.length > 1 ? 's' : '') + ' flagged with a problem in the last two weeks' +
+        ' &mdash; details in Iris history.</span></div>';
+    }
+    return h + '</div>';
+  }
+
   function renderLedgers(){
-    return '<section><div class="ledgers">' + renderPlan() + renderPipeline() + '</div></section>';
+    return '<section><div class="ledgers">' + renderPlan() + renderPipeline() + '</div></section>' +
+           '<section><div class="ledgers">' + renderJobs() + renderYard() + '</div></section>';
   }
 
   function renderPlan(){
@@ -868,6 +1009,8 @@
     unsubs.push(watch('kairos',  S.kairos.entries,   'timeclock',function(v){ DATA.entries   = v || []; }));
     unsubs.push(watch('minerva', S.minerva.schedule, 'planner',  function(v){ DATA.schedule  = v || false; }));
     unsubs.push(watch('kubera',  S.kubera.quotes,    'quotes',   function(v){ DATA.quotes    = v || []; }));
+    unsubs.push(watch('odin',    S.odin.projects,    'projects', function(v){ DATA.projects  = v || []; }));
+    unsubs.push(watch('iris',    S.iris.receipts,    'receiving',function(v){ DATA.receipts  = v || []; }));
   }
   // The sign-in overlay calls this when the account changes.
   window.__lankoReattach = attachAll;
