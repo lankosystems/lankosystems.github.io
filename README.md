@@ -1,20 +1,22 @@
 # Lanko Systems — shop apps
 
-Four single-file HTML apps sharing one Firebase project (`lanko-kairos-cbbcd`) and one
+Six single-file HTML apps sharing one Firebase project (`lanko-kairos-cbbcd`) and one
 set of design tokens. No build step: each file is opened directly in a browser.
 
 ## The naming standard
 
 | Product name                 | Header chip    | File           | Firestore collection | Doc keys  |
-| ---------------------------- | -------------- | -------------- | -------------------- | --------- |
-| Lanko Aengus Dashboard       | `Aengus 26.2`  | `index.html`   | *(reads only)*       | —         |
-| Lanko Kairos Timeclock       | `Kairos 26.5`  | `kairos.html`  | `kairos_state`       | `lanko_*` |
-| Lanko Minerva Planner        | `Minerva 26.2` | `minerva.html` | `minerva_state`      | `lb_*`    |
-| Lanko Kubera Quote Builder   | `Kubera 26.1`  | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
+| ----------------------------- | -------------- | -------------- | --------------------- | --------- |
+| Lanko Aengus Dashboard        | `Aengus 26.4`  | `index.html`   | *(reads only)*        | —         |
+| Lanko Kairos Timeclock        | `Kairos 26.10` | `kairos.html`  | `kairos_state`        | `lanko_*` |
+| Lanko Minerva Planner         | `Minerva 26.12`| `minerva.html` | `minerva_state`       | `lb_*`    |
+| Lanko Kubera Quote Builder    | `Kubera 26.6`  | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
+| Lanko Iris Shipping & Receiving | `Iris 26.2`  | `iris.html`    | `iris_state`          | —         |
+| Lanko Odin Projects           | `Odin 26.5`    | `odin.html`    | `odin_state`          | —         |
 
 The pattern is **`Lanko <Deity> <Function>`**. The deity alone is the short name; the
-function says what it does so nobody has to remember which Roman/Greek/Hindu god does
-quoting. Filenames are the lowercase deity, and **never carry a version or a date** —
+function says what it does so nobody has to remember which Roman/Greek/Hindu/Norse god
+does quoting. Filenames are the lowercase deity, and **never carry a version or a date** —
 that is how `Lanko_Mercury_26_7.html` came to look like version 26.7 when 26_7 was
 really the 26th of July.
 
@@ -31,28 +33,28 @@ per released iteration:
 2027:  27.0  27.1  27.2  …
 ```
 
-Each app carries its own counter — they are not kept in step. Aengus starts at 26.0;
-Kairos is at 26.5, Minerva 26.2, Kubera 26.3, Aengus 26.2.
+Each app carries its own counter — they are not kept in step. Current: Aengus 26.4,
+Kairos 26.10, Minerva 26.12, Kubera 26.6, Iris 26.2, Odin 26.5.
 
 In Aengus the version lives in one place, `APP_VERSION`, and both the `<title>` and the
-header chip are built from it. The other three still have it written out by hand in a
+header chip are built from it. The others still have it written out by hand in a
 couple of spots (title, header chip, and the "Exit to …" button in Kairos and Minerva) —
 worth collapsing to one constant next time each is touched.
 
 ## Aengus
 
-Aengus is the front door. It opens listeners on the other three collections and shows:
+Aengus is the front door. It opens listeners on the other collections and shows:
 
 - **On the clock** — who is clocked in right now, on what job, since when, plus hours
   logged today. From `kairos_state`.
-- **The apps** — three plates linking to each app, each carrying its own live vitals.
+- **The apps** — plates linking to each app, each carrying its own live vitals.
 - **Today's plan** — the published Minerva week, filtered to today. From `minerva_state`.
 - **Quote pipeline** — draft/sent/won/lost counts and value. From `mercury_state`.
 
 **Aengus is read-only and must stay that way.** It never writes a document. If the
 dashboard could write, a stray click here could clobber a payroll entry or a live quote
-with no way to tell which app did it. Anything that changes data belongs in Kairos,
-Minerva or Kubera.
+with no way to tell which app did it. Anything that changes data belongs in one of the
+other five apps.
 
 Links between the apps are relative (`kairos.html`, not a full URL), so the whole set
 works unchanged whatever the site ends up being called, and works from a local folder too.
@@ -61,6 +63,43 @@ Two things Aengus is careful about, because getting them wrong is worse than use
 wall monitor: a panel that **could not be read** says so, rather than showing a
 comforting zero; and a Minerva week that was published a while ago is labelled with its
 age, so nobody plans a Tuesday off last month's board.
+
+## Minerva: job display and same-job continuity
+
+The week board shows each job as a row in a compact table — job number, name, and hours
+remaining — instead of the old chip legend underneath the schedule grid. Same data,
+easier to scan at a glance and to compare against remaining hours.
+
+When building a week, Minerva now gives a soft preference to keeping an employee on the
+job they most recently clocked into in Kairos (`kairos_state/lanko_entries`, read-only —
+Minerva never writes to Kairos's collection). This is a **tie-break only**: it sits below
+same-week stickiness (an employee who was on a job Monday gets first claim on it Tuesday,
+within the week Minerva is currently computing) and below pins, exclusivity, and job
+restrictions. It never overrides priority order or a materials hold, and if the Kairos
+read fails or finds no match, scheduling proceeds exactly as before — there is no crash
+and no hard dependency on Kairos being reachable.
+
+## Iris
+
+Shipping & Receiving. Shares the same header chrome as the other apps (gradient topbar,
+wordmark, version chip) rather than its earlier bespoke banner — one less thing that
+looks like a different product when the tablets are lined up on the wall.
+
+## Odin: reminders
+
+Odin now carries a lightweight reminders feature, built for a specific use case: Ivan
+and Travis keying in a task from a phone while on the road, and someone actioning it
+back at the office.
+
+- A button on the main screen opens a simple "new reminder" screen — a note, a category,
+  and an optional project to attach it to.
+- Four categories to start: **Procurement, Operations, Scheduling, Other.**
+- A reminder attached to a project shows up in two places: the dedicated **Reminders**
+  page, and a card on that project's own page. They're the same record — marking it
+  done or deleting it from either place updates both.
+- Reminders can be marked complete from either the project page or the Reminders page.
+
+Stored under `odin_state`, alongside the rest of Odin's project/procurement data.
 
 ## Live quotes in the archive
 
@@ -101,7 +140,7 @@ not:
 - Changed: title, header chip, backup filename, the `app:` stamp inside backups, the
   "Kubera assigns the next one" hint, the archive "Raised here" filter.
 - **Unchanged: the `mercury_state` collection and the `mc_*` doc keys.** Renaming them in
-  the file would not move the data — it would just point the app at four empty documents
+  the file would not move the data — it would just point the app at empty documents
   and orphan every quote, pack list and archive row already stored.
 
 New archive rows are stamped `source: 'Kubera'`. Rows already stamped `'Mercury'` are
@@ -111,48 +150,13 @@ If the collection is ever renamed properly, it is a copy-then-cut-over, not a
 find-and-replace: copy each `mc_*` doc to the new collection, verify, point the app at
 it, keep the old collection read-only for a while, then delete.
 
-## Moving to a lankosystems URL
-
-Currently `https://ilaing-netizen.github.io/kairos-timeclock`. Two ways to get the name:
-
-**A — new organisation (suggested).** Create a free GitHub organisation called
-`lankosystems`, then a public repo inside it named exactly `lankosystems.github.io`. Your
-personal account stays untouched, and you can add people later. Check
-`github.com/lankosystems` first to confirm the name is free.
-
-**B — rename the existing account.** Settings → Account → Change username, from
-`ilaing-netizen` to `lankosystems`. Keeps all repos and history, but frees the old
-username for anyone else to claim, and old links only redirect for a while.
-
-Either way, the repo name `lankosystems.github.io` is what puts the site at the root:
-
-```
-https://lankosystems.github.io/            → index.html   (Aengus)
-https://lankosystems.github.io/kairos.html
-https://lankosystems.github.io/minerva.html
-https://lankosystems.github.io/kubera.html
-```
-
-A repo named anything else, e.g. `apps`, lands the site at
-`https://lankosystems.github.io/apps/` instead — which works, but the shorter root is
-nicer to type on a tablet.
-
-Then: push these four files to the default branch, Settings → Pages → Source: *Deploy
-from a branch*, branch `main`, folder `/ (root)`. First deploy takes a minute or two.
-Add the new domain to Firebase Console → Authentication → Settings → **Authorized
-domains**, or anonymous sign-in will fail on the new URL and every app will show "no
-connection". Re-bookmark the shop tablets — the old URL will not follow.
-
-Note GitHub Pages needs a **public** repo unless you are on a paid plan. Public means
-anyone with the URL loads the app, so:
-
 ## Who can sign in, and why
 
-These are static files on a public URL. The Firebase config inside them is public by
-design, which means anyone who knows the project id can reach the database with the
-REST API without ever loading a page. So the PINs in Kairos and Minerva are not
-security — they run in JavaScript on the visitor's own machine. `firestore.rules` is
-the only real boundary, and it works by telling a real account apart from an
+These are static files on a public URL (`lankosystems.github.io`). The Firebase config
+inside them is public by design, which means anyone who knows the project id can reach
+the database with the REST API without ever loading a page. So any PINs inside the apps
+are not security — they run in JavaScript on the visitor's own machine. `firestore.rules`
+is the only real boundary, and it works by telling a real account apart from an
 anonymous session.
 
 | App | Sign-in | Why |
@@ -161,6 +165,8 @@ anonymous session.
 | Minerva | required | Editing the schedule. Kairos still reads it anonymously. |
 | Kubera | required | Quote prices, margins, customer contacts. |
 | Aengus | optional | Anonymous shows timeclock + planner; quotes need an account. |
+| Iris | required | Shipping/receiving records. |
+| Odin | required | Project, procurement, and reminder data. |
 
 Aengus is optional on purpose: a wall monitor shouldn't go blank because a session
 lapsed, and nobody walking past sees quote values unless someone deliberately signs
@@ -179,13 +185,13 @@ office apps out of their own data.
 
 ## Still worth tightening
 
-Neither is caused by the rename, but both get more exposed on a new public URL.
+Neither is caused by the rename, but both get more exposed on a public URL.
 
 **1. `kairos_state` is still open to anonymous sessions.** It has to be, so keyboardless
 tablets can clock people in. Anyone who works out the project id can read the roster,
 jobs and hours. The pricing is what's locked; this is names and times. The proper fix is
 App Check, which attests a request came from your real site without adding a login. It
-needs SDK changes in all four apps, so it is not a five-minute job.
+needs SDK changes across every app, so it is not a five-minute job.
 
 **2. Never commit `Lanko_quote_archive.json`.** It is 640 KB of real customer quotes,
 names and prices. It went into a public repo once already and had to be deleted along
