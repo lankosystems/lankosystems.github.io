@@ -875,8 +875,8 @@
       id: uid('pj'), quoteId: q.id, quoteNum: String(q.num), rev: num(q.rev),
       jobRef: q.jobRef || baseNum(q.num), customerId: q.customerId || '',
       customerName: custName(q.customerId), title: q.title || '',
-      currency: q.currency || 'CAD', value: quoteTotal(q),
-      poNo:'', dueDate:'', status:'awaiting',
+      currency: q.currency || 'CAD', value: quoteSubtotal(q) + num(q.freight),
+      poNo: q.rfqRef || '', dueDate:'', status:'awaiting',
       items: (q.items||[]).filter(function(it){ return String(it.desc).trim() || String(it.partNo).trim(); })
         .map(function(it){ return { id:uid('i'), qty:num(it.qty), unit:it.unit||'EA',
           partNo:it.partNo||'', desc:it.desc||'', unitPrice:num(it.unitPrice) }; }),
