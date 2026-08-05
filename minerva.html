@@ -1750,6 +1750,7 @@
     legend.jobs.forEach(function(j){ legendIds[j.id] = true; });
     var deferredHTML = deferredJobsTableHTML(legendIds);
     var outputBar = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">'+
+      '<button class="addbtn" data-action="board-refresh-kairos">'+(STATE.kairosRefreshStatus==='loading'?'Refreshing&hellip;':'&#8635; Refresh Schedule')+'</button>'+
       '<button class="addbtn" data-action="board-export-csv">&#8681; Download CSV</button>'+
       '<button class="addbtn" data-action="board-print">&#128424; Print Schedules</button>'+
       '<button class="addbtn" data-action="board-publish-kairos">'+(STATE.publishStatus==='sending'?'Publishing&hellip;':'Publish to Kairos')+'</button>'+
@@ -1757,6 +1758,12 @@
         (STATE.sheetWriteStatus==='sending'?'Sending&hellip;':'Send to Google Sheet')+'</button>' : '')+
       (STATE.sheetWriteUrl ? '<button class="addbtn" data-action="board-email-open">Email this schedule</button>' : '')+
       '</div>';
+    var kairosRefreshStatusHTML = '';
+    if(STATE.kairosRefreshStatus==='ok' && STATE.kairosRefreshedAt){
+      kairosRefreshStatusHTML = '<div class="hint" style="margin-bottom:14px;color:var(--olive);font-weight:600;">&#10003; Refreshed from Kairos: '+fmtDateTime(STATE.kairosRefreshedAt)+' &mdash; today\'s schedule now reflects the latest clock-ins.</div>';
+    } else if(STATE.kairosRefreshStatus==='error'){
+      kairosRefreshStatusHTML = '<div class="hint" style="margin-bottom:14px;color:var(--rust);font-weight:600;">&#9888; Could not reach Kairos. Check your connection and try again.</div>';
+    }
     var publishStatus = '';
     if(STATE.publishStatus==='ok' && STATE.publishedAt){
       publishStatus = '<div class="hint" style="margin-bottom:14px;color:var(--olive);font-weight:600;">&#10003; Published for Kairos: '+fmtDateTime(STATE.publishedAt)+' &mdash; employees will see a suggested job when they clock in.</div>';
@@ -1789,7 +1796,7 @@
       '<div class="board-heading"><h1>Week Schedule</h1><span>Generated live from current priorities, materials holds &amp; remaining hours</span></div>'+
       legendHTML+
       deferredHTML+
-      outputBar+publishStatus+emailForm+sheetStatus+
+      kairosRefreshStatusHTML+outputBar+publishStatus+emailForm+sheetStatus+
       body+
       '</main>'+
       '<div class="print-only">'+buildPrintHTML(weekDates, activeEmployees, results)+'</div>';
@@ -2364,6 +2371,7 @@
       case 'week-prev': STATE.weekStart = addDays(STATE.weekStart, -7); safeSetJSON(K.weekStart, STATE.weekStart); render(); break;
       case 'week-next': STATE.weekStart = addDays(STATE.weekStart, 7); safeSetJSON(K.weekStart, STATE.weekStart); render(); break;
 
+      case 'board-refresh-kairos': onRefreshFromKairos(); break;
       case 'board-export-csv': { var c=computeResults(); onCSVExport(c.weekDates, c.employees, c.results); break; }
       case 'board-print': window.print(); break;
       case 'board-publish-kairos': { var c4=computeResults(); publishScheduleForKairos(c4.weekDates, c4.employees, c4.results); break; }
