@@ -748,14 +748,17 @@
   }
 
   /* ---------------- scheduling engine ----------------
-     Priority-ordered, job-major bin-packing with four levers: pins (an employee's work is
-     exclusive to one job until it's exhausted), restrictedTo (a job may only be worked by a
-     specific set of employees), favoredEmployeeIds (first claim, not exclusive), and
-     historyPreferred (a soft nudge toward whatever job Kairos's actual clock-in history says
-     an employee last worked, so the crew tends to stay put rather than bouncing jobs day to
-     day for no reason). All four are tie-breaks, never overrides -- true priority always wins
-     if a materials hold just released a higher-priority job. Assembly hours on a job are gated
-     until that job's fab skills (cutting/fitting/welding/lineboring) are fully done. */
+     Job-major bin-packing with four levers: pins (an employee's work is exclusive to one
+     job until it's exhausted), restrictedTo (a job may only be worked by a specific set of
+     employees), favoredEmployeeIds (first claim within a job's own turn, not exclusive), and
+     historyPreferred (a nudge toward whatever job Kairos's actual clock-in history says an
+     employee last worked). As of 2026-08-05: pins AND stickiness (same-week momentum plus
+     Kairos history) both run as a pass BEFORE the priority-ordered job loop -- an employee
+     stays on their sticky/last-worked job first, regardless of that job's priority, and only
+     leftover capacity after that pass gets allocated in priority order below. favoredEmployeeIds
+     remains a true tie-break inside a single job's own turn, subordinate to priority. Assembly
+     hours on a job are gated until that job's fab skills (cutting/fitting/welding/lineboring)
+     are fully done. */
   /* A deferred job uses its deferredDueDate for priority/scheduling purposes instead of
      its real dueDate -- the real dueDate is left untouched as the actual commitment,
      deferredDueDate is purely "don't work this until then" for ranking purposes. This
@@ -862,6 +865,38 @@
           if(need <= 0.001) return;
           var take = Math.min(freeCapacity[e.id], need);
           if(take > 0.001) logAssign(e.id, job.id, skill, take);
+        });
+      });
+
+      // Sticky-first pass (2026-08-05 rule change): stickiness now outranks priority
+      // outright, not just as a tie-break within a job's own turn. Any employee whose
+      // same-week momentum or most recent Kairos clock-in points at a job with eligible
+      // work left gets that work FIRST, job priority be damned -- only the capacity left
+      // over after this pass is handed out in priority order below. Same-week momentum
+      // (sticky[]) still outranks Kairos history when both exist, matching the tier order
+      // used inside the priority loop.
+      employees.forEach(function(e){
+        if(manuallySetToday[e.id] || stillPinnedToday[e.id]) return;
+        if(freeCapacity[e.id] <= 0.001) return;
+        var stickyJobId = sticky[e.id] ? sticky[e.id].jobId : (historyPreferred[e.id] || null);
+        if(!stickyJobId) return;
+        var job = jobs.filter(function(j){ return j.id===stickyJobId; })[0];
+        if(!job) return;
+        var restricted = restrictedTo[job.id];
+        if(restricted && restricted.indexOf(e.id)===-1) return;
+        var preferredSkill = sticky[e.id] ? sticky[e.id].skill : null;
+        var skillsToTry = preferredSkill ? [preferredSkill].concat(ALL_SKILLS.filter(function(s){ return s!==preferredSkill; })) : ALL_SKILLS;
+        skillsToTry.forEach(function(skill){
+          if(freeCapacity[e.id] <= 0.001) return;
+          if(!skillOf[e.id][skill]) return;
+          if(!isEligible(job, skill, dateISO)) return;
+          var need = remaining[job.id+'|'+skill];
+          if(need <= 0.001) return;
+          var take = Math.min(freeCapacity[e.id], need);
+          if(take > 0.001){
+            logAssign(e.id, job.id, skill, take);
+            sticky[e.id] = { jobId: job.id, skill: skill };
+          }
         });
       });
 
