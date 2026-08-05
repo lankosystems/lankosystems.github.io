@@ -756,13 +756,19 @@
      day for no reason). All four are tie-breaks, never overrides -- true priority always wins
      if a materials hold just released a higher-priority job. Assembly hours on a job are gated
      until that job's fab skills (cutting/fitting/welding/lineboring) are fully done. */
+  /* A deferred job uses its deferredDueDate for priority/scheduling purposes instead of
+     its real dueDate -- the real dueDate is left untouched as the actual commitment,
+     deferredDueDate is purely "don't work this until then" for ranking purposes. This
+     is a soft re-rank, not a hard block like materialsHold: if nothing else is eligible,
+     a deferred job can still get worked. */
+  function effectiveDueDate(j){ return j.deferredDueDate || j.dueDate; }
   function priorityComparator(a,b){
     var ao=a.priorityOverride, bo=b.priorityOverride;
     if(ao!=null || bo!=null){
       var av = ao==null?999999:ao, bv = bo==null?999999:bo;
       if(av!==bv) return av-bv;
     }
-    var ad=a.dueDate, bd=b.dueDate;
+    var ad=effectiveDueDate(a), bd=effectiveDueDate(b);
     if(ad && !bd) return -1;
     if(!ad && bd) return 1;
     if(ad && bd && ad!==bd) return ad<bd ? -1 : 1;
@@ -1487,13 +1493,77 @@
   }
   function jobLegendForWeek(weekDates, employees, results){
     var ids = {};
+    var poolsForJob = {};
     ['fab','assembly','draftorder'].forEach(function(poolKey){
       var res = results[poolKey];
       employees.filter(function(e){ return e.pool===poolKey; }).forEach(function(emp){
-        weekDates.forEach(function(d){ (res.schedule[emp.id][d]||[]).forEach(function(en){ ids[en.jobId]=true; }); });
+        weekDates.forEach(function(d){ (res.schedule[emp.id][d]||[]).forEach(function(en){
+          ids[en.jobId]=true;
+          poolsForJob[en.jobId] = poolsForJob[en.jobId] || {};
+          poolsForJob[en.jobId][poolKey] = true;
+        }); });
       });
     });
-    return STATE.jobs.filter(function(j){ return ids[j.id]; }).sort(priorityComparator);
+    var jobs = STATE.jobs.filter(function(j){ return ids[j.id]; }).sort(priorityComparator);
+    return { jobs: jobs, poolsForJob: poolsForJob };
+  }
+  var POOL_SHORT = { fab:"Fab", assembly:"Assembly", draftorder:"Draft/Order" };
+  function poolBadgesHTML(jobId, poolsForJob){
+    var set = poolsForJob[jobId] || {};
+    var out = ['fab','assembly','draftorder'].filter(function(p){ return set[p]; }).map(function(p){
+      return '<span class="badge active" style="background:'+POOL_HEX[p]+';color:#fff;margin-right:3px;white-space:nowrap;">'+esc(POOL_SHORT[p])+'</span>';
+    }).join('');
+    return out || '&mdash;';
+  }
+  /* ---------------- forward completion estimate ----------------
+     Re-runs the real scheduling engine week-over-week (starting from the given week)
+     against a cloned copy of jobs' remaining hours, decrementing as it goes, until the
+     target job's remaining hours hit zero or maxWeeks is exhausted. Manual overrides and
+     Kairos-history stickiness only apply to the first (real, current) week -- future
+     weeks are algorithm-only, which is the best available guess since neither exists yet
+     for those weeks. Each pool is simulated separately (matching computeResults) and their
+     resulting remaining-hours are merged per job+skill by taking the smaller (more-
+     decremented) of the two, since only the pool whose employees actually hold that skill
+     will have moved it from its input value. Returns an ISO date (the Friday of the week
+     the job finishes), 'done' if already at zero, or null if it doesn't finish within
+     maxWeeks (shown to the user as an open-ended "6mo+"-style estimate). */
+  function simulateJobCompletion(jobId, startWeekStartISO, employees, jobsSnapshot, opts, maxWeeks){
+    maxWeeks = maxWeeks || 30;
+    function totalRemaining(job){
+      return ALL_SKILLS.reduce(function(s,sk){ return s + Math.max(0, (job.remaining[sk]||0)); }, 0);
+    }
+    var simJobs = jobsSnapshot.map(function(j){ return Object.assign({}, j, { remaining: Object.assign({}, j.remaining) }); });
+    var target = simJobs.filter(function(j){ return j.id===jobId; })[0];
+    if(!target) return null;
+    if(totalRemaining(target) <= 0.001) return 'done';
+    var weekStart = startWeekStartISO;
+    for(var w=0; w<maxWeeks; w++){
+      var weekDates = businessDatesOfWeek(weekStart);
+      var manualOverridesThisWeek = (w===0) ? (opts.manualOverrides||{}) : {};
+      var historyPreferredThisWeek = (w===0) ? (opts.historyPreferred||{}) : {};
+      var perPoolRemaining = [];
+      ['fab','assembly','draftorder'].forEach(function(poolKey){
+        var poolEmployees = employees.filter(function(e){ return e.pool===poolKey; });
+        var res = scheduleWeek({ weekDates:weekDates, employees:poolEmployees, jobs:simJobs,
+          preferences: opts.preferences, pins: opts.pins, restrictions: opts.restrictions,
+          calendar: opts.calendar, manualOverrides: manualOverridesThisWeek,
+          historyPreferred: historyPreferredThisWeek });
+        perPoolRemaining.push(res.remaining);
+      });
+      simJobs = simJobs.map(function(j){
+        var newRemaining = {};
+        ALL_SKILLS.forEach(function(sk){
+          var key = j.id+'|'+sk;
+          var vals = perPoolRemaining.map(function(pr){ return pr[key]; }).filter(function(v){ return v!=null; });
+          newRemaining[sk] = vals.length ? Math.min.apply(Math, vals) : (j.remaining[sk]||0);
+        });
+        return Object.assign({}, j, { remaining:newRemaining });
+      });
+      target = simJobs.filter(function(j){ return j.id===jobId; })[0];
+      if(totalRemaining(target) <= 0.001) return weekDates[weekDates.length-1];
+      weekStart = addDays(weekStart, 7);
+    }
+    return null;
   }
   function dayCellHTML(entries){
     if(!entries || entries.length===0) return '<span class="daycell-empty">&mdash;</span>';
@@ -1525,27 +1595,55 @@
     return '<div class="pool-block"><div class="pool-head" style="background:'+POOL_HEX[poolKey]+';">'+esc(POOL_LABEL[poolKey])+'</div>'+
       '<table class="pool-table">'+head+rows+'</table></div>';
   }
-  function jobTableHTML(jobs){
+    function deferControlHTML(j){
+    var status = j.deferredDueDate
+      ? '<div class="hint" style="margin-top:4px;white-space:nowrap;">&rarr; '+fmtDate(j.deferredDueDate)+
+        ' &middot; <a href="#" data-action="clear-defer" data-id="'+j.id+'">clear</a></div>'
+      : '';
+    return '<div style="display:flex;gap:4px;align-items:center;white-space:nowrap;">'+
+      '<input type="number" min="1" step="1" value="1" id="deferAmt_'+j.id+'" style="width:42px;">'+
+      '<select id="deferUnit_'+j.id+'"><option value="d">days</option><option value="w">weeks</option></select>'+
+      '<button class="iconbtn" data-action="defer-job" data-id="'+j.id+'">Push back</button>'+
+      '</div>'+status;
+  }
+  function jobTableHTML(jobs, poolsForJob, completionByJobId){
     if(!jobs.length) return '';
+    poolsForJob = poolsForJob || {};
+    completionByJobId = completionByJobId || {};
     var rows = jobs.map(function(j){
       var totalRemaining = ALL_SKILLS.reduce(function(s,sk){ return s+(j.remaining[sk]||0); }, 0);
+      var completion = completionByJobId[j.id];
+      var completionHTML = completion==null ? '&mdash;' : (completion==='done' ? 'Done' : fmtDate(completion));
       return '<tr>'+
         '<td class="jnum">'+esc(j.jobNum)+'</td>'+
         '<td>'+esc(j.desc)+'</td>'+
+        '<td>'+poolBadgesHTML(j.id, poolsForJob)+'</td>'+
         '<td class="jdue">'+(j.dueDate?fmtDate(j.dueDate):'backlog')+'</td>'+
+        '<td>'+(j.deferredDueDate?fmtDate(j.deferredDueDate):'&mdash;')+'</td>'+
+        '<td>'+completionHTML+'</td>'+
         '<td>'+(j.materialsHold?'<span class="badge hold">hold '+fmtDate(j.materialsHold)+'</span>':'&mdash;')+'</td>'+
         '<td class="jrem">'+Math.round(totalRemaining)+'h</td>'+
+        '<td>'+deferControlHTML(j)+'</td>'+
         '</tr>';
     }).join('');
     return '<div class="jobtable-wrap"><table class="jobtable"><thead><tr>'+
-      '<th>Job #</th><th>Description</th><th>Due</th><th>Materials hold</th><th style="text-align:right;">Remaining</th>'+
+      '<th>Job #</th><th>Description</th><th>Pools this week</th><th>Due</th><th>Deferred to</th>'+
+      '<th>Updated est. completion</th><th>Materials hold</th><th style="text-align:right;">Remaining</th><th>Defer</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
   function renderBoard(){
     var comp = computeResults();
     var weekDates = comp.weekDates, results = comp.results, activeEmployees = comp.employees;
     var legend = jobLegendForWeek(weekDates, activeEmployees, results);
-    var legendHTML = jobTableHTML(legend);
+    var activeJobsAll = STATE.jobs.filter(function(j){ return j.active!==false; });
+    var simOpts = { preferences: STATE.preferences, pins: STATE.pins, restrictions: STATE.restrictions,
+      calendar: STATE.calendar, manualOverrides: STATE.manualOverrides[STATE.weekStart]||{},
+      historyPreferred: historyPreferredJobFor(activeEmployees, activeJobsAll) };
+    var completionByJobId = {};
+    legend.jobs.forEach(function(j){
+      completionByJobId[j.id] = simulateJobCompletion(j.id, STATE.weekStart, activeEmployees, activeJobsAll, simOpts, 30);
+    });
+    var legendHTML = jobTableHTML(legend.jobs, legend.poolsForJob, completionByJobId);
     var outputBar = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">'+
       '<button class="addbtn" data-action="board-export-csv">&#8681; Download CSV</button>'+
       '<button class="addbtn" data-action="board-print">&#128424; Print Schedules</button>'+
@@ -1952,6 +2050,26 @@
     mutateLocal(K.jobs, STATE.jobs, function(list){ return list.filter(function(j){ return j.id!==id; }); })
       .then(function(updated){ STATE.jobs = updated; if(STATE.expandedJobId===id) STATE.expandedJobId=null; render(); });
   }
+  function onDeferJob(jobId){
+    var amtEl = document.getElementById('deferAmt_'+jobId);
+    var unitEl = document.getElementById('deferUnit_'+jobId);
+    var amt = amtEl ? parseInt(amtEl.value, 10) : 0;
+    if(!amt || amt<=0) return;
+    var unit = unitEl ? unitEl.value : 'd';
+    var days = unit==='w' ? amt*7 : amt;
+    mutateLocal(K.jobs, STATE.jobs, function(list){
+      return list.map(function(j){
+        if(j.id!==jobId) return j;
+        var base = j.deferredDueDate || j.dueDate || todayISO();
+        return Object.assign({}, j, { deferredDueDate: addDays(base, days) });
+      });
+    }).then(function(updated){ STATE.jobs = updated; render(); });
+  }
+  function onClearDefer(jobId){
+    mutateLocal(K.jobs, STATE.jobs, function(list){
+      return list.map(function(j){ return j.id===jobId ? Object.assign({}, j, {deferredDueDate:null}) : j; });
+    }).then(function(updated){ STATE.jobs = updated; render(); });
+  }
   function onAdminJobReactivate(id){
     mutateLocal(K.jobs, STATE.jobs, function(list){
       return list.map(function(j){ return j.id===id ? Object.assign({}, j, {active:true, source:'manual'}) : j; });
@@ -2144,6 +2262,9 @@
       case 'board-print': window.print(); break;
       case 'board-publish-kairos': { var c4=computeResults(); publishScheduleForKairos(c4.weekDates, c4.employees, c4.results); break; }
       case 'board-send-sheet': { var c2=computeResults(); onSendScheduleToSheet(c2.weekDates, c2.employees, c2.results); break; }
+      case 'defer-job': onDeferJob(id); break;
+      case 'clear-defer': e.preventDefault(); onClearDefer(id); break;
+
       case 'board-email-open': STATE.emailFormOpen=true; STATE.emailStatus='idle'; STATE.emailError=null; render(); break;
       case 'board-email-cancel': STATE.emailFormOpen=false; render(); break;
       case 'board-email-send': {
