@@ -680,6 +680,7 @@
     pins: DEFAULT_PINS.slice(), restrictions: Object.assign({}, DEFAULT_RESTRICTIONS), calendar: Object.assign({}, DEFAULT_CALENDAR),
     manualOverrides: {}, // { weekStart: { employeeId: { dateISO: [{jobId,skill,hours},...] } } }
     kairosEntries: [], // read-only cross-app link -- Kairos's actual clock-in history (kairos_state/lanko_entries)
+    kairosRefreshStatus: 'idle', kairosRefreshedAt: null,
     weekStart: null, adminPin: DEFAULT_ADMIN_PIN,
     view: 'loading',
     adminTab: 'roster',
@@ -873,18 +874,32 @@
       // same-week momentum or most recent Kairos clock-in points at a job with eligible
       // work left gets that work FIRST, job priority be damned -- only the capacity left
       // over after this pass is handed out in priority order below. Same-week momentum
-      // (sticky[]) still outranks Kairos history when both exist, matching the tier order
-      // used inside the priority loop.
+      // (sticky[]) still outranks Kairos history when both exist -- EXCEPT for today
+      // itself (2026-08-05, part 2): same-week momentum for today was carried forward
+      // from whatever Minerva assigned on an earlier day, which may not match what the
+      // employee actually did today. Today specifically trusts live Kairos over Minerva's
+      // own inherited momentum, since Kairos is ground truth for "right now" and Minerva's
+      // carried-forward value is just a guess. Past/future days keep the normal order.
       employees.forEach(function(e){
         if(manuallySetToday[e.id] || stillPinnedToday[e.id]) return;
         if(freeCapacity[e.id] <= 0.001) return;
-        var stickyJobId = sticky[e.id] ? sticky[e.id].jobId : (historyPreferred[e.id] || null);
+        var isToday = dateISO === todayISO();
+        var stickyJobId, preferredSkill;
+        if(isToday && historyPreferred[e.id]){
+          stickyJobId = historyPreferred[e.id];
+          preferredSkill = (sticky[e.id] && sticky[e.id].jobId===stickyJobId) ? sticky[e.id].skill : null;
+        } else if(sticky[e.id]){
+          stickyJobId = sticky[e.id].jobId;
+          preferredSkill = sticky[e.id].skill;
+        } else {
+          stickyJobId = historyPreferred[e.id] || null;
+          preferredSkill = null;
+        }
         if(!stickyJobId) return;
         var job = jobs.filter(function(j){ return j.id===stickyJobId; })[0];
         if(!job) return;
         var restricted = restrictedTo[job.id];
         if(restricted && restricted.indexOf(e.id)===-1) return;
-        var preferredSkill = sticky[e.id] ? sticky[e.id].skill : null;
         var skillsToTry = preferredSkill ? [preferredSkill].concat(ALL_SKILLS.filter(function(s){ return s!==preferredSkill; })) : ALL_SKILLS;
         skillsToTry.forEach(function(skill){
           if(freeCapacity[e.id] <= 0.001) return;
@@ -898,6 +913,7 @@
             sticky[e.id] = { jobId: job.id, skill: skill };
           }
         });
+      });
       });
 
       sortedJobs.forEach(function(job){
@@ -1311,6 +1327,24 @@
      engine. Kairos uses it to suggest a job when someone clocks in. Publishing is a manual
      action (like the other outputs here) so it's predictable when Kairos's suggestions
      actually update. */
+  /* Manual button (2026-08-05): the sticky rule already prefers today's Kairos history over
+     Minerva's own inherited same-week momentum (see scheduleWeek), and the live listener in
+     startSharedDataListeners keeps STATE.kairosEntries current automatically -- but this gives
+     Ivan an explicit, deliberate way to force a fresh read of the very latest clock-in data
+     right now and see the schedule respond, rather than trusting the listener silently. */
+  function onRefreshFromKairos(){
+    STATE.kairosRefreshStatus = 'loading'; render();
+    kairosDoc('lanko_entries').get().then(function(snap){
+      STATE.kairosEntries = (snap.exists && snap.data().value) ? snap.data().value : [];
+      STATE.kairosRefreshStatus = 'ok';
+      STATE.kairosRefreshedAt = new Date().toISOString();
+      render();
+    }).catch(function(e){
+      console.error('kairos refresh failed', e);
+      STATE.kairosRefreshStatus = 'error';
+      render();
+    });
+  }
   function publishScheduleForKairos(weekDates, employees, results){
     var byName = {};
     employees.forEach(function(emp){
