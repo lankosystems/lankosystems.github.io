@@ -1666,6 +1666,39 @@
       '<th>Updated est. completion</th><th>Materials hold</th><th style="text-align:right;">Remaining</th><th>Defer</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>';
   }
+  /* Deferred jobs used to vanish from the board entirely once they lost enough priority to
+     fall out of this week's pool schedules -- no way to see or clear the defer short of a
+     direct data fix. This keeps every deferred, not-yet-finished job visible in its own
+     section right below the week table regardless of whether anyone's actually scheduled
+     on it this week, with its own Clear link. excludeIds skips jobs already shown above so
+     nothing appears twice. */
+  function deferredJobsTableHTML(excludeIds){
+    excludeIds = excludeIds || {};
+    var deferred = STATE.jobs.filter(function(j){
+      if(j.active===false) return false;
+      if(!j.deferredDueDate) return false;
+      if(excludeIds[j.id]) return false;
+      var totalRemaining = ALL_SKILLS.reduce(function(s,sk){ return s+(j.remaining[sk]||0); }, 0);
+      return totalRemaining > 0.001;
+    }).sort(priorityComparator);
+    if(!deferred.length) return '';
+    var rows = deferred.map(function(j){
+      var totalRemaining = ALL_SKILLS.reduce(function(s,sk){ return s+(j.remaining[sk]||0); }, 0);
+      return '<tr>'+
+        '<td class="jnum">'+esc(j.jobNum)+'</td>'+
+        '<td>'+esc(j.desc)+'</td>'+
+        '<td class="jdue">'+(j.dueDate?fmtDate(j.dueDate):'backlog')+'</td>'+
+        '<td>'+fmtDate(j.deferredDueDate)+'</td>'+
+        '<td class="jrem">'+Math.round(totalRemaining)+'h</td>'+
+        '<td><a href="#" data-action="clear-defer" data-id="'+j.id+'">Clear defer</a></td>'+
+        '</tr>';
+    }).join('');
+    return '<div class="jobtable-wrap" style="margin-top:6px;">'+
+      '<div class="hint" style="padding:8px 12px;background:var(--paper-dim);border-bottom:1px solid var(--line);">'+
+      'Deferred &mdash; not scheduled this week</div>'+
+      '<table class="jobtable"><thead><tr><th>Job #</th><th>Description</th><th>Due</th><th>Deferred to</th>'+
+      '<th style="text-align:right;">Remaining</th><th>Clear</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
   function renderBoard(){
     var comp = computeResults();
     var weekDates = comp.weekDates, results = comp.results, activeEmployees = comp.employees;
@@ -1679,6 +1712,9 @@
       completionByJobId[j.id] = simulateJobCompletion(j.id, STATE.weekStart, activeEmployees, activeJobsAll, simOpts, 30);
     });
     var legendHTML = jobTableHTML(legend.jobs, legend.poolsForJob, completionByJobId);
+    var legendIds = {};
+    legend.jobs.forEach(function(j){ legendIds[j.id] = true; });
+    var deferredHTML = deferredJobsTableHTML(legendIds);
     var outputBar = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">'+
       '<button class="addbtn" data-action="board-export-csv">&#8681; Download CSV</button>'+
       '<button class="addbtn" data-action="board-print">&#128424; Print Schedules</button>'+
@@ -1718,6 +1754,7 @@
     return '<main class="board no-print">'+
       '<div class="board-heading"><h1>Week Schedule</h1><span>Generated live from current priorities, materials holds &amp; remaining hours</span></div>'+
       legendHTML+
+      deferredHTML+
       outputBar+publishStatus+emailForm+sheetStatus+
       body+
       '</main>'+
