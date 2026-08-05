@@ -352,7 +352,7 @@
   /* ---------------- state ---------------- */
   var state = { projects:[], vendors:[], pos:[], counters:null, settings:null, receipts:[], reminders:[] };
   var loaded = {};
-  var view = { page:'projects', id:null, err:'' };
+  var view = { page:'projects', id:null, err:'', projSort:{ key:'awardedAt', dir:-1 } };
 
   /* ---------------- helpers ---------------- */
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
@@ -366,6 +366,12 @@
       (cur==='USD' ? ' USD' : '');
   }
   function fmtDate(d){ return d ? String(d) : ''; }
+  /* Order value is always derived from the line items, never typed by hand -
+     qty times unit price, summed, no GST (Odin tracks pre-tax job value). */
+  function lineAmt(it){ return num(it.qty) * num(it.unitPrice); }
+  function projectValue(p){
+    return (p.items||[]).reduce(function(t, it){ return t + lineAmt(it); }, 0);
+  }
   function toast(msg, isErr){
     var t = document.getElementById('toast');
     t.textContent = msg; t.style.display = 'block';
@@ -539,8 +545,32 @@
     });
     return Object.keys(b);
   }
+  /* Column headers on the projects list are clickable: first click sorts that
+     column ascending, a second click flips to descending. Value sorts on the
+     computed total, not any stored field, so it always matches what is shown. */
+  var PROJ_COLS = [
+    ['job','Job'], ['customerName','Customer'], ['title','Title'],
+    ['poNo','PO #'], ['dueDate','Due'], ['value','Value'], ['status','Stage']
+  ];
+  function projSortValue(p, key){
+    if(key==='job') return p.jobRef || p.quoteNum || '';
+    if(key==='value') return projectValue(p);
+    if(key==='awardedAt') return p.awardedAt||0;
+    return p[key] || '';
+  }
+  function sortProjects(rows){
+    var key = view.projSort.key, dir = view.projSort.dir;
+    return rows.slice().sort(function(a,b){
+      var va = projSortValue(a, key), vb = projSortValue(b, key);
+      if(typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+      va = String(va).toLowerCase(); vb = String(vb).toLowerCase();
+      if(va < vb) return -1 * dir;
+      if(va > vb) return 1 * dir;
+      return 0;
+    });
+  }
   function renderProjects(){
-    var rows = state.projects.slice().sort(function(a,b){ return (b.awardedAt||0)-(a.awardedAt||0); });
+    var rows = sortProjects(state.projects);
     var open = rows.filter(function(p){ return p.status!=='closed'; });
     var h = '<div class="section-head"><div><h1>Projects</h1>' +
       '<div class="sub">'+open.length+' open &middot; awarded quotes arrive here from Kubera</div></div>' +
@@ -553,8 +583,12 @@
         'Mark a quote Won in Kubera and use its Award to Odin button, or raise one by hand.</div></div>';
     }
     h += '<div class="card" style="padding:8px 12px"><table class="rows"><thead><tr>' +
-      '<th>Job</th><th>Customer</th><th>Title</th><th>PO #</th><th>Due</th>' +
-      '<th class="right">Value</th><th>Stage</th><th></th></tr></thead><tbody>';
+      PROJ_COLS.map(function(c){
+        var active = view.projSort.key === c[0];
+        var arrow = active ? (view.projSort.dir===1 ? ' \u25B2' : ' \u25BC') : '';
+        var cls = c[0]==='value' ? 'right sortable' : 'sortable';
+        return '<th class="'+cls+'" data-sort="'+c[0]+'" style="cursor:pointer;user-select:none">'+esc(c[1])+arrow+'</th>';
+      }).join('') + '<th></th></tr></thead><tbody>';
     rows.forEach(function(p){
       var blocked = blockedOpsFor(p);
       h += '<tr class="click" data-open="'+p.id+'">' +
@@ -563,7 +597,7 @@
         '<td>'+esc(p.title||'')+'</td>' +
         '<td class="mono">'+esc(p.poNo||'')+'</td>' +
         '<td class="mono">'+esc(p.dueDate||'')+'</td>' +
-        '<td class="right mono">'+money(p.value, p.currency)+'</td>' +
+        '<td class="right mono">'+money(projectValue(p), p.currency)+'</td>' +
         '<td>'+rail(p.status)+'</td>' +
         '<td>'+(blocked.length ? '<span class="pill warn" title="'+esc(blocked.join(', '))+'">'+
           blocked.length+' op'+(blocked.length>1?'s':'')+' blocked</span>' :
@@ -586,6 +620,15 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-open]'), function(tr){
       tr.onclick = function(){ go('project', tr.getAttribute('data-open')); };
     });
+    Array.prototype.forEach.call(document.querySelectorAll('th[data-sort]'), function(th){
+      th.onclick = function(){
+        var key = th.getAttribute('data-sort');
+        if(view.projSort.key === key) view.projSort.dir *= -1;
+        else { view.projSort.key = key; view.projSort.dir = 1; }
+        render();
+      };
+    });
+  }
   }
 
   /* ==========================================================================
@@ -627,15 +670,20 @@
       '</div><div class="grid g3" style="margin-top:12px">' +
       field('Customer', '<input data-f="customerName" value="'+esc(p.customerName)+'">') +
       field('Title', '<input data-f="title" value="'+esc(p.title)+'">') +
-      field('Order value', '<input class="mono" data-f="value" value="'+esc(p.value)+'">') +
+      field('Order value', '<div class="mono" id="pjOrderValueDisplay" style="padding:8px 0;font-weight:700;font-size:15px">'+
+        money(projectValue(p), p.currency)+'</div>',
+        'Calculated from the line items below (qty &times; unit price, no GST) &mdash; not typed by hand.') +
       '</div></div>';
 
-    /* line items - the PO review. What the customer actually bought. */
+    /* line items - the PO review. What the customer actually bought. Amount
+       and the Order value above recalculate live as qty, price or the line
+       list itself changes; nothing here is a manually-kept total. */
     h += '<div class="card"><h2>Line items &mdash; check against the purchase order</h2>' +
       '<div class="hint" style="margin-bottom:10px">The customer may have bought fewer items or smaller ' +
       'quantities than quoted. Adjust these lines to match the PO before scheduling anything.</div>' +
       '<table class="items"><thead><tr><th class="c-qty">Qty</th><th class="c-unit">Unit</th>' +
-      '<th class="c-part">Part no.</th><th>Description</th><th class="c-price">Unit price</th><th class="c-del"></th></tr></thead><tbody>';
+      '<th class="c-part">Part no.</th><th>Description</th><th class="c-price">Unit price</th>' +
+      '<th class="c-price right">Amount</th><th class="c-del"></th></tr></thead><tbody>';
     p.items.forEach(function(it, i){
       h += '<tr>' +
         '<td><input class="c-qty" data-ii="'+i+'" data-if="qty" value="'+esc(it.qty)+'"></td>' +
@@ -643,9 +691,13 @@
         '<td><input class="c-part" data-ii="'+i+'" data-if="partNo" value="'+esc(it.partNo||'')+'"></td>' +
         '<td><textarea data-ii="'+i+'" data-if="desc" rows="1">'+esc(it.desc||'')+'</textarea></td>' +
         '<td><input class="c-price" data-ii="'+i+'" data-if="unitPrice" value="'+esc(it.unitPrice)+'"></td>' +
+        '<td class="right mono" id="pjAmt-'+i+'">'+money(lineAmt(it), p.currency)+'</td>' +
         '<td class="c-del"><button class="iconbtn danger" data-idel="'+i+'">x</button></td></tr>';
     });
-    h += '</tbody></table><div style="margin-top:10px"><button class="btn sm ghost" id="pjAddItem">Add line</button></div></div>';
+    h += '</tbody></table><div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">' +
+      '<button class="btn sm ghost" id="pjAddItem">Add line</button>' +
+      '<div class="mono" style="font-size:15px">Total (excl. GST): <b id="pjItemsTotal">'+money(projectValue(p), p.currency)+'</b></div>' +
+      '</div></div>';
 
     /* hours budget in the 17-op vocabulary */
     h += '<div class="card"><h2>Hours budget by operation</h2>' +
@@ -727,6 +779,7 @@
     document.getElementById('pjSave').onclick = function(){
       var prev = state.projects.find(function(x){ return x.id === p.id; });
       var entering = prev && prev.status === 'awaiting' && p.status !== 'awaiting';
+      p.value = projectValue(p);
       saveProjects(upsert(state.projects, JSON.parse(JSON.stringify(p))))
         .then(function(ok){
           if(!ok) return;
@@ -761,10 +814,22 @@
       el.oninput = function(){ p[el.getAttribute('data-f')] =
         el.getAttribute('data-f')==='value' ? num(el.value) : el.value; };
     });
+    var refreshTotals = function(){
+      var t = projectValue(p);
+      var totalEl = document.getElementById('pjItemsTotal');
+      if(totalEl) totalEl.textContent = money(t, p.currency);
+      var orderEl = document.getElementById('pjOrderValueDisplay');
+      if(orderEl) orderEl.textContent = money(t, p.currency);
+    };
     Array.prototype.forEach.call(document.querySelectorAll('[data-ii]'), function(el){
       el.oninput = function(){
         var i = parseInt(el.getAttribute('data-ii'),10), f = el.getAttribute('data-if');
-        p.items[i][f] = (f==='qty'||f==='unitPrice') ? el.value : el.value;
+        p.items[i][f] = (f==='qty'||f==='unitPrice') ? num(el.value) : el.value;
+        if(f==='qty' || f==='unitPrice'){
+          var amtEl = document.getElementById('pjAmt-'+i);
+          if(amtEl) amtEl.textContent = money(lineAmt(p.items[i]), p.currency);
+          refreshTotals();
+        }
       };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-idel]'), function(el){
