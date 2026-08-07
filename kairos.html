@@ -1205,7 +1205,6 @@
       case 'pin': stage.innerHTML = renderPin(); break;
       case 'newpin': stage.innerHTML = renderNewPinSetup(); break;
       case 'action': stage.innerHTML = renderAction(); break;
-      case 'officestatus': stage.innerHTML = renderOfficeStatus(); break;
       case 'manualentry': stage.innerHTML = renderManualEntry(); break;
       case 'myhistory': stage.innerHTML = renderMyHistory(); break;
       case 'tasks': stage.innerHTML = renderTaskSelect(); break;
@@ -1296,7 +1295,8 @@
         STATE.newPinBuffer=''; STATE.newPinStage='enter'; STATE.newPin1=null; STATE.newPinError=false;
         STATE.view='newpin';
       } else if(emp.presenceOnly){
-        STATE.view='officestatus';
+        onQuickToggleOfficeStatus();
+        return;
       } else {
         STATE.view='action'; STATE.actionMode=null;
       }
@@ -1435,32 +1435,20 @@
 
   /* ---------------- office presence (salaried, no time tracking) ----------------
      For employees flagged presenceOnly (e.g. salaried office staff): tapping their tile
-     and entering their PIN opens this simple in/out toggle instead of the normal
-     clock-in/out + job flow. No entries get created here at all -- just a status flag
-     and timestamp on the employee record itself. */
-  function renderOfficeStatus(){
-    var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
-    if(!emp){ STATE.view='rack'; return renderRack(); }
-    var inOffice = emp.officeStatus==='in';
-    var updatedLine = emp.officeStatusUpdatedAt ? ('<p class="statusline" style="margin-top:4px;font-size:13px;color:#8a7f68;">Last updated '+fmtTime(emp.officeStatusUpdatedAt)+'</p>') : '';
-    return '<div class="action-view"><span class="backlink" data-action="officestatus-back">&larr; Back</span>'+
-      '<div class="action-view-scroll">'+
-      '<div class="status-hero"><p class="greetname">'+esc(emp.name)+'</p>'+
-      '<p class="statusline">You are currently <b>'+(inOffice?'In Office':'Out of Office')+'</b></p>'+
-      updatedLine+
-      '</div>'+
-      '<div class="actionbtns">'+
-        '<button class="bigbtn '+(inOffice?'secondary':'primary')+'" data-action="office-set-in">I\u2019m In Office</button>'+
-        '<button class="bigbtn '+(!inOffice?'secondary':'primary')+'" data-action="office-set-out">I\u2019m Out of Office</button>'+
-      '</div></div></div>';
-  }
-  function onSetOfficeStatus(status){
+     and entering their PIN immediately flips their status (in<->out) and drops them back
+     on the rack, same "quick punch" feel as clock-in/out's showStamp. No entries get
+     created here at all -- just a status flag and timestamp on the employee record. */
+  function onQuickToggleOfficeStatus(){
     var empId = STATE.selectedEmployeeId;
+    var emp = STATE.employees.find(function(e){ return e.id===empId; });
+    if(!emp){ resetToRack(); return; }
+    var newStatus = emp.officeStatus==='in' ? 'out' : 'in';
     var now = new Date().toISOString();
     mutateLocal(K.employees, STATE.employees, function(list){
-      return list.map(function(e){ return e.id===empId ? Object.assign({}, e, {officeStatus:status, officeStatusUpdatedAt:now}) : e; });
+      return list.map(function(e){ return e.id===empId ? Object.assign({}, e, {officeStatus:newStatus, officeStatusUpdatedAt:now}) : e; });
     }).then(function(updated){
-      STATE.employees = updated; render();
+      STATE.employees = updated;
+      showStamp(newStatus, newStatus==='in'?'In Office':'Out of Office', null);
     });
   }
 
@@ -2698,9 +2686,6 @@
       case 'newpin-back': STATE.newPinBuffer=STATE.newPinBuffer.slice(0,-1); render(); break;
 
       case 'action-cancel': resetToRack(); break;
-      case 'officestatus-back': resetToRack(); break;
-      case 'office-set-in': onSetOfficeStatus('in'); break;
-      case 'office-set-out': onSetOfficeStatus('out'); break;
       case 'logtime-mode': STATE.adminLogTimeMode=id; STATE.adminLogTimeError=null; render(); break;
       case 'admin-logtime-clock-save': onAdminLogTimeClockSave(); break;
       case 'admin-logtime-simple-save': onAdminLogTimeSimpleSave(); break;
@@ -2854,7 +2839,7 @@
   function startIdleWatch(){
     setInterval(function(){
       var idleMs = Date.now() - (STATE.lastInteractionAt||Date.now());
-      if((STATE.view==='pin' || STATE.view==='action' || STATE.view==='adminpin' || STATE.view==='newpin' || STATE.view==='officestatus') && idleMs>20000){ resetToRack(); }
+      if((STATE.view==='pin' || STATE.view==='action' || STATE.view==='adminpin' || STATE.view==='newpin') && idleMs>20000){ resetToRack(); }
       else if(STATE.view==='tasks' && idleMs>30000){ resetToRack(); }
       else if(STATE.view==='manualentry' && idleMs>60000){ resetToRack(); }
       else if(STATE.view==='myhistory' && idleMs>60000){ resetToRack(); }
