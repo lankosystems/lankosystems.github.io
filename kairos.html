@@ -94,6 +94,7 @@
   }
   .aengus-link:hover{ background:rgba(0,0,0,0.24); color:var(--gold-light); }
   @media (max-width:700px){ .aengus-link .txt{ display:none; } .aengus-link{ padding:6px 8px; } }
+  .admin-topbar-right{ display:flex; align-items:center; gap:10px; }
   .topbar-right{ display:flex; align-items:center; gap:22px; }
   .headclock{ font-family: var(--mono); text-align:right; color: var(--paper); line-height:1.15; }
   .headclock .time{ font-size:22px; font-weight:600; letter-spacing:0.5px;}
@@ -357,7 +358,6 @@
     <div class="topbar-right">
       <div class="headclock"><div class="time" id="hcTime">--:--</div><div class="date" id="hcDate">---</div></div>
       <button class="gearbtn" data-action="open-gear" aria-label="Admin"><span class="gearicon">&#9881;</span>Admin</button>
-      <a class="aengus-link" href="index.html" title="Back to Aengus Dashboard">&#8962;<span class="txt"> Aengus</span></a>
     </div>
   </header>
   <div id="stage"></div>
@@ -1951,7 +1951,8 @@
   function renderAdmin(){
     return '<div class="admin-view"><div class="admin-topbar">'+
       '<div class="admin-tabs">'+tabBtn('employees','Employees')+tabBtn('jobs','Jobs')+tabBtn('tasks','Tasks')+tabBtn('logtime','Log Time')+tabBtn('log','Daily Log')+tabBtn('settings','Settings')+'</div>'+
-      '<button class="admin-exit" data-action="exit-admin">Exit to Kairos 26.10</button>'+
+      '<div class="admin-topbar-right"><button class="admin-exit" data-action="exit-admin">Exit to Kairos 26.10</button>'+
+      '<a class="aengus-link" href="index.html" title="Back to Aengus Dashboard">&#8962;<span class="txt"> Aengus</span></a></div>'+
       '</div><div class="admin-body">'+
       (STATE.adminTab==='employees'?renderEmployeesTab():
        STATE.adminTab==='jobs'?renderJobsTab():
