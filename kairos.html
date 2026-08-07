@@ -492,6 +492,7 @@
     employeeSource:null, employeeSourceFormOpen:false, employeeSourceError:null, empSyncStatus:'idle', empSyncError:null,
     taskSource:null, taskSourceFormOpen:false, taskSourceError:null, taskSyncStatus:'idle', taskSyncError:null,
     manualEntryError:null, manualEntrySavedName:null,
+    adminLogTimeMode:'clock', adminLogTimeError:null, adminLogTimeSavedName:null,
     sheetWriteUrl:null, sheetWriteFormOpen:false, sheetWriteError:null, sheetWriteStatus:'idle', sheetWriteLastSentAt:null,
     historyRangeDays:14, historyFlagOpenId:null, historyFlagError:null,
     historyEmailFormOpen:false, historyEmailInput:null, historyEmailStatus:'idle', historyEmailError:null,
@@ -1204,6 +1205,7 @@
       case 'pin': stage.innerHTML = renderPin(); break;
       case 'newpin': stage.innerHTML = renderNewPinSetup(); break;
       case 'action': stage.innerHTML = renderAction(); break;
+      case 'officestatus': stage.innerHTML = renderOfficeStatus(); break;
       case 'manualentry': stage.innerHTML = renderManualEntry(); break;
       case 'myhistory': stage.innerHTML = renderMyHistory(); break;
       case 'tasks': stage.innerHTML = renderTaskSelect(); break;
@@ -1231,13 +1233,22 @@
       .sort(function(a,b){ return a.name.localeCompare(b.name); });
     var openByEmp = {};
     STATE.entries.forEach(function(en){ if(!en.clockOut) openByEmp[en.employeeId]=en; });
-    var activeCount = activeEmployees.filter(function(e){ return openByEmp[e.id]; }).length;
+    var activeCount = activeEmployees.filter(function(e){ return e.presenceOnly ? e.officeStatus==='in' : openByEmp[e.id]; }).length;
 
     if(activeEmployees.length===0){
       return '<main class="rack"><div class="empty-state" style="margin-top:60px;"><b>No employees yet</b>Tap the gear icon above to add your team and job list.</div></main>';
     }
 
     var cards = activeEmployees.map(function(emp){
+      if(emp.presenceOnly){
+        var inOffice = emp.officeStatus==='in';
+        var cls = inOffice ? 'card active' : 'card idle';
+        var sub = inOffice ? 'In Office' : 'Out of Office';
+        return '<div class="'+cls+'" tabindex="0" data-action="open-employee" data-id="'+emp.id+'">'+
+          '<div class="sub"><span class="dot"></span>'+sub+'</div>'+
+          '<div class="name">'+esc(emp.name)+'</div>'+
+          '<div class="dashed">Tap to update</div></div>';
+      }
       var open = openByEmp[emp.id];
       var cls = open ? 'card active' : 'card idle';
       var tag = open ? '<span class="tag">'+esc(open.jobName)+'</span>' : '';
@@ -1284,6 +1295,8 @@
       if(emp.needsPinSetup){
         STATE.newPinBuffer=''; STATE.newPinStage='enter'; STATE.newPin1=null; STATE.newPinError=false;
         STATE.view='newpin';
+      } else if(emp.presenceOnly){
+        STATE.view='officestatus';
       } else {
         STATE.view='action'; STATE.actionMode=null;
       }
@@ -1420,6 +1433,37 @@
       '</div></div></div>';
   }
 
+  /* ---------------- office presence (salaried, no time tracking) ----------------
+     For employees flagged presenceOnly (e.g. salaried office staff): tapping their tile
+     and entering their PIN opens this simple in/out toggle instead of the normal
+     clock-in/out + job flow. No entries get created here at all -- just a status flag
+     and timestamp on the employee record itself. */
+  function renderOfficeStatus(){
+    var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
+    if(!emp){ STATE.view='rack'; return renderRack(); }
+    var inOffice = emp.officeStatus==='in';
+    var updatedLine = emp.officeStatusUpdatedAt ? ('<p class="statusline" style="margin-top:4px;font-size:13px;color:#8a7f68;">Last updated '+fmtTime(emp.officeStatusUpdatedAt)+'</p>') : '';
+    return '<div class="action-view"><span class="backlink" data-action="officestatus-back">&larr; Back</span>'+
+      '<div class="action-view-scroll">'+
+      '<div class="status-hero"><p class="greetname">'+esc(emp.name)+'</p>'+
+      '<p class="statusline">You are currently <b>'+(inOffice?'In Office':'Out of Office')+'</b></p>'+
+      updatedLine+
+      '</div>'+
+      '<div class="actionbtns">'+
+        '<button class="bigbtn '+(inOffice?'secondary':'primary')+'" data-action="office-set-in">I\u2019m In Office</button>'+
+        '<button class="bigbtn '+(!inOffice?'secondary':'primary')+'" data-action="office-set-out">I\u2019m Out of Office</button>'+
+      '</div></div></div>';
+  }
+  function onSetOfficeStatus(status){
+    var empId = STATE.selectedEmployeeId;
+    var now = new Date().toISOString();
+    mutateLocal(K.employees, STATE.employees, function(list){
+      return list.map(function(e){ return e.id===empId ? Object.assign({}, e, {officeStatus:status, officeStatusUpdatedAt:now}) : e; });
+    }).then(function(updated){
+      STATE.employees = updated; render();
+    });
+  }
+
   /* ---------------- manual crew entry (lead hand / foreman) ----------------
      Lets an employee flagged canManualEntry log a complete clock-in/out entry on
      behalf of a crew member who has no way to sign into the tablet themselves. Grantable
@@ -1471,6 +1515,114 @@
       clockIn:clockIn, clockOut:clockOut, completedTasks:[], enteredBy: loggedBy ? loggedBy.name : null };
     mutateEntries(function(list){ return list.concat([entry]); }).then(function(updated){
       STATE.entries = updated; STATE.manualEntryError=null; STATE.manualEntrySavedName=emp.name; render();
+    });
+  }
+
+  /* ---------------- admin: log time for crew ----------------
+     Same underlying entry shape as the employee-side manual entry above, but reachable
+     from the Admin screen (admin PIN) instead of a specific employee's own PIN session --
+     needed once an employee is presenceOnly and no longer has a personal action screen to
+     reach "Log time for a crew member" from. A "Logged by" dropdown (anyone with
+     canManualEntry) replaces STATE.selectedEmployeeId as the audit-trail source. Offers two
+     entry styles: the original clock-in/out picker, and a simpler date+job+hours form that
+     synthesizes a clockIn/clockOut window under the hood so nothing downstream (Payroll,
+     Time by Job, the sheet bridge) needs to know the difference. */
+  function renderLogTimeTab(){
+    var crewOptions = STATE.employees.filter(function(e){ return e.active && !e.presenceOnly; })
+      .sort(function(a,b){ return a.name.localeCompare(b.name); });
+    var loggers = STATE.employees.filter(function(e){ return e.canManualEntry; })
+      .sort(function(a,b){ return a.name.localeCompare(b.name); });
+    var shopJobs = STATE.jobs.filter(function(j){ return j.active && (j.audience||'shop')==='shop'; });
+    var mode = STATE.adminLogTimeMode || 'clock';
+    var nowVal = toLocalInputVal(new Date().toISOString());
+    var todayVal = new Date().toISOString().slice(0,10);
+
+    var loggedByField = '<div class="field" style="flex:1;min-width:180px;"><label>Logged by</label><select id="adminLogTimeBySelect">'+
+      (loggers.length===0?'<option value="">No one has manual-entry access</option>':'')+
+      loggers.map(function(e){ return '<option value="'+e.id+'">'+esc(e.name)+'</option>'; }).join('')+
+    '</select></div>';
+
+    var modeToggle = '<div class="admin-tabs" style="margin:16px 0;">'+
+      '<button class="'+(mode==='clock'?'active':'')+'" data-action="logtime-mode" data-id="clock">Clock In / Out</button>'+
+      '<button class="'+(mode==='simple'?'active':'')+'" data-action="logtime-mode" data-id="simple">Simple (Date + Hours)</button>'+
+    '</div>';
+
+    var savedMsg = STATE.adminLogTimeSavedName ? '<div class="formerr" style="color:var(--olive);font-weight:600;">&#10003; Saved for '+esc(STATE.adminLogTimeSavedName)+'.</div>' : '';
+    var errMsg = STATE.adminLogTimeError ? '<div class="formerr">'+esc(STATE.adminLogTimeError)+'</div>' : '';
+
+    var empField = '<div class="field" style="flex:1;min-width:180px;"><label>Employee</label><select id="adminLogTimeEmpSelect">'+
+      (crewOptions.length===0?'<option value="">No employees</option>':'')+
+      crewOptions.map(function(e){ return '<option value="'+e.id+'">'+esc(e.name)+'</option>'; }).join('')+
+    '</select></div>';
+    var jobField = '<div class="field" style="flex:1;min-width:180px;"><label>Job</label><select id="adminLogTimeJobSelect">'+
+      (shopJobs.length===0?'<option value="">No shop jobs</option>':'')+
+      shopJobs.map(function(j){ return '<option value="'+j.id+'">'+esc(j.name)+'</option>'; }).join('')+
+    '</select></div>';
+
+    var formBody;
+    if(mode==='simple'){
+      formBody = empField + jobField +
+        '<div class="field"><label>Date</label><input id="adminLogTimeDateInput" type="date" value="'+todayVal+'"></div>'+
+        '<div class="field"><label>Hours worked</label><input id="adminLogTimeHoursInput" type="number" min="0.25" step="0.25" placeholder="e.g. 7.5"></div>'+
+        errMsg+
+        '<div class="formbtns"><button class="save" data-action="admin-logtime-simple-save">Save entry</button></div>';
+    } else {
+      formBody = empField + jobField +
+        '<div class="field"><label>Clock in</label><input id="adminLogTimeInInput" type="datetime-local" value="'+nowVal+'"></div>'+
+        '<div class="field"><label>Clock out (optional)</label><input id="adminLogTimeOutInput" type="datetime-local" value=""></div>'+
+        errMsg+
+        '<div class="formbtns"><button class="save" data-action="admin-logtime-clock-save">Save entry</button></div>';
+    }
+
+    return '<div><h2 style="margin-top:0;">Log Time for Crew</h2>'+
+      '<p class="sub" style="margin-bottom:0;">For crew who can\u2019t sign in themselves, or to backfill a missed entry.</p>'+
+      savedMsg+
+      '<div class="inlineform" style="max-width:640px;margin-top:16px;">'+loggedByField+'</div>'+
+      modeToggle+
+      '<div class="inlineform" style="max-width:640px;">'+formBody+'</div>'+
+      '</div>';
+  }
+  function onAdminLogTimeClockSave(){
+    var empSel = document.getElementById('adminLogTimeEmpSelect');
+    var jobSel = document.getElementById('adminLogTimeJobSelect');
+    var inVal = document.getElementById('adminLogTimeInInput').value;
+    var outVal = document.getElementById('adminLogTimeOutInput').value;
+    var loggedBySel = document.getElementById('adminLogTimeBySelect');
+    var emp = STATE.employees.find(function(e){ return e.id===(empSel?empSel.value:null); });
+    var job = STATE.jobs.find(function(j){ return j.id===(jobSel?jobSel.value:null); });
+    var loggedBy = STATE.employees.find(function(e){ return e.id===(loggedBySel?loggedBySel.value:null); });
+    if(!emp){ STATE.adminLogTimeError='Pick an employee.'; render(); return; }
+    if(!job){ STATE.adminLogTimeError='Pick a job.'; render(); return; }
+    if(!inVal){ STATE.adminLogTimeError='Clock-in time is required.'; render(); return; }
+    var clockIn = new Date(inVal).toISOString();
+    var clockOut = outVal ? new Date(outVal).toISOString() : null;
+    if(clockOut && new Date(clockOut) <= new Date(clockIn)){ STATE.adminLogTimeError='Clock-out must be after clock-in.'; render(); return; }
+    var entry = { id:uid('ent'), employeeId:emp.id, employeeName:emp.name, jobId:job.id, jobName:job.name,
+      clockIn:clockIn, clockOut:clockOut, completedTasks:[], enteredBy: loggedBy ? loggedBy.name : null };
+    mutateEntries(function(list){ return list.concat([entry]); }).then(function(updated){
+      STATE.entries = updated; STATE.adminLogTimeError=null; STATE.adminLogTimeSavedName=emp.name; render();
+    });
+  }
+  function onAdminLogTimeSimpleSave(){
+    var empSel = document.getElementById('adminLogTimeEmpSelect');
+    var jobSel = document.getElementById('adminLogTimeJobSelect');
+    var dateVal = document.getElementById('adminLogTimeDateInput').value;
+    var hoursVal = parseFloat(document.getElementById('adminLogTimeHoursInput').value);
+    var loggedBySel = document.getElementById('adminLogTimeBySelect');
+    var emp = STATE.employees.find(function(e){ return e.id===(empSel?empSel.value:null); });
+    var job = STATE.jobs.find(function(j){ return j.id===(jobSel?jobSel.value:null); });
+    var loggedBy = STATE.employees.find(function(e){ return e.id===(loggedBySel?loggedBySel.value:null); });
+    if(!emp){ STATE.adminLogTimeError='Pick an employee.'; render(); return; }
+    if(!job){ STATE.adminLogTimeError='Pick a job.'; render(); return; }
+    if(!dateVal){ STATE.adminLogTimeError='Pick a date.'; render(); return; }
+    if(!hoursVal || hoursVal<=0){ STATE.adminLogTimeError='Enter hours worked (greater than 0).'; render(); return; }
+    var clockInDate = new Date(dateVal+'T07:00:00');
+    var clockIn = clockInDate.toISOString();
+    var clockOut = new Date(clockInDate.getTime() + hoursVal*3600000).toISOString();
+    var entry = { id:uid('ent'), employeeId:emp.id, employeeName:emp.name, jobId:job.id, jobName:job.name,
+      clockIn:clockIn, clockOut:clockOut, completedTasks:[], enteredBy: loggedBy ? loggedBy.name : null };
+    mutateEntries(function(list){ return list.concat([entry]); }).then(function(updated){
+      STATE.entries = updated; STATE.adminLogTimeError=null; STATE.adminLogTimeSavedName=emp.name; render();
     });
   }
 
@@ -1798,12 +1950,13 @@
 
   function renderAdmin(){
     return '<div class="admin-view"><div class="admin-topbar">'+
-      '<div class="admin-tabs">'+tabBtn('employees','Employees')+tabBtn('jobs','Jobs')+tabBtn('tasks','Tasks')+tabBtn('log','Daily Log')+tabBtn('settings','Settings')+'</div>'+
+      '<div class="admin-tabs">'+tabBtn('employees','Employees')+tabBtn('jobs','Jobs')+tabBtn('tasks','Tasks')+tabBtn('logtime','Log Time')+tabBtn('log','Daily Log')+tabBtn('settings','Settings')+'</div>'+
       '<button class="admin-exit" data-action="exit-admin">Exit to Kairos 26.10</button>'+
       '</div><div class="admin-body">'+
       (STATE.adminTab==='employees'?renderEmployeesTab():
        STATE.adminTab==='jobs'?renderJobsTab():
        STATE.adminTab==='tasks'?renderTasksTab():
+       STATE.adminTab==='logtime'?renderLogTimeTab():
        STATE.adminTab==='log'?renderLogTab():renderSettingsTab())+
       '</div></div>';
   }
@@ -1862,6 +2015,8 @@
         '<option value="office" '+(editType==='office'?'selected':'')+'>Office</option></select></div>'+
         '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
         '<input id="empManualEntryInput" type="checkbox" style="width:auto;" '+(editing&&editing.canManualEntry?'checked':'')+'> Can log manual crew entries (lead hand / foreman)</label></div>'+
+        '<div class="field"><label>&nbsp;</label><label style="flex-direction:row;display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:13px;color:var(--ink);min-width:auto;">'+
+        '<input id="empPresenceOnlyInput" type="checkbox" style="width:auto;" '+(editing&&editing.presenceOnly?'checked':'')+'> Presence only \u2014 In/Out of Office tile, no time tracking</label></div>'+
         (STATE.employeeFormError ? '<div class="formerr">'+esc(STATE.employeeFormError)+'</div>' : '')+
         '<div class="formbtns"><button class="save" data-action="admin-emp-save" data-id="'+(editing?editing.id:'')+'">Save</button>'+
         '<button class="cancel" data-action="admin-emp-cancel-form">Cancel</button></div></div>';
@@ -1872,7 +2027,8 @@
       var fromSheet = emp.source==='sheet';
       var empType = emp.employeeType||'shop';
       return '<tr class="'+(emp.active?'':'inactive')+'"><td>'+esc(emp.name)+
-        (emp.canManualEntry?'<div style="font-size:11px;color:var(--olive);margin-top:2px;font-weight:600;">Lead hand / foreman</div>':'')+'</td>'+
+        (emp.canManualEntry?'<div style="font-size:11px;color:var(--olive);margin-top:2px;font-weight:600;">Lead hand / foreman</div>':'')+
+        (emp.presenceOnly?'<div style="font-size:11px;color:var(--rust);margin-top:2px;font-weight:600;">Presence only</div>':'')+'</td>'+
         '<td style="font-family:var(--mono);">'+esc(emp.pin)+
         (emp.needsPinSetup?'<div style="color:var(--rust);font-size:11px;font-weight:600;margin-top:2px;">&#9888; default PIN — will prompt at login</div>':'')+'</td>'+
         '<td><span class="badge" style="background:'+(empType==='office'?'var(--olive-dim)':'#eee')+';color:'+(empType==='office'?'var(--olive)':'#666')+';">'+(empType==='office'?'Office':'Shop')+'</span></td>'+
@@ -2213,6 +2369,7 @@
     var email = document.getElementById('empEmailInput').value.trim();
     var employeeType = document.getElementById('empTypeInput').value === 'office' ? 'office' : 'shop';
     var canManualEntry = document.getElementById('empManualEntryInput').checked;
+    var presenceOnly = document.getElementById('empPresenceOnlyInput').checked;
     if(!name){ STATE.employeeFormError='Enter a name.'; render(); return; }
     if(!/^\d{4}$/.test(pin)){ STATE.employeeFormError='PIN must be exactly 4 digits.'; render(); return; }
     if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ STATE.employeeFormError='That email address doesn\'t look right.'; render(); return; }
@@ -2222,8 +2379,8 @@
     }
     var needsPinSetup = (pin === DEFAULT_EMPLOYEE_PIN);
     mutateLocal(K.employees, STATE.employees, function(list){
-      if(editId) return list.map(function(e){ return e.id===editId ? Object.assign({}, e, {name:name, pin:pin, email:email, needsPinSetup:needsPinSetup, employeeType:employeeType, canManualEntry:canManualEntry}) : e; });
-      return list.concat([{id:uid('emp'), name:name, pin:pin, email:email, active:true, source:'manual', needsPinSetup:needsPinSetup, employeeType:employeeType, canManualEntry:canManualEntry}]);
+      if(editId) return list.map(function(e){ return e.id===editId ? Object.assign({}, e, {name:name, pin:pin, email:email, needsPinSetup:needsPinSetup, employeeType:employeeType, canManualEntry:canManualEntry, presenceOnly:presenceOnly, officeStatus:e.officeStatus||'out'}) : e; });
+      return list.concat([{id:uid('emp'), name:name, pin:pin, email:email, active:true, source:'manual', needsPinSetup:needsPinSetup, employeeType:employeeType, canManualEntry:canManualEntry, presenceOnly:presenceOnly, officeStatus:'out'}]);
     }).then(function(updated){
       STATE.employees = updated; STATE.employeeFormOpen=false; STATE.editingEmployeeId=null; STATE.employeeFormError=null; render();
     });
@@ -2541,6 +2698,12 @@
       case 'newpin-back': STATE.newPinBuffer=STATE.newPinBuffer.slice(0,-1); render(); break;
 
       case 'action-cancel': resetToRack(); break;
+      case 'officestatus-back': resetToRack(); break;
+      case 'office-set-in': onSetOfficeStatus('in'); break;
+      case 'office-set-out': onSetOfficeStatus('out'); break;
+      case 'logtime-mode': STATE.adminLogTimeMode=id; STATE.adminLogTimeError=null; render(); break;
+      case 'admin-logtime-clock-save': onAdminLogTimeClockSave(); break;
+      case 'admin-logtime-simple-save': onAdminLogTimeSimpleSave(); break;
       case 'select-job-clockin': punchFeedback('in'); doClockIn(id); break;
       case 'show-transfer': openTaskSelect({type:'transfer'}); break;
       case 'back-to-status': STATE.actionMode=null; STATE.pendingTaskNames=null; render(); break;
@@ -2573,7 +2736,7 @@
       case 'adminpin-cancel': STATE.view='rack'; render(); break;
 
       case 'exit-admin': resetToRack(); break;
-      case 'admin-tab': STATE.adminTab=id; STATE.employeeFormOpen=false; STATE.jobFormOpen=false; STATE.taskFormOpen=false; STATE.editingEntryId=null; render(); break;
+      case 'admin-tab': STATE.adminTab=id; STATE.employeeFormOpen=false; STATE.jobFormOpen=false; STATE.taskFormOpen=false; STATE.editingEntryId=null; STATE.adminLogTimeError=null; STATE.adminLogTimeSavedName=null; render(); break;
 
       case 'admin-emp-new': STATE.employeeFormOpen=true; STATE.editingEmployeeId=null; STATE.employeeFormError=null; render(); break;
       case 'admin-emp-edit': STATE.employeeFormOpen=true; STATE.editingEmployeeId=id; STATE.employeeFormError=null; render(); break;
@@ -2691,7 +2854,7 @@
   function startIdleWatch(){
     setInterval(function(){
       var idleMs = Date.now() - (STATE.lastInteractionAt||Date.now());
-      if((STATE.view==='pin' || STATE.view==='action' || STATE.view==='adminpin' || STATE.view==='newpin') && idleMs>20000){ resetToRack(); }
+      if((STATE.view==='pin' || STATE.view==='action' || STATE.view==='adminpin' || STATE.view==='newpin' || STATE.view==='officestatus') && idleMs>20000){ resetToRack(); }
       else if(STATE.view==='tasks' && idleMs>30000){ resetToRack(); }
       else if(STATE.view==='manualentry' && idleMs>60000){ resetToRack(); }
       else if(STATE.view==='myhistory' && idleMs>60000){ resetToRack(); }
