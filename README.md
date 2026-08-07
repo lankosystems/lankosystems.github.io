@@ -8,11 +8,11 @@ set of design tokens. No build step: each file is opened directly in a browser.
 | Product name                 | Header chip    | File           | Firestore collection | Doc keys  |
 | ----------------------------- | -------------- | -------------- | --------------------- | --------- |
 | Lanko Aengus Dashboard        | `Aengus 26.4`  | `index.html`   | *(reads only)*        | —         |
-| Lanko Kairos Timeclock        | `Kairos 26.10` | `kairos.html`  | `kairos_state`        | `lanko_*` |
-| Lanko Minerva Planner         | `Minerva 26.12`| `minerva.html` | `minerva_state`       | `lb_*`    |
-| Lanko Kubera Quote Builder    | `Kubera 26.6`  | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
+| Lanko Kairos Timeclock        | `Kairos 26.11` | `kairos.html`  | `kairos_state`        | `lanko_*` |
+| Lanko Minerva Planner         | `Minerva 26.13`| `minerva.html` | `minerva_state`       | `lb_*`    |
+| Lanko Kubera Quote Builder    | `Kubera 26.7`  | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
 | Lanko Iris Shipping & Receiving | `Iris 26.2`  | `iris.html`    | `iris_state`          | —         |
-| Lanko Odin Projects           | `Odin 26.5`    | `odin.html`    | `odin_state`          | —         |
+| Lanko Odin Projects           | `Odin 26.6`    | `odin.html`    | `odin_state`          | —         |
 
 The pattern is **`Lanko <Deity> <Function>`**. The deity alone is the short name; the
 function says what it does so nobody has to remember which Roman/Greek/Hindu/Norse god
@@ -34,12 +34,13 @@ per released iteration:
 ```
 
 Each app carries its own counter — they are not kept in step. Current: Aengus 26.4,
-Kairos 26.10, Minerva 26.12, Kubera 26.6, Iris 26.2, Odin 26.5.
+Kairos 26.11, Minerva 26.13, Kubera 26.7, Iris 26.2, Odin 26.6.
 
 In Aengus the version lives in one place, `APP_VERSION`, and both the `<title>` and the
 header chip are built from it. The others still have it written out by hand in a
-couple of spots (title, header chip, and the "Exit to …" button in Kairos and Minerva) —
-worth collapsing to one constant next time each is touched.
+couple of spots (title, header chip, the "Exit to …" button in Kairos and Minerva, and
+the backup-file app stamp in Kubera) — worth collapsing to one constant next time each
+is touched.
 
 ## Aengus
 
@@ -63,6 +64,26 @@ Two things Aengus is careful about, because getting them wrong is worse than use
 wall monitor: a panel that **could not be read** says so, rather than showing a
 comforting zero; and a Minerva week that was published a while ago is labelled with its
 age, so nobody plans a Tuesday off last month's board.
+
+## Back to Aengus
+
+Kairos, Minerva, Kubera and Odin each carry a small pill-shaped link (⌘ Aengus) back
+to the dashboard, so nobody has to hit the browser back button or retype the URL. Iris
+does not have one — skipped on purpose, not an oversight.
+
+Placement follows whatever survives that app's own re-render, not one fixed rule:
+
+| App | Where | Why there |
+| --- | --- | --- |
+| Minerva | Wordmark, next to the app name | `topbar-right` gets its innerHTML replaced on every view change |
+| Kubera | `topbar-right`, after the sync lamp | Nothing else there gets wholesale-replaced |
+| Odin | Header, after Sign out | Same reasoning — `#nav` gets rewritten on tab change, its siblings don't |
+| Kairos | Inside the PIN-protected admin panel, next to "Exit to Kairos" | See below |
+
+**Kairos is the odd one out on purpose.** Employees clocking in and out all day don't
+need a way off the rack screen, and it's one more thing to accidentally tap on a shop
+tablet. The link only appears after the admin PIN, so it's there for Ivan and Travis,
+not the crew.
 
 ## Minerva: job display and same-job continuity
 
@@ -100,6 +121,23 @@ back at the office.
 - Reminders can be marked complete from either the project page or the Reminders page.
 
 Stored under `odin_state`, alongside the rest of Odin's project/procurement data.
+
+## Kairos: Festive Friday
+
+A one-day cosmetic mode for the rack screen — barbed-wire tile borders, a shimmering
+banner, a staggered pop-in animation on load, and a synthesized happy chime on
+clock-in. Purely decorative: no data model changes, nothing about real clock in/out
+behavior is touched.
+
+Gated by `isFestiveFriday()`, which checks the device's local date against a single
+hardcoded day. It turns itself on at midnight on that day and off again the next —
+no manual toggle, nothing to remember to revert. `PREVIEW_FESTIVE` inside the same
+function is a manual override for testing before the date arrives; it must be `false`
+in the deployed file or the theme runs every day.
+
+To run it again next year (or for a different one-day theme), update the date check
+in `isFestiveFriday()` and the banner text in `renderRack()` — both are in one place,
+commented, in `kairos.html`.
 
 ## Live quotes in the archive
 
