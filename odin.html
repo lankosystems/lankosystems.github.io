@@ -56,6 +56,17 @@
     font-family: var(--display-text); font-weight:600; font-size:13px; color: var(--paper-dim);
     letter-spacing:2.5px; text-transform:uppercase; opacity:0.85;
   }
+  .aengus-link{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:5px 10px; border-radius:8px;
+    border:1px solid rgba(217,161,37,0.35);
+    color:var(--gold-dim); background:rgba(0,0,0,0.12);
+    font-family:var(--display-text); font-weight:700; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.4px; text-decoration:none;
+    white-space:nowrap; line-height:1;
+  }
+  .aengus-link:hover{ background:rgba(0,0,0,0.24); color:var(--gold-light); }
+  @media (max-width:700px){ .aengus-link .txt{ display:none; } .aengus-link{ padding:6px 8px; } }
   nav{ display:flex; gap:4px; flex-wrap:wrap; }
   nav button{ background:none; border:1px solid transparent; color:#CBBFA5;
     font-family:var(--display-text); font-weight:700; font-size:13px; letter-spacing:0.8px;
@@ -305,6 +316,7 @@
       <div class="spacer"></div>
       <div id="lamp"><span class="dot"></span><span id="lampTxt">Connecting</span></div>
       <div id="whoami"><span id="whoTxt"></span><button id="signOut">Sign out</button></div>
+      <a class="aengus-link" href="index.html" title="Back to Aengus Dashboard">&#8962;<span class="txt"> Aengus</span></a>
     </header>
   </div>
   <main><div class="wrap" id="view"></div></main>
