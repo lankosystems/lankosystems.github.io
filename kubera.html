@@ -72,6 +72,17 @@
     font-family: var(--display-text); font-weight:600; font-size:13px; color: var(--paper-dim);
     letter-spacing:2.5px; text-transform:uppercase; opacity:0.85;
   }
+  .aengus-link{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:5px 10px; border-radius:8px;
+    border:1px solid rgba(217,161,37,0.35);
+    color:var(--gold-dim); background:rgba(0,0,0,0.12);
+    font-family:var(--display-text); font-weight:700; font-size:12px;
+    text-transform:uppercase; letter-spacing:0.4px; text-decoration:none;
+    white-space:nowrap; line-height:1;
+  }
+  .aengus-link:hover{ background:rgba(0,0,0,0.24); color:var(--gold-light); }
+  @media (max-width:700px){ .aengus-link .txt{ display:none; } .aengus-link{ padding:6px 8px; } }
   .topbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .synclamp{ font-family:var(--mono); font-size:11.5px; color:var(--gold-muted); display:flex; align-items:center; gap:7px; }
   .synclamp .bulb{ width:8px; height:8px; border-radius:50%; background:var(--gold-dim); }
@@ -503,6 +514,7 @@
       </div>
       <div class="topbar-right">
         <div class="synclamp" id="synclamp"><span class="bulb"></span><span id="synctext">Connecting</span></div>
+        <a class="aengus-link" href="index.html" title="Back to Aengus Dashboard">&#8962;<span class="txt"> Aengus</span></a>
       </div>
     </header>
     <nav class="tabs" id="tabs"></nav>
