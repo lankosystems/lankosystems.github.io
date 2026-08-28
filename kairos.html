@@ -350,6 +350,10 @@
   .summary-card{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 18px; min-width:150px; }
   .summary-card .n{ font-family:var(--display); font-size:24px; color:var(--oxblood); font-weight:800; }
   .summary-card .l{ font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#8a7f68; margin-top:2px; }
+  .summary-card.clickable{ cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
+  .summary-card.clickable:hover{ transform:translateY(-2px); box-shadow:0 6px 14px -6px rgba(36,24,17,0.28); }
+  .summary-card.clickable:active{ transform:translateY(0); }
+  .summary-card.selected{ border-color:var(--oxblood); box-shadow:inset 0 0 0 2px var(--oxblood); }
   .subhead{ font-family:var(--display-text); font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.4px; color:var(--oxblood); margin:0 0 10px; }
   .settingsnote{ color:#8a7f68; font-size:13px; max-width:480px; line-height:1.5; }
 
@@ -551,7 +555,7 @@
     jobFormOpen:false, editingJobId:null, jobFormError:null,
     taskFormOpen:false, editingTaskId:null, taskFormError:null,
     editingEntryId:null, logEditError:null,
-    logFrom:null, logTo:null,
+    logFrom:null, logTo:null, logEmpFilter:null,
     settingsError:null,
     setupStage:'enter', setupPin1:null, setupPinBuffer:'', setupError:false,
     stamp:null,
@@ -2390,10 +2394,17 @@
     var totalsHtml = Object.keys(totalsByEmp).sort().map(function(name){
       var t = totalsByEmp[name];
       var qt = t.quoteMs>0 ? ' <span style="font-size:12px;color:var(--gold-dim);font-weight:600;">('+msToHoursStr(t.quoteMs)+'h quotes)</span>' : '';
-      return '<div class="summary-card"><div class="n">'+msToHoursStr(t.hoursMs)+'h'+qt+'</div><div class="l">'+esc(name)+'</div></div>';
+      var selected = STATE.logEmpFilter===name;
+      return '<div class="summary-card clickable'+(selected?' selected':'')+'" data-action="log-emp-filter" data-id="'+esc(name)+'"><div class="n">'+msToHoursStr(t.hoursMs)+'h'+qt+'</div><div class="l">'+esc(name)+'</div></div>';
     }).join('') || '<div class="empty-state" style="padding:14px;">No entries in this range.</div>';
 
-    var tableRows = rows.map(function(en){
+    // Clicking a summary card above drills the table below down to just that
+    // employee's entries for the selected date range; STATE.logEmpFilter never
+    // touches getFilteredEntries() itself, so the summary cards always keep
+    // showing every employee (with the active one highlighted) and it's a
+    // one-click toggle to get back to everyone.
+    var displayRows = STATE.logEmpFilter ? rows.filter(function(en){ return en.employeeName===STATE.logEmpFilter; }) : rows;
+    var tableRows = displayRows.map(function(en){
       if(STATE.editingEntryId===en.id){
         return '<tr><td colspan="8"><div class="inlineform" style="margin:0;">'+
           '<div class="field"><label>Job</label><select id="logJobSelect">'+
@@ -2428,10 +2439,12 @@
       '<button class="addbtn" style="background:var(--card);color:var(--oxblood);border:1px solid var(--line);" data-action="log-export">Export CSV</button>'+
       '</div>'+
       renderSheetWritePanel()+
-      '<div class="subhead">Hours by employee</div>'+
+      '<div class="subhead">Hours by employee — click a name to see just their entries</div>'+
       '<div class="summary-cards">'+totalsHtml+'</div>'+
-      '<div class="subhead">Entries — times shown as clocked; hours are the clocked span rounded to the nearest 15 minutes</div>'+
-      (rows.length===0?'<div class="empty-state">No time entries in this range.</div>':
+      '<div class="subhead">'+(STATE.logEmpFilter?
+        'Entries — showing '+esc(STATE.logEmpFilter)+' only <button class="iconbtn" data-action="log-emp-filter" data-id="'+esc(STATE.logEmpFilter)+'" style="margin-left:6px;">Show everyone</button>' :
+        'Entries — times shown as clocked; hours are the clocked span rounded to the nearest 15 minutes')+'</div>'+
+      (displayRows.length===0?'<div class="empty-state">No time entries'+(STATE.logEmpFilter?' for '+esc(STATE.logEmpFilter):'')+' in this range.</div>':
         '<table class="datatable"><thead><tr><th>Date</th><th>Employee</th><th>Job</th><th>In</th><th>Out</th><th>Hours</th><th>Tasks completed</th><th>Actions</th></tr></thead><tbody>'+tableRows+'</tbody></table>');
   }
 
@@ -2870,6 +2883,7 @@
         render();
         break;
       case 'log-export': onLogExport(); break;
+      case 'log-emp-filter': STATE.logEmpFilter = (STATE.logEmpFilter===id ? null : id); render(); break;
       case 'sheetwrite-setup-open': STATE.sheetWriteFormOpen=true; STATE.sheetWriteError=null; render(); break;
       case 'sheetwrite-cancel-form': STATE.sheetWriteFormOpen=false; STATE.sheetWriteError=null; render(); break;
       case 'sheetwrite-save': onSheetWriteSave(); break;
