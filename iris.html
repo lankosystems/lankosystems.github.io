@@ -6,17 +6,17 @@
 <title>Lanko Iris Shipping &amp; Receiving 26.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* Shared Lanko tokens. Iris runs on the yard tablet like Kairos: big
      targets, one job per screen, nothing Roger has to configure. */
   :root{
-    --oxblood:#6D1708; --oxblood-dark:#4E1005; --oxblood-deep:#320A03;
-    --gold:#DEA509; --gold-light:#E9C45F; --gold-dim:#AD8007;
-    --ink:#241811; --paper:#F4EEE1; --paper-dim:#E6DCC5; --card:#FBF7EC;
-    --olive:#5B6B3F; --olive-dim:#EEF1E4; --rust:#A23B1E; --rust-dim:#F7E6DE;
-    --steel:#3B5169; --steel-dim:#E4E9EF; --line:#D8CCB2;
-    --display:"Big Shoulders",sans-serif; --display-text:"Big Shoulders Text",sans-serif;
+    --oxblood:#6E1809; --oxblood-dark:#430F04; --oxblood-deep:#2C0A03;
+    --gold:#DDA508; --gold-light:#F0C550; --gold-dim:#B58A1F;
+    --ink:#F7F3E9; --paper:#292524; --paper-dim:#1C1918; --card:#332E2C;
+    --olive:#7CAB55; --olive-dim:rgba(124,171,85,0.16); --rust:#DB7F58; --rust-dim:rgba(219,127,88,0.16);
+    --steel:#7AA3C8; --steel-dim:rgba(122,163,200,0.16); --line:rgba(247,243,233,0.14);
+    --display:"Jura",sans-serif; --display-text:"Jura",sans-serif;
     --body:"IBM Plex Sans",sans-serif; --mono:"IBM Plex Mono",monospace;
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -36,7 +36,7 @@
   .wordmark .logo-img{ height:34px; width:auto; display:block; filter: drop-shadow(0 2px 0 var(--oxblood-deep)); }
   .wordmark .divider{ width:1.5px; height:26px; background: rgba(217,161,37,0.35); }
   .wordmark small{
-    font-family: var(--display-text); font-weight:600; font-size:13px; color: var(--paper-dim);
+    font-family: var(--display-text); font-weight:600; font-size:13px; color: var(--gold-light);
     letter-spacing:2.5px; text-transform:uppercase; opacity:0.85;
   }
   .spacer{ flex:1; }
@@ -48,25 +48,25 @@
   nav.tabs{ display:flex; gap:8px; padding:14px 0 4px; }
   nav.tabs button{ flex:1; font-family:var(--display-text); font-weight:700; font-size:16px;
     letter-spacing:1px; text-transform:uppercase; padding:14px 8px; border-radius:8px;
-    border:1px solid var(--line); background:var(--card); color:#7a6f5c; cursor:pointer; }
+    border:1px solid var(--line); background:var(--card); color:#B8AF98; cursor:pointer; }
   nav.tabs button.on{ background:var(--oxblood); color:var(--gold-light); border-color:var(--oxblood-dark); }
 
   main{ padding:12px 0 80px; }
   .card{ background:var(--card); border:1px solid var(--line); border-radius:10px;
     padding:16px 18px; margin-bottom:14px; }
-  .hint{ font-size:13px; color:#9a8f78; }
+  .hint{ font-size:13px; color:#8F8A79; }
   h2.day{ font-family:var(--display-text); font-weight:700; font-size:13px;
-    letter-spacing:1.4px; text-transform:uppercase; color:var(--oxblood); margin:18px 0 8px; }
+    letter-spacing:1.4px; text-transform:uppercase; color:var(--gold); margin:18px 0 8px; }
 
   /* big tap rows */
   .row{ background:var(--card); border:1px solid var(--line); border-radius:10px;
     padding:14px 16px; margin-bottom:10px; cursor:pointer; display:flex; gap:14px; align-items:center; }
-  .row:active{ background:#F3ECD9; }
+  .row:active{ background:#3D3733; }
   .row .job{ font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:0.8px;
-    color:var(--oxblood); min-width:78px; }
+    color:var(--gold); min-width:78px; }
   .row .mid{ flex:1; min-width:0; }
   .row .desc{ font-size:16px; font-weight:600; line-height:1.35; }
-  .row .meta{ font-family:var(--mono); font-size:12px; color:#7a6f5c; margin-top:3px; }
+  .row .meta{ font-family:var(--mono); font-size:12px; color:#B8AF98; margin-top:3px; }
   .row .eta{ font-family:var(--mono); font-size:13px; padding:5px 10px; border-radius:16px;
     background:var(--steel-dim); color:var(--steel); white-space:nowrap; }
   .row .eta.late{ background:var(--rust-dim); color:var(--rust); }
@@ -80,28 +80,28 @@
 
   /* confirm panel */
   .panel label{ display:block; font-family:var(--display-text); font-weight:700; font-size:12.5px;
-    letter-spacing:1px; text-transform:uppercase; color:#7a6f5c; margin:14px 0 6px; }
+    letter-spacing:1px; text-transform:uppercase; color:#B8AF98; margin:14px 0 6px; }
   .panel input[type=text], .panel input[type=number], .panel textarea{
     width:100%; font-family:var(--body); font-size:18px; padding:13px 14px;
-    border:1px solid var(--line); border-radius:8px; background:#fff; }
+    border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); }
   .panel input.mono{ font-family:var(--mono); }
   .panel textarea{ min-height:70px; }
   .flagrow{ display:flex; gap:10px; margin-top:6px; }
   .flagrow button{ flex:1; font-family:var(--display-text); font-weight:700; font-size:15px;
     letter-spacing:0.8px; text-transform:uppercase; padding:15px 8px; border-radius:8px;
-    border:1px solid var(--line); background:#fff; color:#7a6f5c; cursor:pointer; }
+    border:1px solid var(--line); background:var(--card); color:#B8AF98; cursor:pointer; }
   .flagrow button.okon{ background:var(--olive); color:#fff; border-color:var(--olive); }
   .flagrow button.flagon{ background:var(--rust); color:#fff; border-color:var(--rust); }
 
   .btn{ font-family:var(--display-text); font-weight:700; font-size:15px; letter-spacing:1px;
     text-transform:uppercase; padding:15px 20px; border-radius:8px; border:1px solid var(--gold-dim);
     background:var(--gold); color:var(--oxblood-deep); cursor:pointer; width:100%; margin-top:16px; }
-  .btn.ghost{ background:none; color:var(--oxblood); border-color:var(--line); width:auto; padding:11px 16px; margin-top:0; }
+  .btn.ghost{ background:none; color:var(--gold); border-color:var(--line); width:auto; padding:11px 16px; margin-top:0; }
   .btn.dark{ background:var(--oxblood); color:var(--gold-light); border-color:var(--oxblood-dark); }
   .btn[disabled]{ opacity:0.5; }
 
   .mtr{ margin-top:14px; border:1.5px dashed var(--gold-dim); border-radius:8px; padding:14px;
-    background:#FFFDF6; }
+    background:rgba(221,165,8,0.08); }
   .mtr .t{ font-family:var(--display-text); font-weight:700; font-size:12.5px; letter-spacing:1px;
     text-transform:uppercase; color:var(--gold-dim); margin-bottom:8px; }
   .mtr .got{ font-family:var(--mono); font-size:12.5px; color:var(--olive); margin-top:8px; }
@@ -111,15 +111,15 @@
     background:var(--oxblood); color:var(--gold-light); cursor:pointer; }
 
   .hist{ font-family:var(--mono); font-size:13px; line-height:1.5; padding:10px 0;
-    border-bottom:1px solid rgba(36,24,17,0.08); }
-  .hist b{ color:var(--oxblood); }
+    border-bottom:1px solid rgba(247,243,233,0.10); }
+  .hist b{ color:var(--gold); }
 
   #toast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
     background:var(--oxblood-deep); color:#EBDFC6; font-size:15px; padding:12px 20px;
     border-radius:8px; border:1px solid var(--gold-dim); display:none; z-index:999; max-width:86vw; }
-  .empty{ text-align:center; color:#9a8f78; padding:34px 10px; font-size:15px; }
+  .empty{ text-align:center; color:#8F8A79; padding:34px 10px; font-size:15px; }
   .empty b{ display:block; font-family:var(--display-text); font-size:17px; letter-spacing:0.8px;
-    text-transform:uppercase; color:#7a6f5c; margin-bottom:6px; }
+    text-transform:uppercase; color:#B8AF98; margin-bottom:6px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
