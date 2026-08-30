@@ -634,6 +634,14 @@
   ];
   var screensaverIndex = 0;
   var screensaverRotateTimer = null;
+  // Picks a random photo, but never the one already showing (avoids an obvious
+  // "stuck" moment where the crossfade would look like nothing changed).
+  function pickNextScreensaverIndex(current){
+    if(SCREENSAVER_IMAGES.length<=1) return 0;
+    var next;
+    do{ next = Math.floor(Math.random()*SCREENSAVER_IMAGES.length); }while(next===current);
+    return next;
+  }
   function activateScreensaver(){
     if(STATE.screensaverActive) return;
     STATE.screensaverActive = true;
@@ -676,7 +684,7 @@
     tickClock();
     wrap._clockTimer = setInterval(tickClock, 1000);
     screensaverRotateTimer = setInterval(function(){
-      screensaverIndex = (screensaverIndex+1) % SCREENSAVER_IMAGES.length;
+      screensaverIndex = pickNextScreensaverIndex(screensaverIndex);
       var nextLayer = showingA ? layerB : layerA;
       var curLayer = showingA ? layerA : layerB;
       nextLayer.style.backgroundImage = "url('"+SCREENSAVER_IMAGES[screensaverIndex]+"')";
