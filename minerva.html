@@ -6,32 +6,32 @@
 <title>Lanko Minerva Planner 26.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* Design tokens carried over from Kairos (the shop timeclock) so both apps share one
      visual language. Same palette/fonts, same card-and-rack idiom. */
   :root{
-    --oxblood:      #6D1708;
-    --oxblood-dark: #4E1005;
-    --oxblood-deep: #320A03;
-    --gold:         #DEA509;
-    --gold-light:   #E9C45F;
-    --gold-dim:     #AD8007;
+    --oxblood:      #6E1809;
+    --oxblood-dark: #430F04;
+    --oxblood-deep: #2C0A03;
+    --gold:         #DDA508;
+    --gold-light:   #F0C550;
+    --gold-dim:     #B58A1F;
     --gold-muted:   #C7A15E;
-    --ink:          #241811;
-    --paper:        #F4EEE1;
-    --paper-dim:    #E6DCC5;
-    --card:         #FBF7EC;
-    --olive:        #5B6B3F;
-    --olive-dim:    #EEF1E4;
-    --rust:         #A23B1E;
-    --rust-dim:     #F7E6DE;
-    --steel:        #3B5169;
-    --steel-dim:    #E4EAF0;
-    --line: rgba(36,24,17,0.14);
+    --ink:          #F7F3E9;
+    --paper:        #292524;
+    --paper-dim:    #1C1918;
+    --card:         #332E2C;
+    --olive:        #7CAB55;
+    --olive-dim:    rgba(124,171,85,0.16);
+    --rust:         #DB7F58;
+    --rust-dim:     rgba(219,127,88,0.16);
+    --steel:        #7AA3C8;
+    --steel-dim:    rgba(122,163,200,0.16);
+    --line: rgba(247,243,233,0.14);
 
-    --display: "Big Shoulders", sans-serif;
-    --display-text: "Big Shoulders Text", sans-serif;
+    --display: "Jura", sans-serif;
+    --display-text: "Jura", sans-serif;
     --body: "IBM Plex Sans", sans-serif;
     --mono: "IBM Plex Mono", monospace;
   }
@@ -71,7 +71,7 @@
   .wordmark .logo-img{ height:34px; width:auto; display:block; filter: drop-shadow(0 2px 0 var(--oxblood-deep)); }
   .wordmark .divider{ width:1.5px; height:26px; background: rgba(217,161,37,0.35); }
   .wordmark small{
-    font-family: var(--display-text); font-weight:600; font-size:15.6px; color: var(--paper-dim);
+    font-family: var(--display-text); font-weight:600; font-size:15.6px; color: var(--gold-light);
     letter-spacing:2.5px; text-transform:uppercase; opacity:0.85;
   }
   .aengus-link{
@@ -109,37 +109,37 @@
   .board-heading{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
   .board-heading h1{
     font-family:var(--display); font-size:19px; font-weight:700; letter-spacing:1.5px;
-    text-transform:uppercase; color: var(--oxblood); margin:0;
+    text-transform:uppercase; color: var(--gold); margin:0;
   }
-  .board-heading span{ font-family:var(--mono); font-size:13px; color:#7a6f5c; }
+  .board-heading span{ font-family:var(--mono); font-size:13px; color:#B8AF98; }
 
   .jobtable-wrap{ border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--card);
     box-shadow:0 4px 8px -4px rgba(36,24,17,0.18); margin-bottom:18px; }
   table.jobtable{ width:100%; border-collapse:collapse; }
   table.jobtable th{ text-align:left; font-family:var(--display-text); font-size:10.5px; text-transform:uppercase;
-    letter-spacing:0.5px; color:#8a7f68; padding:8px 12px; background:var(--paper-dim); border-bottom:1px solid var(--line); white-space:nowrap; }
+    letter-spacing:0.5px; color:#B8AF98; padding:8px 12px; background:var(--paper-dim); border-bottom:1px solid var(--line); white-space:nowrap; }
   table.jobtable td{ padding:7px 12px; border-bottom:1px solid var(--line); font-size:12.5px; vertical-align:middle; }
   table.jobtable tr:last-child td{ border-bottom:none; }
-  table.jobtable td.jnum{ font-family:var(--mono); font-weight:700; color:var(--oxblood); white-space:nowrap; }
+  table.jobtable td.jnum{ font-family:var(--mono); font-weight:700; color:var(--gold); white-space:nowrap; }
   table.jobtable td.jdue{ font-family:var(--mono); font-size:11.5px; white-space:nowrap; }
-  table.jobtable td.jrem{ font-family:var(--mono); font-weight:700; color:var(--oxblood); text-align:right; white-space:nowrap; }
+  table.jobtable td.jrem{ font-family:var(--mono); font-weight:700; color:var(--gold); text-align:right; white-space:nowrap; }
 
   .pool-block{ margin-bottom:22px; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--card); box-shadow:0 10px 18px -10px rgba(36,24,17,0.22); }
   .pool-block .pool-head{ padding:9px 16px; font-family:var(--display-text); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.6px; color:#fff; }
   .pool-table{ width:100%; border-collapse:collapse; }
-  .pool-table th{ text-align:left; font-family:var(--display-text); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:#8a7f68; padding:8px 12px; background:var(--paper-dim); border-bottom:1px solid var(--line); white-space:nowrap; }
+  .pool-table th{ text-align:left; font-family:var(--display-text); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:#B8AF98; padding:8px 12px; background:var(--paper-dim); border-bottom:1px solid var(--line); white-space:nowrap; }
   .pool-table td{ padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; font-size:12.5px; }
   .pool-table tr:last-child td{ border-bottom:none; }
   .pool-table .empname{ font-family:var(--display-text); font-weight:700; color:var(--ink); white-space:nowrap; }
-  .pool-table .total{ text-align:center; font-family:var(--mono); font-weight:700; color:var(--oxblood); }
+  .pool-table .total{ text-align:center; font-family:var(--mono); font-weight:700; color:var(--gold); }
   .daycell-entry{ font-family:var(--mono); font-size:11.5px; line-height:1.5; }
   .daycell-entry b{ color:var(--gold-dim); }
-  .daycell-empty{ color:#b9ae95; font-style:italic; font-size:11.5px; }
-  .notstarted{ color:#b9ae95; font-size:11px; font-style:italic; }
+  .daycell-empty{ color:#8F8A79; font-style:italic; font-size:11.5px; }
+  .notstarted{ color:#8F8A79; font-size:11px; font-style:italic; }
   .notstarted .beg{ display:block; font-size:10px; }
 
-  .empty-state{ text-align:center; padding:50px 20px; color:#9a8f78; font-family:var(--body); font-size:14px; }
-  .empty-state b{ display:block; font-family:var(--display); font-size:18px; color:var(--oxblood); margin-bottom:6px; }
+  .empty-state{ text-align:center; padding:50px 20px; color:#8F8A79; font-family:var(--body); font-size:14px; }
+  .empty-state b{ display:block; font-family:var(--display); font-size:18px; color:var(--gold); margin-bottom:6px; }
 
   /* ---------- pin / center-stage ---------- */
   .center-stage{
@@ -151,9 +151,9 @@
     box-shadow: 0 18px 40px -14px rgba(36,24,17,0.32), 0 2px 4px rgba(36,24,17,0.1);
     padding:32px 36px 30px; width:100%; max-width:400px; text-align:center; position:relative;
   }
-  .authcard h2{ font-family:var(--display); font-size:26px; font-weight:700; margin:6px 0 2px; color:var(--oxblood); }
-  .authcard p.sub{ font-size:13px; color:#7a6f5c; margin:0 0 22px; }
-  .backlink{ position:absolute; top:16px; left:16px; font-family:var(--display-text); font-weight:700; font-size:13px; color:#9a8f78; cursor:pointer; letter-spacing:0.3px; }
+  .authcard h2{ font-family:var(--display); font-size:26px; font-weight:700; margin:6px 0 2px; color:var(--gold); }
+  .authcard p.sub{ font-size:13px; color:#B8AF98; margin:0 0 22px; }
+  .backlink{ position:absolute; top:16px; left:16px; font-family:var(--display-text); font-weight:700; font-size:13px; color:#8F8A79; cursor:pointer; letter-spacing:0.3px; }
   .dots{ display:flex; gap:14px; justify-content:center; margin-bottom:22px; }
   .dots .dot-slot{ width:16px;height:16px;border-radius:50%; border:2px solid var(--gold-dim); background:transparent; transition: background .1s; }
   .dots .dot-slot.filled{ background:var(--gold-dim); }
@@ -169,7 +169,7 @@
     box-shadow: 0 2px 0 rgba(36,24,17,0.08), 0 3px 6px rgba(36,24,17,0.08); cursor:pointer;
   }
   .keypad button:active{ transform: translateY(1px); box-shadow:none; background:var(--paper-dim); }
-  .keypad button.wide{ font-size:16px; font-family:var(--display-text); font-weight:700; color:#8a7f68; }
+  .keypad button.wide{ font-size:16px; font-family:var(--display-text); font-weight:700; color:#B8AF98; }
   .keypad button.zero{ grid-column: 2; }
 
   /* ---------- admin ---------- */
@@ -178,41 +178,41 @@
   .admin-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
   .admin-tabs button{
     font-family:var(--display-text); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.4px;
-    padding:9px 15px; border-radius:8px; border:none; background:transparent; color:#7a6f5c; cursor:pointer;
+    padding:9px 15px; border-radius:8px; border:none; background:transparent; color:#B8AF98; cursor:pointer;
   }
   .admin-tabs button.active{ background:var(--oxblood); color:var(--gold-light); }
   .admin-exit{ font-family:var(--display-text); font-weight:700; font-size:13px; background:var(--gold); color:var(--oxblood-deep); border:none; padding:9px 15px; border-radius:8px; cursor:pointer; }
   .admin-body{ flex:1; overflow-y:auto; padding:20px 26px 40px; }
   .admin-section-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
-  .admin-section-head h2{ font-family:var(--display); font-size:20px; color:var(--oxblood); margin:0; }
+  .admin-section-head h2{ font-family:var(--display); font-size:20px; color:var(--gold); margin:0; }
   .addbtn{ font-family:var(--display-text); font-weight:700; font-size:13px; background:var(--gold); color:var(--oxblood-deep); border:none; padding:10px 16px; border-radius:8px; cursor:pointer; }
   .datatable{ width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden; box-shadow:0 1px 0 var(--line); margin-top:4px; }
-  .datatable th{ text-align:left; font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:#8a7f68; padding:10px 14px; background:var(--paper-dim); border-bottom:1px solid var(--line); }
+  .datatable th{ text-align:left; font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:#B8AF98; padding:10px 14px; background:var(--paper-dim); border-bottom:1px solid var(--line); }
   .datatable td{ padding:10px 14px; font-size:13.5px; border-bottom:1px solid var(--line); vertical-align:middle; }
-  .datatable tr.inactive td{ color:#a89e8a; }
+  .datatable tr.inactive td{ color:#8F8A79; }
   .badge{ display:inline-block; font-family:var(--display-text); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; padding:3px 9px; border-radius:20px; }
   .badge.active{ background:var(--olive-dim); color:var(--olive); }
-  .badge.inactive{ background:#eee; color:#999; }
+  .badge.inactive{ background:rgba(152,151,143,0.16); color:#ACA79C; }
   .badge.hold{ background:var(--rust-dim); color:var(--rust); }
-  .chip{ display:inline-block; font-family:var(--display-text); font-weight:600; font-size:11.5px; padding:4px 10px; border-radius:20px; border:1.5px solid var(--line); color:#7a6f5c; cursor:pointer; margin:2px; background:var(--paper); }
+  .chip{ display:inline-block; font-family:var(--display-text); font-weight:600; font-size:11.5px; padding:4px 10px; border-radius:20px; border:1.5px solid var(--line); color:#B8AF98; cursor:pointer; margin:2px; background:var(--paper); }
   .chip.on{ background:var(--gold); border-color:var(--gold); color:var(--oxblood-deep); }
-  .iconbtn{ border:none; background:transparent; cursor:pointer; font-size:13px; color:#8a7f68; font-family:var(--display-text); font-weight:700; text-decoration:underline; padding:2px 6px; }
+  .iconbtn{ border:none; background:transparent; cursor:pointer; font-size:13px; color:#B8AF98; font-family:var(--display-text); font-weight:700; text-decoration:underline; padding:2px 6px; }
   .iconbtn.danger{ color:var(--rust); }
   .inlineform{ background:var(--paper-dim); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .field{ display:flex; flex-direction:column; gap:5px; min-width:120px; }
-  .field label{ font-family:var(--display-text); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:#8a7f68; font-weight:700; }
+  .field label{ font-family:var(--display-text); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; color:#B8AF98; font-weight:700; }
   .field input[type=text], .field input[type=number], .field input[type=date], .field input[type=email], .field select{
-    font-family:var(--mono); font-size:13px; padding:8px 10px; border-radius:7px; border:1px solid var(--line); background:#fff; color:var(--ink);
+    font-family:var(--mono); font-size:13px; padding:8px 10px; border-radius:7px; border:1px solid var(--line); background:var(--card); color:var(--ink);
   }
   .field.err input{ border-color:var(--rust); }
   .formerr{ font-size:12px; color:var(--rust); font-weight:600; width:100%; }
   .formbtns{ display:flex; gap:8px; }
   .formbtns .save{ font-family:var(--display-text); font-weight:700; font-size:13px; background:var(--oxblood); color:var(--gold-light); border:none; padding:9px 16px; border-radius:7px; cursor:pointer; }
-  .formbtns .cancel{ font-family:var(--display-text); font-weight:700; font-size:13px; background:transparent; color:#8a7f68; border:1.5px solid var(--line); padding:9px 16px; border-radius:7px; cursor:pointer; }
-  .subhead{ font-family:var(--display-text); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:var(--oxblood); margin:22px 0 8px; }
+  .formbtns .cancel{ font-family:var(--display-text); font-weight:700; font-size:13px; background:transparent; color:#B8AF98; border:1.5px solid var(--line); padding:9px 16px; border-radius:7px; cursor:pointer; }
+  .subhead{ font-family:var(--display-text); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; color:var(--gold); margin:22px 0 8px; }
   .settingcard{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px; }
-  .hint{ font-size:12px; color:#8a7f68; line-height:1.5; }
-  .statusline{ font-size:12px; color:#8a7f68; margin-top:4px; }
+  .hint{ font-size:12px; color:#B8AF98; line-height:1.5; }
+  .statusline{ font-size:12px; color:#B8AF98; margin-top:4px; }
   .statusline.err{ color:var(--rust); }
   .jobrow-detail{ background:var(--paper-dim); border-top:1px dashed var(--line); padding:14px 16px; }
 
@@ -220,7 +220,7 @@
   .manual-badge{ display:inline-block; background:var(--steel); color:#fff; font-size:9px; font-weight:800; border-radius:3px; padding:0 4px; margin-left:3px; vertical-align:middle; }
   td.editable-cell{ position:relative; cursor:pointer; }
   td.editable-cell:hover{ background:var(--steel-dim); }
-  td.editable-cell .editpencil{ position:absolute; top:4px; right:6px; font-size:11px; color:#b9ae95; opacity:0; }
+  td.editable-cell .editpencil{ position:absolute; top:4px; right:6px; font-size:11px; color:#8F8A79; opacity:0; }
   td.editable-cell:hover .editpencil{ opacity:1; }
   .celleditor{ background:var(--card); border:2px solid var(--steel); border-radius:10px; padding:16px 18px; margin-bottom:18px; }
   .celleditor h3{ font-family:var(--display); font-size:18px; color:var(--steel); margin:0 0 10px; }
@@ -230,6 +230,31 @@
   /* ---------- print ---------- */
   .print-only{ display:none; }
   @media print{
+    /* Printed output should always read dark-on-white, independent of the
+       on-screen dark theme above — restore the original light-theme values
+       for every token this stylesheet references while printing. */
+    :root{
+      --oxblood:      #6D1708;
+      --oxblood-dark: #4E1005;
+      --oxblood-deep: #320A03;
+      --gold:         #DEA509;
+      --gold-light:   #E9C45F;
+      --gold-dim:     #AD8007;
+      --gold-muted:   #C7A15E;
+      --ink:          #241811;
+      --paper:        #F4EEE1;
+      --paper-dim:    #E6DCC5;
+      --card:         #FBF7EC;
+      --olive:        #5B6B3F;
+      --olive-dim:    #EEF1E4;
+      --rust:         #A23B1E;
+      --rust-dim:     #F7E6DE;
+      --steel:        #3B5169;
+      --steel-dim:    #E4EAF0;
+      --line: rgba(36,24,17,0.14);
+      --display: "Big Shoulders", sans-serif;
+      --display-text: "Big Shoulders Text", sans-serif;
+    }
     body{ overflow:visible; }
     .no-print{ display:none !important; }
     #app{ height:auto; }
@@ -282,11 +307,11 @@
   #authgate .eyebrow{ font-family:var(--mono); font-size:10px; font-weight:600;
     letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:6px; }
   #authgate h1{ font-family:var(--display); font-weight:800; font-size:27px; line-height:1;
-    margin:0 0 6px; text-transform:uppercase; letter-spacing:0.01em; color:var(--oxblood); }
-  #authgate p.sub{ font-family:var(--body); font-size:13px; color:#8a7f68;
+    margin:0 0 6px; text-transform:uppercase; letter-spacing:0.01em; color:var(--gold); }
+  #authgate p.sub{ font-family:var(--body); font-size:13px; color:#B8AF98;
     margin:0 0 18px; line-height:1.5; }
   #authgate label{ display:block; font-family:var(--display-text); font-weight:700; font-size:11.5px;
-    text-transform:uppercase; letter-spacing:0.07em; color:#7a6f5c; margin:0 0 5px; }
+    text-transform:uppercase; letter-spacing:0.07em; color:#B8AF98; margin:0 0 5px; }
   #authgate input{ width:100%; font-family:var(--body); font-size:15px; padding:10px 12px;
     border:1.5px solid var(--line); border-radius:4px; background:var(--paper);
     color:var(--ink); margin-bottom:14px; }
@@ -305,12 +330,12 @@
   #whoami{ position:fixed; left:12px; bottom:12px; z-index:900;
     font-family:var(--mono); font-size:10.5px; letter-spacing:0.04em;
     background:var(--card); border:1px solid var(--line); border-radius:999px;
-    padding:5px 12px; color:#8a7f68; display:flex; gap:9px; align-items:center;
-    box-shadow:0 2px 8px rgba(36,24,17,0.08); }
+    padding:5px 12px; color:#B8AF98; display:flex; gap:9px; align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3); }
   #whoami[hidden]{ display:none; }
   #whoami button{ font-family:var(--display-text); font-weight:700; font-size:10.5px;
     text-transform:uppercase; letter-spacing:0.06em; background:none; border:none;
-    color:var(--oxblood); cursor:pointer; padding:0; }
+    color:var(--gold); cursor:pointer; padding:0; }
   #whoami button:hover{ text-decoration:underline; }
   @media print{ #whoami, #authgate{ display:none !important; } }
 </style>
@@ -1496,7 +1521,7 @@
       case 'board': stage.innerHTML = renderBoard(); topbarRight.innerHTML = renderTopbarRight(); break;
       case 'adminpin': stage.innerHTML = renderAdminPin(); topbarRight.innerHTML=''; break;
       case 'admin': stage.innerHTML = renderAdmin(); topbarRight.innerHTML=''; break;
-      default: stage.innerHTML = '<div class="center-stage"><div style="text-align:center;color:#8a7f68;font-family:var(--display-text);font-weight:700;">Loading&hellip;</div></div>'; topbarRight.innerHTML='';
+      default: stage.innerHTML = '<div class="center-stage"><div style="text-align:center;color:#B8AF98;font-family:var(--display-text);font-weight:700;">Loading&hellip;</div></div>'; topbarRight.innerHTML='';
     }
   }
   function renderTopbarRight(){
@@ -1949,7 +1974,7 @@
       var isActive = job.active !== false;
       var totalRemaining = ALL_SKILLS.reduce(function(s,sk){ return s+(job.remaining[sk]||0); }, 0);
       var head = '<tr class="'+(isActive?'':'inactive')+'" style="cursor:pointer;" data-action="job-row-toggle" data-id="'+job.id+'">'+
-        '<td style="font-family:var(--mono);color:var(--oxblood);font-weight:700;">'+esc(job.jobNum)+'</td>'+
+        '<td style="font-family:var(--mono);color:var(--gold);font-weight:700;">'+esc(job.jobNum)+'</td>'+
         '<td>'+esc(job.desc)+(isActive?'':' <span class="badge inactive">Inactive</span>')+'</td>'+
         '<td style="font-family:var(--mono);font-size:12px;white-space:nowrap;">'+(job.dueDate?fmtDate(job.dueDate):'backlog')+
           (job.materialsHold?'<div class="badge hold" style="margin-top:3px;">hold '+fmtDate(job.materialsHold)+'</div>':'')+'</td>'+
@@ -2023,7 +2048,7 @@
     }
     if(!src){
       return '<div class="inlineform" style="align-items:center;">'+
-        '<div style="flex:1;font-size:13px;color:#8a7f68;min-width:220px;">Keep '+label.toLowerCase()+' in sync with a Google Sheet instead of entering them by hand.</div>'+
+        '<div style="flex:1;font-size:13px;color:#B8AF98;min-width:220px;">Keep '+label.toLowerCase()+' in sync with a Google Sheet instead of entering them by hand.</div>'+
         '<button class="addbtn" data-action="'+prefix+'-setup-open">Connect a Google Sheet</button></div>';
     }
     var statusText = status==='syncing' ? 'Syncing&hellip;' :
@@ -2031,7 +2056,7 @@
       (src.lastSyncAt ? ('&#10003; Last synced '+fmtDateTime(src.lastSyncAt)) : 'Not synced yet');
     return '<div class="inlineform" style="align-items:center;">'+
       '<div style="flex:1;min-width:220px;">'+
-      '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);">'+label+' synced from Google Sheet</div>'+
+      '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--gold);">'+label+' synced from Google Sheet</div>'+
       '<div class="statusline '+(status==='error'?'err':'')+'">'+statusText+'</div></div>'+
       '<button class="iconbtn" data-action="'+prefix+'-sync-now">Sync now</button>'+
       '<button class="iconbtn" data-action="'+prefix+'-setup-open">Edit</button>'+
@@ -2048,7 +2073,7 @@
         '<button class="cancel" data-action="sheetwrite-cancel">Cancel</button></div></div>';
     } else if(!STATE.sheetWriteUrl){
       sw = '<div class="inlineform" style="align-items:center;">'+
-        '<div style="flex:1;min-width:220px;font-size:13px;color:#8a7f68;">Connect a Google Apps Script Web App to send this week\u2019s schedule to a Sheet, or email it, straight from the board. See the companion <code>lanko-minerva-appsscript.gs</code> for the script to deploy.</div>'+
+        '<div style="flex:1;min-width:220px;font-size:13px;color:#B8AF98;">Connect a Google Apps Script Web App to send this week\u2019s schedule to a Sheet, or email it, straight from the board. See the companion <code>lanko-minerva-appsscript.gs</code> for the script to deploy.</div>'+
         '<button class="addbtn" data-action="sheetwrite-setup-open">Connect Apps Script</button></div>';
     } else {
       sw = '<div class="inlineform" style="align-items:center;">'+
