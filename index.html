@@ -6,33 +6,33 @@
 <title>Lanko Aengus Dashboard 26.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* Design tokens are the same set Kairos, Minerva and Kubera use, so the whole
      suite reads as one system. Nothing new is invented here on purpose. */
   :root{
-    --oxblood:      #6D1708;
-    --oxblood-dark: #4E1005;
-    --oxblood-deep: #320A03;
-    --gold:         #DEA509;
-    --gold-light:   #E9C45F;
-    --gold-dim:     #AD8007;
+    --oxblood:      #6E1809;
+    --oxblood-dark: #430F04;
+    --oxblood-deep: #2C0A03;
+    --gold:         #DDA508;
+    --gold-light:   #F0C550;
+    --gold-dim:     #B58A1F;
     --gold-muted:   #C7A15E;
-    --ink:          #241811;
-    --ink-soft:     #8A7F68;
-    --paper:        #F4EEE1;
-    --paper-dim:    #E6DCC5;
-    --card:         #FBF7EC;
-    --olive:        #5B6B3F;
-    --olive-dim:    #EEF1E4;
-    --rust:         #A23B1E;
-    --rust-dim:     #F7E6DE;
-    --steel:        #3B5169;
-    --steel-dim:    #E4EAF0;
-    --line: rgba(36,24,17,0.14);
+    --ink:          #F7F3E9;
+    --ink-soft:     #A79E89;
+    --paper:        #292524;
+    --paper-dim:    #1C1918;
+    --card:         #332E2C;
+    --olive:        #7CAB55;
+    --olive-dim:    rgba(124,171,85,0.16);
+    --rust:         #DB7F58;
+    --rust-dim:     rgba(219,127,88,0.16);
+    --steel:        #7AA3C8;
+    --steel-dim:    rgba(122,163,200,0.16);
+    --line: rgba(247,243,233,0.14);
 
-    --display: "Big Shoulders", sans-serif;
-    --display-text: "Big Shoulders Text", sans-serif;
+    --display: "Jura", sans-serif;
+    --display-text: "Jura", sans-serif;
     --body: "IBM Plex Sans", sans-serif;
     --mono: "IBM Plex Mono", monospace;
   }
@@ -92,7 +92,7 @@
     box-shadow:0 0 0 3px rgba(233,196,95,0.22); flex:none;
   }
   .synclamp.saving .bulb{ background:var(--gold-dim); }
-  .synclamp.off .bulb{ background:var(--rust); box-shadow:0 0 0 3px rgba(162,59,30,0.25); }
+  .synclamp.off .bulb{ background:var(--rust); box-shadow:0 0 0 3px rgba(219,127,88,0.25); }
 
   /* ---------- layout ---------- */
   main{ flex:1; padding:20px 18px 40px; max-width:1240px; width:100%; margin:0 auto; }
@@ -169,7 +169,7 @@
   .vital b{ font-family:var(--mono); font-weight:600; font-size:13.5px; color:var(--ink); }
   .plate .goto{
     margin-top:12px; font-family:var(--display-text); font-weight:700; font-size:13px;
-    text-transform:uppercase; letter-spacing:0.09em; color:var(--oxblood);
+    text-transform:uppercase; letter-spacing:0.09em; color:var(--gold);
     display:flex; align-items:center; gap:6px;
   }
   .plate .ver{ font-family:var(--mono); font-size:10.5px; color:var(--gold-dim); letter-spacing:0.06em; }
@@ -179,8 +179,8 @@
   .plate.minerva .deity{ color:var(--steel); }
   .plate.kubera{ border-top-color:var(--gold-dim); }
   .plate.kubera .deity{ color:var(--gold-dim); }
-  .plate.odin{ border-top-color:var(--oxblood); }
-  .plate.odin .deity{ color:var(--oxblood); }
+  .plate.odin{ border-top-color:#CB5F35; }
+  .plate.odin .deity{ color:#CB5F35; }
   .plate.iris{ border-top-color:var(--rust); }
   .plate.iris .deity{ color:var(--rust); }
 
@@ -197,7 +197,7 @@
     padding:0 8px 6px 0; border-bottom:1px solid var(--line);
   }
   table.rows td{
-    padding:7px 8px 7px 0; border-bottom:1px solid rgba(36,24,17,0.06);
+    padding:7px 8px 7px 0; border-bottom:1px solid rgba(247,243,233,0.08);
     font-size:13.5px; vertical-align:baseline;
   }
   table.rows tr:last-child td{ border-bottom:none; }
@@ -208,7 +208,7 @@
     display:inline-block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.05em;
     text-transform:uppercase; border-radius:2px; padding:2px 6px;
   }
-  .pill.draft{ background:var(--paper-dim); color:#6b6250; }
+  .pill.draft{ background:var(--paper-dim); color:#B8AF98; }
   .pill.sent{ background:var(--steel-dim); color:var(--steel); }
   .pill.won{ background:var(--olive-dim); color:var(--olive); }
   .pill.lost{ background:var(--rust-dim); color:var(--rust); }
@@ -275,11 +275,11 @@
   #authgate .eyebrow{ font-family:var(--mono); font-size:10px; font-weight:600;
     letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:6px; }
   #authgate h1{ font-family:var(--display); font-weight:800; font-size:27px; line-height:1;
-    margin:0 0 6px; text-transform:uppercase; letter-spacing:0.01em; color:var(--oxblood); }
-  #authgate p.sub{ font-family:var(--body); font-size:13px; color:#8a7f68;
+    margin:0 0 6px; text-transform:uppercase; letter-spacing:0.01em; color:var(--gold); }
+  #authgate p.sub{ font-family:var(--body); font-size:13px; color:#B8AF98;
     margin:0 0 18px; line-height:1.5; }
   #authgate label{ display:block; font-family:var(--display-text); font-weight:700; font-size:11.5px;
-    text-transform:uppercase; letter-spacing:0.07em; color:#7a6f5c; margin:0 0 5px; }
+    text-transform:uppercase; letter-spacing:0.07em; color:#B8AF98; margin:0 0 5px; }
   #authgate input{ width:100%; font-family:var(--body); font-size:15px; padding:10px 12px;
     border:1.5px solid var(--line); border-radius:4px; background:var(--paper);
     color:var(--ink); margin-bottom:14px; }
@@ -298,12 +298,12 @@
   #whoami{ position:fixed; left:12px; bottom:12px; z-index:900;
     font-family:var(--mono); font-size:10.5px; letter-spacing:0.04em;
     background:var(--card); border:1px solid var(--line); border-radius:999px;
-    padding:5px 12px; color:#8a7f68; display:flex; gap:9px; align-items:center;
-    box-shadow:0 2px 8px rgba(36,24,17,0.08); }
+    padding:5px 12px; color:#B8AF98; display:flex; gap:9px; align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3); }
   #whoami[hidden]{ display:none; }
   #whoami button{ font-family:var(--display-text); font-weight:700; font-size:10.5px;
     text-transform:uppercase; letter-spacing:0.06em; background:none; border:none;
-    color:var(--oxblood); cursor:pointer; padding:0; }
+    color:var(--gold); cursor:pointer; padding:0; }
   #whoami button:hover{ text-decoration:underline; }
   @media print{ #whoami, #authgate{ display:none !important; } }
 </style>
