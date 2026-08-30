@@ -252,6 +252,7 @@
   }
   .jobtile:hover{ transform:translateY(-2px); border-color:var(--shop-gold); }
   .jobtile:active{ transform:scale(0.98); }
+  .jobtile .jobnum{ display:block; font-size:22px; font-weight:700; line-height:1.2; }
   .jobtile .jobsub{ display:block; font-family:var(--mono); font-weight:500; font-size:11px; color:var(--shop-gold-light); margin-top:5px; text-transform:uppercase; letter-spacing:0.5px; }
   .jobtile .jobdesc{ display:block; font-family:var(--body); font-weight:400; font-size:12px; color:var(--shop-gray); margin-top:4px; text-transform:none; letter-spacing:normal; line-height:1.35; }
   .jobtile.suggested{ box-shadow:0 0 0 2px var(--shop-gold), 0 8px 14px -8px rgba(0,0,0,0.4); }
@@ -359,6 +360,11 @@
   .formbtns .save{ background:var(--oxblood); color:var(--gold-light); }
   .formbtns .cancel{ background:transparent; color:#8a7f68; border:1px solid var(--line); }
   .logfilters{ display:flex; gap:14px; align-items:flex-end; margin-bottom:18px; flex-wrap:wrap; }
+  /* Employee-facing "my history" reuses the admin panel's light card + table styling
+     (rather than the dark --shop-* theme) so the text has real contrast - the same
+     inline dark-text-on-dark-bg approach used here before was nearly unreadable. */
+  .history-panel{ background:var(--card); border-radius:14px; padding:18px 20px 20px; width:100%; max-width:760px; box-shadow:0 8px 14px -8px rgba(0,0,0,0.4); }
+  .history-panel .logfilters{ margin-bottom:14px; }
   .summary-cards{ display:flex; gap:12px; margin:6px 0 26px; flex-wrap:wrap; }
   .summary-card{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 18px; min-width:150px; }
   .summary-card .n{ font-family:var(--display); font-size:24px; color:var(--oxblood); font-weight:800; }
@@ -504,7 +510,7 @@
 (function(){
   'use strict';
 
-  var K = { employees:'lanko_employees', jobs:'lanko_jobs', entries:'lanko_entries', adminPin:'lanko_admin_pin', jobSource:'lanko_job_source', officeJobSource:'lanko_office_job_source', employeeSource:'lanko_employee_source', taskSource:'lanko_task_source', tasks:'lanko_tasks', sheetWrite:'lanko_sheet_write' };
+  var K = { employees:'lanko_employees', jobs:'lanko_jobs', entries:'lanko_entries', adminPin:'lanko_admin_pin', jobSource:'lanko_job_source', officeJobSource:'lanko_office_job_source', employeeSource:'lanko_employee_source', taskSource:'lanko_task_source', tasks:'lanko_tasks', sheetWrite:'lanko_sheet_write', printRequests:'lanko_print_requests' };
 
   // Pre-wired to the sheets given at setup time. Both adjustable from their tabs without
   // needing another round of edits (column numbers, header row, etc).
@@ -581,12 +587,13 @@
     manualEntryError:null, manualEntrySavedName:null,
     adminLogTimeMode:'clock', adminLogTimeError:null, adminLogTimeSavedName:null,
     sheetWriteUrl:null, sheetWriteFormOpen:false, sheetWriteError:null, sheetWriteStatus:'idle', sheetWriteLastSentAt:null,
-    historyRangeDays:14, historyFlagOpenId:null, historyFlagError:null,
-    historyEmailFormOpen:false, historyEmailInput:null, historyEmailStatus:'idle', historyEmailError:null,
+    historyFrom:null, historyTo:null, historyFlagOpenId:null, historyFlagError:null,
+    historyPrintStatus:'idle', historyPrintError:null,
     minervaSchedule:null, // published by Minerva (the scheduling app) -- read-only, used to suggest a job at clock-in
     minervaEmployees:null, // Minerva's roster, read-only -- pools decide who sees the office task tiles
     kuberaQuotes:null, // Kubera's live quotes, read-only -- draft/sent ones become clockable "quote time" jobs for office
     odinClosedJobs:[], // Odin's Closed/Shipped job numbers, read-only -- hides those shop jobs from the clock-in/transfer tile lists
+    printRequests:[], // employee "please print my history" requests, resolved/removed from the admin Daily Log tab
     lastInteractionAt: Date.now(),
     screensaverActive:false
   };
@@ -670,6 +677,10 @@
   }
   function todayStr(){
     var d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function daysAgoStr(n){
+    var d = new Date(); d.setDate(d.getDate()-n);
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
   function fmtTime(iso){ return new Date(iso).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true}); }
@@ -1056,6 +1067,22 @@
       return STATE.entries; // best-effort fallback so a caller's .then() doesn't throw
     });
   }
+  // Same read-modify-write safety as mutateEntries - two employees on two different
+  // tablets could submit a printout request within the same second.
+  function mutatePrintRequests(mutatorFn){
+    var ref = fsDoc(K.printRequests);
+    return firebaseDb.runTransaction(function(tx){
+      return tx.get(ref).then(function(snap){
+        var remote = (snap.exists && snap.data().value) ? snap.data().value : [];
+        var updated = mutatorFn(remote);
+        tx.set(ref, { value: updated, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        return updated;
+      });
+    }).catch(function(e){
+      console.error('printRequests transaction failed', e);
+      return STATE.printRequests;
+    });
+  }
   /* ---------------- Google Sheet sync (jobs + employees) ---------------- */
   function parseCSV(text){
     var rows = [], row = [], field = '', inQuotes = false;
@@ -1402,13 +1429,15 @@
       safeGetJSON(K.tasks, []),
       safeGetJSON(K.sheetWrite, null),
       safeGetJSON(K.taskSource, DEFAULT_TASK_SOURCE),
-      safeGetJSON(K.officeJobSource, DEFAULT_OFFICE_JOB_SOURCE)
+      safeGetJSON(K.officeJobSource, DEFAULT_OFFICE_JOB_SOURCE),
+      safeGetJSON(K.printRequests, [])
     ]).then(function(res){
       STATE.employees = res[0]; STATE.jobs = res[1]; STATE.entries = res[2]; STATE.adminPin = res[3];
       STATE.jobSource = res[4]; STATE.employeeSource = res[5]; STATE.tasks = res[6];
       if(res[7]){ STATE.sheetWriteUrl = res[7].url; STATE.sheetWriteLastSentAt = res[7].lastSentAt; }
       STATE.taskSource = res[8];
       STATE.officeJobSource = res[9];
+      STATE.printRequests = res[10];
     });
   }
   function refreshPublicData(){
@@ -1659,7 +1688,7 @@
           var isSuggested = suggestedJobIds[j.id];
           return '<div class="jobtile'+(isSuggested?' suggested':'')+'" tabindex="0" data-action="select-job-clockin" data-id="'+j.id+'">'+
             (isSuggested?'<span class="suggested-badge">Suggested</span>':'')+
-            esc(j.name)+
+            '<span class="jobnum">'+esc(j.name)+'</span>'+
             (j.description?'<span class="jobdesc">'+esc(j.description)+'</span>':'')+
             '<span class="jobsub">Clock in</span></div>';
         }).join('')+'</div></div>'+
@@ -1673,7 +1702,8 @@
         '<div class="action-view-scroll">'+
         '<div class="status-hero"><p class="greetname">'+esc(emp.name)+'</p><p class="statusline">Pick the job to transfer to</p></div>'+
         '<div class="joblist">'+others.map(function(j){
-          return '<div class="jobtile" tabindex="0" data-action="select-job-transfer" data-id="'+j.id+'">'+esc(j.name)+
+          return '<div class="jobtile" tabindex="0" data-action="select-job-transfer" data-id="'+j.id+'">'+
+            '<span class="jobnum">'+esc(j.name)+'</span>'+
             (j.description?'<span class="jobdesc">'+esc(j.description)+'</span>':'')+
             '<span class="jobsub">Transfer here</span></div>';
         }).join('')+'</div></div></div>';
@@ -1882,75 +1912,81 @@
      Lets any employee view their own recent clock history (never anyone else's), report
      a problem with a specific entry for the admin to review, and - if the Apps Script
      sheet-write URL is configured - email a copy of their history to themselves. */
-  function getMyRecentEntries(empId, days){
-    var since = new Date(); since.setDate(since.getDate()-(days-1)); since.setHours(0,0,0,0);
-    return STATE.entries.filter(function(en){ return en.employeeId===empId && new Date(en.clockIn) >= since; })
-      .sort(function(a,b){ return new Date(b.clockIn)-new Date(a.clockIn); });
+  function getMyEntriesInRange(empId, from, to){
+    var fromTime = new Date(from+'T00:00:00').getTime();
+    var toTime = new Date(to+'T23:59:59').getTime();
+    return STATE.entries.filter(function(en){
+      var t = new Date(en.clockIn).getTime();
+      return en.employeeId===empId && t>=fromTime && t<=toTime;
+    }).sort(function(a,b){ return new Date(b.clockIn)-new Date(a.clockIn); });
   }
   function renderMyHistory(){
     var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
     if(!emp){ STATE.view='rack'; return renderRack(); }
-    var days = STATE.historyRangeDays || 14;
+    if(!STATE.historyFrom) STATE.historyFrom = daysAgoStr(13);
+    if(!STATE.historyTo) STATE.historyTo = todayStr();
     var payable = computePayableMap();
-    var myEntries = getMyRecentEntries(emp.id, days);
+    var myEntries = getMyEntriesInRange(emp.id, STATE.historyFrom, STATE.historyTo);
 
-    var rangeBtns = [7,14,30].map(function(d){
-      return '<button class="iconbtn" style="'+(days===d?'background:var(--oxblood);color:#fff;':'')+'" data-action="history-range" data-id="'+d+'">'+d+' days</button>';
+    var quickBtns = [7,14,30].map(function(d){
+      var qFrom = daysAgoStr(d-1), qTo = todayStr();
+      var isActive = STATE.historyFrom===qFrom && STATE.historyTo===qTo;
+      return '<button class="iconbtn" style="'+(isActive?'background:var(--oxblood);color:#fff;':'')+'" data-action="history-range" data-id="'+d+'">'+d+' days</button>';
     }).join('');
 
     var totalMs = 0;
-    var rows = myEntries.map(function(en){
+    var tableRows = myEntries.map(function(en){
       var p = payable[en.id] || {hoursMs:0, quoteMs:0};
       totalMs += p.hoursMs;
-      var hoursStr = en.clockOut ? fmtDuration(p.hoursMs) : 'active';
-      var flagRow;
-      if(en.flagged){
-        flagRow = '<div style="margin-top:8px;padding:8px 10px;background:#fff3e0;border-radius:8px;font-size:12px;color:var(--rust);">'+
-          '&#9873; Reported: '+esc(en.flagNote||'')+
-          ' <button class="iconbtn" data-action="history-flag-withdraw" data-id="'+en.id+'" style="margin-left:8px;">Withdraw</button></div>';
-      } else if(STATE.historyFlagOpenId===en.id){
-        flagRow = '<div style="margin-top:8px;">'+
+      var hoursStr = en.clockOut ? fmtDuration(p.hoursMs) : 'Active';
+      var rowStyle = en.flagged ? ' style="background:#fff8ec;"' : '';
+      var statusCell = en.flagged ?
+        '<span style="color:var(--rust);font-weight:600;">&#9873; Flagged</span> <button class="iconbtn" data-action="history-flag-withdraw" data-id="'+en.id+'">Withdraw</button>' :
+        '<button class="iconbtn" data-action="history-flag-open" data-id="'+en.id+'">Report a problem</button>';
+      var mainRow = '<tr'+rowStyle+'>'+
+        '<td>'+fmtDateShort(en.clockIn)+'</td>'+
+        '<td>'+esc(en.jobName)+'</td>'+
+        '<td>'+fmtTime(en.clockIn)+'</td>'+
+        '<td>'+(en.clockOut?fmtTime(en.clockOut):'&mdash;')+'</td>'+
+        '<td>'+hoursStr+'</td>'+
+        '<td style="white-space:nowrap;">'+statusCell+'</td>'+
+        '</tr>';
+      var extraRow = '';
+      if(en.flagged && en.flagNote){
+        extraRow += '<tr'+rowStyle+'><td colspan="6" style="padding-top:0;font-size:12px;color:#8a7f68;">&#8220;'+esc(en.flagNote)+'&#8221;</td></tr>';
+      }
+      if(STATE.historyFlagOpenId===en.id){
+        extraRow += '<tr><td colspan="6">'+
           '<textarea id="historyFlagNoteInput" rows="2" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;padding:8px;border-radius:8px;border:1px solid var(--line);" placeholder="What looks wrong?"></textarea>'+
           (STATE.historyFlagError?'<div class="formerr">'+esc(STATE.historyFlagError)+'</div>':'')+
           '<div class="formbtns"><button class="save" data-action="history-flag-submit" data-id="'+en.id+'">Submit</button>'+
-          '<button class="cancel" data-action="history-flag-cancel">Cancel</button></div></div>';
-      } else {
-        flagRow = '<button class="iconbtn" data-action="history-flag-open" data-id="'+en.id+'" style="margin-top:8px;">Report a problem</button>';
+          '<button class="cancel" data-action="history-flag-cancel">Cancel</button></div></td></tr>';
       }
-      return '<div style="padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;">'+
-        '<div style="display:flex;justify-content:space-between;gap:10px;font-weight:600;">'+
-        '<span>'+fmtDateShort(en.clockIn)+' — '+esc(en.jobName)+'</span><span style="white-space:nowrap;">'+hoursStr+'</span></div>'+
-        '<div style="font-size:13px;color:#8a7f68;margin-top:2px;">'+fmtTime(en.clockIn)+' – '+(en.clockOut?fmtTime(en.clockOut):'active')+'</div>'+
-        flagRow+
-        '</div>';
+      return mainRow+extraRow;
     }).join('');
 
-    var emailSection = '';
-    if(STATE.sheetWriteUrl){
-      if(STATE.historyEmailFormOpen){
-        emailSection = '<div class="inlineform" style="margin-top:14px;">'+
-          '<div class="field" style="flex:1;min-width:200px;"><label>Email address</label>'+
-          '<input id="historyEmailInput" type="email" value="'+esc(emp.email||'')+'" placeholder="you@example.com"></div>'+
-          (STATE.historyEmailError?'<div class="formerr">'+esc(STATE.historyEmailError)+'</div>':'')+
-          '<div class="formbtns"><button class="save" data-action="history-email-send">Send</button>'+
-          '<button class="cancel" data-action="history-email-cancel">Cancel</button></div></div>';
-      } else {
-        var statusText = STATE.historyEmailStatus==='sending' ? 'Sending&hellip;' :
-          STATE.historyEmailStatus==='ok' ? '&#10003; Sent! Check your inbox in a minute.' :
-          STATE.historyEmailStatus==='error' ? ('&#9888; '+esc(STATE.historyEmailError||'')) : '';
-        emailSection = '<div class="actionbtns" style="margin-top:6px;">'+
-          '<button class="bigbtn secondary" data-action="history-email-open">Email me this</button></div>'+
-          (statusText?'<div style="font-size:13px;margin-top:8px;">'+statusText+'</div>':'');
-      }
-    }
+    var printStatusText = STATE.historyPrintStatus==='sending' ? 'Sending request&hellip;' :
+      STATE.historyPrintStatus==='ok' ? '&#10003; Request sent \u2014 ask your admin to print this out.' :
+      STATE.historyPrintStatus==='error' ? ('&#9888; '+esc(STATE.historyPrintError||'')) : '';
 
     return '<div class="action-view"><span class="backlink" data-action="action-cancel">&larr; Back</span>'+
       '<div class="action-view-scroll">'+
       '<div class="status-hero"><p class="greetname">'+esc(emp.name)+'\u2019s history</p>'+
-      '<p class="statusline">Last '+days+' days &middot; '+msToHoursStr(totalMs)+'h total</p></div>'+
-      '<div style="display:flex;gap:8px;margin-bottom:14px;">'+rangeBtns+'</div>'+
-      (rows || '<div class="empty-state">No clocked time in this range.</div>')+
-      emailSection+
+      '<p class="statusline">'+esc(STATE.historyFrom)+' to '+esc(STATE.historyTo)+' &middot; '+msToHoursStr(totalMs)+'h total</p></div>'+
+      '<div class="history-panel">'+
+      '<div class="logfilters">'+
+      '<div class="field"><label>From</label><input id="historyFromInput" type="date" value="'+STATE.historyFrom+'"></div>'+
+      '<div class="field"><label>To</label><input id="historyToInput" type="date" value="'+STATE.historyTo+'"></div>'+
+      '<button class="addbtn" data-action="history-apply-range">Update</button>'+
+      quickBtns+
+      '</div>'+
+      (tableRows ?
+        '<table class="datatable"><thead><tr><th>Date</th><th>Job</th><th>In</th><th>Out</th><th>Hours</th><th>Status</th></tr></thead><tbody>'+tableRows+'</tbody></table>' :
+        '<div class="empty-state">No clocked time in this range.</div>')+
+      '</div>'+
+      '<div class="actionbtns" style="margin-top:14px;">'+
+      '<button class="bigbtn secondary" data-action="history-print-request">Request admin printout</button></div>'+
+      (printStatusText?'<div style="font-size:13px;margin-top:8px;color:var(--shop-cream);">'+printStatusText+'</div>':'')+
       '</div></div>';
   }
   function onHistoryFlagSubmit(entryId){
@@ -1969,48 +2005,32 @@
       return list.map(function(en){ return en.id===entryId ? Object.assign({}, en, {flagged:false, flagNote:null, flaggedAt:null, flaggedBy:null}) : en; });
     }).then(function(updated){ STATE.entries = updated; render(); });
   }
-  function onEmailHistory(){
+  // Employee-facing "print this for me" request. Writes straight to Firestore (no Apps
+  // Script / email dependency) so it works even on shops that never configured the
+  // sheet-write bridge. Surfaces in the admin Daily Log tab until an admin resolves it.
+  function requestAdminPrintout(){
     var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
-    if(!emp || !STATE.sheetWriteUrl) return;
-    var emailInput = document.getElementById('historyEmailInput');
-    var email = (emailInput ? emailInput.value.trim() : (emp.email||''));
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ STATE.historyEmailError='Enter a valid email address.'; render(); return; }
-
-    var days = STATE.historyRangeDays || 14;
-    var myEntries = getMyRecentEntries(emp.id, days);
-    var payable = computePayableMap();
-    var totalMs = 0;
-    var lines = myEntries.map(function(en){
-      var p = payable[en.id] || {hoursMs:0};
-      totalMs += p.hoursMs;
-      var hrs = en.clockOut ? msToHoursStr(p.hoursMs) : 'active';
-      return fmtDateShort(en.clockIn)+'  '+en.jobName+'  '+fmtTime(en.clockIn)+'-'+(en.clockOut?fmtTime(en.clockOut):'active')+'  '+hrs+'h';
-    });
-    var body = 'Time clock history for '+emp.name+' (last '+days+' days)\n\n'+
-      (lines.length?lines.join('\n'):'No clocked time in this range.')+'\n\nTotal: '+msToHoursStr(totalMs)+'h';
-
-    STATE.historyEmailStatus = 'sending'; STATE.historyEmailError = null; render();
-    var saveEmailPromise = (email !== (emp.email||'')) ?
-      mutateLocal(K.employees, STATE.employees, function(list){
-        return list.map(function(e){ return e.id===emp.id ? Object.assign({}, e, {email:email}) : e; });
-      }).then(function(updated){ STATE.employees = updated; }) : Promise.resolve();
-
-    saveEmailPromise.then(function(){
-      return fetch(STATE.sheetWriteUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        credentials: 'include',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ type:'sendEmail', to: email, subject: 'Your Kairos time clock history', body: body })
-      });
-    }).then(function(){
-      STATE.historyEmailStatus = 'ok'; STATE.historyEmailError = null; STATE.historyEmailFormOpen = false;
-      render();
+    if(!emp) return;
+    var from = STATE.historyFrom || daysAgoStr(13);
+    var to = STATE.historyTo || todayStr();
+    var req = {
+      id: 'pr_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
+      employeeId: emp.id, employeeName: emp.name,
+      from: from, to: to,
+      requestedAt: new Date().toISOString()
+    };
+    STATE.historyPrintStatus = 'sending'; STATE.historyPrintError = null; render();
+    mutatePrintRequests(function(list){ return (list||[]).concat([req]); }).then(function(updated){
+      STATE.printRequests = updated; STATE.historyPrintStatus = 'ok'; render();
     }).catch(function(){
-      STATE.historyEmailStatus = 'error';
-      STATE.historyEmailError = 'Could not reach the script. Ask your admin to check the Google Sheet setup.';
+      STATE.historyPrintStatus = 'error';
+      STATE.historyPrintError = 'Could not reach the shop system. Try again in a minute.';
       render();
     });
+  }
+  function resolvePrintRequest(id){
+    mutatePrintRequests(function(list){ return (list||[]).filter(function(r){ return r.id!==id; }); })
+      .then(function(updated){ STATE.printRequests = updated; render(); });
   }
 
   /* ---------------- task selection (on clock-out / transfer) ---------------- */
@@ -2565,6 +2585,23 @@
         '</div>';
     }
 
+    // Employees' "Request admin printout" taps land here regardless of date range, same
+    // reasoning as the banners above.
+    var printRequests = (STATE.printRequests||[]).slice()
+      .sort(function(a,b){ return new Date(b.requestedAt||0)-new Date(a.requestedAt||0); });
+    var printBanner = '';
+    if(printRequests.length){
+      printBanner = '<div style="background:#e9edf2;border:1px solid var(--steel);border-radius:10px;padding:12px 16px;margin-bottom:16px;">'+
+        '<div style="font-weight:700;color:var(--steel);margin-bottom:8px;">&#128424; '+printRequests.length+' printout request'+(printRequests.length===1?'':'s')+'</div>'+
+        printRequests.map(function(r){
+          return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--steel);">'+
+            '<div style="font-size:13px;"><b>'+esc(r.employeeName)+'</b> — '+esc(r.from)+' to '+esc(r.to)+
+            '<div style="color:#8a7f68;margin-top:2px;">Requested '+fmtTime(r.requestedAt)+' on '+fmtDateShort(r.requestedAt)+'</div></div>'+
+            '<button class="iconbtn" data-action="printreq-resolve" data-id="'+esc(r.id)+'">Mark printed</button></div>';
+        }).join('')+
+        '</div>';
+    }
+
     var totalsByEmp = {};
     rows.forEach(function(en){
       var p = payable[en.id] || {hoursMs:0, quoteMs:0, pendingMs:0};
@@ -2626,6 +2663,7 @@
     return '<div class="admin-section-head"><h2>Daily Log</h2></div>'+
       flaggedBanner+
       pendingBanner+
+      printBanner+
       '<div class="logfilters">'+
       '<div class="field"><label>From</label><input id="logFromInput" type="date" value="'+STATE.logFrom+'"></div>'+
       '<div class="field"><label>To</label><input id="logToInput" type="date" value="'+STATE.logTo+'"></div>'+
@@ -3022,16 +3060,22 @@
 
       case 'open-history':
         STATE.view='myhistory'; STATE.historyFlagOpenId=null; STATE.historyFlagError=null;
-        STATE.historyEmailFormOpen=false; STATE.historyEmailStatus='idle'; STATE.historyEmailError=null;
+        if(!STATE.historyFrom) STATE.historyFrom = daysAgoStr(13);
+        if(!STATE.historyTo) STATE.historyTo = todayStr();
+        STATE.historyPrintStatus='idle'; STATE.historyPrintError=null;
         render(); break;
-      case 'history-range': STATE.historyRangeDays = parseInt(id,10)||14; render(); break;
+      case 'history-range':
+        STATE.historyTo = todayStr(); STATE.historyFrom = daysAgoStr((parseInt(id,10)||14)-1);
+        render(); break;
+      case 'history-apply-range':
+        STATE.historyFrom = document.getElementById('historyFromInput').value || STATE.historyFrom;
+        STATE.historyTo = document.getElementById('historyToInput').value || STATE.historyTo;
+        render(); break;
       case 'history-flag-open': STATE.historyFlagOpenId=id; STATE.historyFlagError=null; render(); break;
       case 'history-flag-cancel': STATE.historyFlagOpenId=null; STATE.historyFlagError=null; render(); break;
       case 'history-flag-submit': onHistoryFlagSubmit(id); break;
       case 'history-flag-withdraw': onHistoryFlagWithdraw(id); break;
-      case 'history-email-open': STATE.historyEmailFormOpen=true; STATE.historyEmailStatus='idle'; STATE.historyEmailError=null; render(); break;
-      case 'history-email-cancel': STATE.historyEmailFormOpen=false; STATE.historyEmailError=null; render(); break;
-      case 'history-email-send': onEmailHistory(); break;
+      case 'history-print-request': requestAdminPrintout(); break;
       case 'manualentry-back': STATE.view='action'; STATE.manualEntryError=null; STATE.manualEntrySavedName=null; render(); break;
       case 'manualentry-save': onManualEntrySave(); break;
 
@@ -3109,6 +3153,7 @@
       case 'log-save-edit': onLogSaveEdit(id); break;
       case 'log-delete': onLogDelete(id); break;
       case 'log-resolve-flag': onLogResolveFlag(id); break;
+      case 'printreq-resolve': resolvePrintRequest(id); break;
       case 'log-approve-afterhours': onLogApproveAfterHours(id); break;
       case 'log-ignore-afterhours': onLogIgnoreAfterHours(id); break;
 
@@ -3161,6 +3206,10 @@
       if(snap.exists && snap.data().value) STATE.tasks = snap.data().value;
       maybeRenderAfterBackgroundSync(false);
     }, function(e){ console.error('tasks listener error', e); });
+    fsDoc(K.printRequests).onSnapshot(function(snap){
+      if(snap.exists && snap.data().value) STATE.printRequests = snap.data().value;
+      maybeRenderAfterBackgroundSync(false);
+    }, function(e){ console.error('printRequests listener error', e); });
   }
   var currentPageETag = null;
   var pendingVersionUpdate = false;
