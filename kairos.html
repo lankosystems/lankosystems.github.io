@@ -426,6 +426,23 @@
   @media (max-width:700px){
     .festive-banner{ font-size:14px; padding:10px 12px; }
   }
+
+  /* ---------------- print report (admin "fulfil printout request") ----------------
+     #printArea is injected on demand by printRequestFulfill() and stays display:none
+     on screen. The @media print rule hides the whole app and shows only this report,
+     using the standard visibility-hidden-then-reveal trick so it works no matter what
+     admin/employee view happens to be underneath when Print is clicked. */
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block; position:absolute; top:0; left:0; width:100%; padding:24px; }
+    #printArea h1{ font-family:Arial,sans-serif; font-size:20px; margin:0 0 4px; }
+    #printArea .meta{ font-family:Arial,sans-serif; font-size:13px; color:#333; margin-bottom:16px; }
+    #printArea table{ width:100%; border-collapse:collapse; font-family:Arial,sans-serif; font-size:13px; }
+    #printArea th, #printArea td{ border:1px solid #999; padding:6px 10px; text-align:left; }
+    #printArea tfoot td{ font-weight:700; }
+  }
 </style>
 </head>
 <body>
@@ -2032,6 +2049,39 @@
     mutatePrintRequests(function(list){ return (list||[]).filter(function(r){ return r.id!==id; }); })
       .then(function(updated){ STATE.printRequests = updated; render(); });
   }
+  function printReportHTML(employeeName, from, to, entries, payable){
+    var totalMs = 0;
+    var rows = entries.map(function(en){
+      var p = payable[en.id] || {hoursMs:0};
+      totalMs += p.hoursMs;
+      var hrs = en.clockOut ? fmtDuration(p.hoursMs) : 'Active';
+      return '<tr><td>'+fmtDateShort(en.clockIn)+'</td><td>'+esc(en.jobName)+'</td><td>'+fmtTime(en.clockIn)+'</td><td>'+
+        (en.clockOut?fmtTime(en.clockOut):'\u2014')+'</td><td>'+hrs+'</td></tr>';
+    }).join('');
+    return '<h1>'+esc(employeeName)+' \u2014 Time Clock History</h1>'+
+      '<div class="meta">'+esc(from)+' to '+esc(to)+' &middot; Printed '+fmtDateShort(new Date().toISOString())+' at '+fmtTime(new Date().toISOString())+'</div>'+
+      '<table><thead><tr><th>Date</th><th>Job</th><th>In</th><th>Out</th><th>Hours</th></tr></thead><tbody>'+
+      (rows || '<tr><td colspan="5">No clocked time in this range.</td></tr>')+
+      '</tbody><tfoot><tr><td colspan="4">Total</td><td>'+msToHoursStr(totalMs)+'h</td></tr></tfoot></table>';
+  }
+  // Fulfils an employee's "Request admin printout" - builds their timesheet for the
+  // requested range and opens the browser print dialog. Deliberately separate from
+  // resolvePrintRequest so printing doesn't itself dismiss the request; the admin
+  // clicks "Mark printed" once the physical printout is actually in hand.
+  function printRequestFulfill(id){
+    var req = (STATE.printRequests||[]).find(function(r){ return r.id===id; });
+    if(!req) return;
+    var payable = computePayableMap();
+    var entries = getMyEntriesInRange(req.employeeId, req.from, req.to);
+    var area = document.getElementById('printArea');
+    if(!area){
+      area = document.createElement('div');
+      area.id = 'printArea';
+      document.body.appendChild(area);
+    }
+    area.innerHTML = printReportHTML(req.employeeName, req.from, req.to, entries, payable);
+    window.print();
+  }
 
   /* ---------------- task selection (on clock-out / transfer) ---------------- */
   function openTaskSelect(pendingAction){
@@ -2597,6 +2647,7 @@
           return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--steel);">'+
             '<div style="font-size:13px;"><b>'+esc(r.employeeName)+'</b> — '+esc(r.from)+' to '+esc(r.to)+
             '<div style="color:#8a7f68;margin-top:2px;">Requested '+fmtTime(r.requestedAt)+' on '+fmtDateShort(r.requestedAt)+'</div></div>'+
+            '<button class="iconbtn" data-action="printreq-print" data-id="'+esc(r.id)+'">Print</button>'+
             '<button class="iconbtn" data-action="printreq-resolve" data-id="'+esc(r.id)+'">Mark printed</button></div>';
         }).join('')+
         '</div>';
@@ -3153,6 +3204,7 @@
       case 'log-save-edit': onLogSaveEdit(id); break;
       case 'log-delete': onLogDelete(id); break;
       case 'log-resolve-flag': onLogResolveFlag(id); break;
+      case 'printreq-print': printRequestFulfill(id); break;
       case 'printreq-resolve': resolvePrintRequest(id); break;
       case 'log-approve-afterhours': onLogApproveAfterHours(id); break;
       case 'log-ignore-afterhours': onLogIgnoreAfterHours(id); break;
