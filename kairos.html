@@ -984,11 +984,15 @@
   }
   // Turns one Kubera quote into a job-shaped object Kairos already knows how to clock
   // against. The "kbq:" id prefix can never collide with a real job's uid('job') id.
+  // name/description are split the same way every other job is (short number in name,
+  // longer title in description) so quote tiles render with the same two-line jobnum/
+  // jobdesc layout as regular job tiles, instead of cramming the whole quote title into
+  // the bold jobnum line.
   function kuberaQuoteJob(q){
     var label = 'Quote ' + (q.num||'?') + (q.rev ? ' Rev ' + q.rev : '');
-    return { id:'kbq:'+q.id, name: label + (q.title ? ' - ' + q.title : ''), active:true,
+    return { id:'kbq:'+q.id, name: label, active:true,
       audience:'office', isQuote:true, afterHoursAllowed:false, source:'kubera-quote',
-      quoteStatus: q.status||'', description:'' };
+      quoteStatus: q.status||'', description: q.title||'' };
   }
   // Every Kubera quote Kairos has ever seen, turned into a job-shaped object -- used so
   // payroll math and the "on X since" caption can still resolve a quote that has since
