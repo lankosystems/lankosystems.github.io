@@ -633,6 +633,7 @@ timeOffRequests:[], // employee time-off requests - pending ones need admin appr
 timeOffError:null, timeOffSavedInfo:null,
 timeOffDraftFrom:null, timeOffDraftTo:null, timeOffDraftPartial:false, timeOffDraftNote:'',
 calendarMonth:null,
+timeOffEditingId:null,
     lastInteractionAt: Date.now(),
     screensaverActive:false
   };
@@ -1231,7 +1232,9 @@ function dateRangeDays(fromStr, toStr){
 function renderTimeOffRequest(){
   var emp = STATE.employees.find(function(e){ return e.id===STATE.selectedEmployeeId; });
   if(!emp){ STATE.view='rack'; return renderRack(); }
+  var editingReq = STATE.timeOffEditingId ? STATE.timeOffRequests.find(function(r){ return r.id===STATE.timeOffEditingId; }) : null;
   var savedBanner = STATE.timeOffSavedInfo ? '<div class="formerr" style="color:var(--olive);font-weight:600;">&#10003; '+esc(STATE.timeOffSavedInfo)+'.</div>' : '';
+  var editBanner = editingReq ? '<div style="background:var(--olive-dim);border:1px solid var(--olive);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--olive);font-weight:600;">Editing your approved request &mdash; submitting will resend it for approval. <span style="text-decoration:underline;cursor:pointer;font-weight:700;" data-action="timeoff-edit-cancel">Cancel edit</span></div>' : '';
   var fromVal = STATE.timeOffDraftFrom || todayStr();
   var toVal = STATE.timeOffDraftTo || fromVal;
   var partialChecked = !!STATE.timeOffDraftPartial;
@@ -1242,12 +1245,13 @@ function renderTimeOffRequest(){
     var statusColor = r.status==='approved' ? 'var(--olive)' : r.status==='denied' ? 'var(--rust)' : 'var(--gold-dim)';
     var statusLabel = r.status==='approved' ? 'Approved' : r.status==='denied' ? 'Denied' : 'Pending';
     var withdrawBtn = r.status==='pending' ? '<button class="iconbtn" data-action="timeoff-withdraw" data-id="'+r.id+'">Withdraw</button>' : '';
+    var editBtn = r.status==='approved' ? '<button class="iconbtn" data-action="timeoff-edit-open" data-id="'+r.id+'">Edit</button>' : '';
     return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);">'+
       '<div style="font-size:13px;"><b>'+esc(range)+'</b>'+(r.partial?' &middot; partial day':'')+
       (r.note?'<div style="color:#8a7f68;margin-top:2px;">'+esc(r.note)+'</div>':'')+'</div>'+
       '<div style="white-space:nowrap;display:flex;align-items:center;gap:8px;">'+
       '<span style="font-family:var(--display-text);font-size:11px;font-weight:700;text-transform:uppercase;color:'+statusColor+';">'+statusLabel+'</span>'+
-      withdrawBtn+'</div></div>';
+      editBtn+withdrawBtn+'</div></div>';
   }).join('');
   var myRequestsPanel = myRequests.length ? ('<div class="inlineform" style="max-width:560px;width:100%;display:block;">'+
     '<div style="font-family:var(--display-text);font-weight:700;font-size:13px;color:var(--oxblood);margin-bottom:4px;">Your requests</div>'+
@@ -1255,7 +1259,7 @@ function renderTimeOffRequest(){
   return '<div class="action-view"><span class="backlink" data-action="timeoff-back">&larr; Back</span>'+
     '<div class="action-view-scroll">'+
     '<div class="status-hero"><p class="greetname">Request time off</p><p class="statusline">Pick the dates you need off</p></div>'+
-    savedBanner+
+    savedBanner+editBanner+
     '<div class="inlineform" style="max-width:560px;width:100%;">'+
     '<div class="field"><label>From</label><input id="timeOffFromInput" type="date" value="'+esc(fromVal)+'"></div>'+
     '<div class="field"><label>To</label><input id="timeOffToInput" type="date" value="'+esc(toVal)+'"></div>'+
@@ -1264,7 +1268,7 @@ function renderTimeOffRequest(){
     '<input id="timeOffPartialInput" type="checkbox" style="width:18px;height:18px;" '+(partialChecked?'checked':'')+'> Partial day (e.g. leaving early) &mdash; single day only</label></div>'+
     '<div class="field" style="flex:1 1 100%;"><label>Note (optional)</label><input id="timeOffNoteInput" type="text" value="'+esc(STATE.timeOffDraftNote||'')+'" placeholder="e.g. family trip, appointment"></div>'+
     (STATE.timeOffError?'<div class="formerr">'+esc(STATE.timeOffError)+'</div>':'')+
-    '<div class="formbtns"><button class="save" data-action="timeoff-save">Submit request</button></div>'+
+    '<div class="formbtns"><button class="save" data-action="timeoff-save">'+(editingReq?'Resend for approval':'Submit request')+'</button></div>'+
     '</div>'+
     myRequestsPanel+
     '</div></div>';
@@ -1282,14 +1286,34 @@ function onTimeOffRequestSave(){
   if(!fromVal){ STATE.timeOffError='Pick a start date.'; render(); return; }
   if(toVal < fromVal){ STATE.timeOffError='End date is before the start date.'; render(); return; }
   if(partial && fromVal!==toVal){ STATE.timeOffError='Partial day only applies to a single day - pick one date, or turn it off.'; render(); return; }
+  var noteVal = noteEl ? noteEl.value.trim() : '';
+  STATE.timeOffError = null;
+  if(STATE.timeOffEditingId){
+    var editId = STATE.timeOffEditingId;
+    mutateTimeOffRequests(function(list){
+      return (list||[]).map(function(r){
+        return r.id===editId ? Object.assign({}, r, {
+          from: fromVal, to: toVal, partial: !!partial, note: noteVal,
+          status: 'pending', resolvedAt: null,
+          requestedAt: new Date().toISOString()
+        }) : r;
+      });
+    }).then(function(updated){
+      STATE.timeOffRequests = updated;
+      STATE.timeOffSavedInfo = 'Updated and resent for approval';
+      STATE.timeOffEditingId = null;
+      STATE.timeOffDraftFrom = null; STATE.timeOffDraftTo = null; STATE.timeOffDraftPartial = false; STATE.timeOffDraftNote = '';
+      render();
+    }).catch(function(e){ console.error('timeoff edit-save failed', e); STATE.timeOffError='Could not save - try again.'; render(); });
+    return;
+  }
   var req = {
     id: uid('tor'), employeeId: emp.id, employeeName: emp.name,
     from: fromVal, to: toVal, partial: !!partial,
-    note: noteEl ? noteEl.value.trim() : '',
+    note: noteVal,
     status: 'pending',
     requestedAt: new Date().toISOString()
   };
-  STATE.timeOffError = null;
   mutateTimeOffRequests(function(list){ return (list||[]).concat([req]); }).then(function(updated){
     STATE.timeOffRequests = updated;
     STATE.timeOffSavedInfo = (fromVal===toVal ? 'Requested '+fmtDateShort(fromVal) : 'Requested '+fmtDateShort(fromVal)+' to '+fmtDateShort(toVal));
@@ -3687,12 +3711,26 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
       case 'mileage-km-confirm': STATE.view='mileage-request'; render(); break;
 
 case 'open-timeoff-request':
-  STATE.view='timeoff-request'; STATE.timeOffError=null; STATE.timeOffSavedInfo=null;
+  STATE.view='timeoff-request'; STATE.timeOffError=null; STATE.timeOffSavedInfo=null; STATE.timeOffEditingId=null;
   STATE.timeOffDraftFrom=null; STATE.timeOffDraftTo=null; STATE.timeOffDraftPartial=false; STATE.timeOffDraftNote='';
   render(); break;
-case 'timeoff-back': STATE.view='action'; STATE.timeOffError=null; STATE.timeOffSavedInfo=null; render(); break;
+case 'timeoff-back': STATE.view='action'; STATE.timeOffError=null; STATE.timeOffSavedInfo=null; STATE.timeOffEditingId=null; render(); break;
 case 'timeoff-save': onTimeOffRequestSave(); break;
 case 'timeoff-withdraw': onTimeOffWithdraw(id); break;
+case 'timeoff-edit-open':
+  STATE.timeOffEditingId = id;
+  var __editReq = STATE.timeOffRequests.find(function(r){ return r.id===id; });
+  if(__editReq){
+    STATE.timeOffDraftFrom = __editReq.from; STATE.timeOffDraftTo = __editReq.to;
+    STATE.timeOffDraftPartial = !!__editReq.partial; STATE.timeOffDraftNote = __editReq.note||'';
+  }
+  STATE.timeOffError=null; STATE.timeOffSavedInfo=null;
+  render(); break;
+case 'timeoff-edit-cancel':
+  STATE.timeOffEditingId=null;
+  STATE.timeOffDraftFrom=null; STATE.timeOffDraftTo=null; STATE.timeOffDraftPartial=false; STATE.timeOffDraftNote='';
+  STATE.timeOffError=null;
+  render(); break;
 case 'timeoff-approve': onTimeOffApprove(id); break;
 case 'timeoff-deny': onTimeOffDeny(id); break;
 case 'calendar-prev-month': onCalendarMonthShift(-1); break;
