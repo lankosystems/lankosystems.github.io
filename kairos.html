@@ -3183,7 +3183,7 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
       if(STATE.editingEntryId===en.id){
         return '<tr><td colspan="8"><div class="inlineform" style="margin:0;">'+
           '<div class="field"><label>Job</label><select id="logJobSelect">'+
-          jobsWithKuberaQuotes().map(function(j){ return '<option value="'+j.id+'" '+(j.id===en.jobId?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('')+
+          jobsWithKuberaQuotes().slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}); }).map(function(j){ return '<option value="'+j.id+'" '+(j.id===en.jobId?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('')+
           '</select></div>'+
           '<div class="field"><label>Clock in</label><input id="logInInput" type="datetime-local" value="'+toLocalInputVal(en.clockIn)+'"></div>'+
           '<div class="field"><label>Clock out</label><input id="logOutInput" type="datetime-local" value="'+(en.clockOut?toLocalInputVal(en.clockOut):'')+'"></div>'+
