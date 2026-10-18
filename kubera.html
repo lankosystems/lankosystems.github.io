@@ -534,8 +534,11 @@
     .sheet:last-child{ page-break-after:auto; break-after:auto; }
     .frame{ min-height:0 !important; }
     table.doctable tbody tr{ page-break-inside:avoid; break-inside:avoid; }
+    tbody.ttotals{ page-break-inside:avoid; break-inside:avoid; }
+    .parties{ page-break-inside:avoid; break-inside:avoid; }
+    table.metabox{ page-break-inside:avoid; break-inside:avoid; }
     .terms, .sigs, .closing{ page-break-inside:avoid; break-inside:avoid; }
-    table.doctable thead{ display:table-header-group; }
+    table.doctable thead{ display:table-header-group; break-after:avoid-page; }
   }
 </style>
 </head>
@@ -4358,19 +4361,17 @@
         return;
       }
       n++;
+      var descCell = '<span class="idesc">'+esc(it.desc||'')+'</span>' +
+        (String(it.note||'').trim() ? '<span class="inote">'+esc(it.note)+'</span>' : '');
       rows += '<tr>' +
         '<td class="c">'+n+'</td>' +
         '<td class="c m">'+esc(it.qty)+'</td>' +
         '<td class="c">'+esc(it.unit||'')+'</td>' +
         (hasPart ? '<td class="m">'+esc(it.partNo||'')+'</td>' : '') +
-        '<td><span class="idesc">'+esc(it.desc||'')+'</span></td>' +
+        '<td>'+descCell+'</td>' +
         '<td class="r">'+(it.noCharge ? '' : money(it.unitPrice, q.currency))+'</td>' +
         '<td class="r">'+(it.noCharge ? '' : money(lineExt(it), q.currency))+'</td>' +
         '</tr>';
-      if(String(it.note||'').trim()){
-        rows += '<tr><td></td><td></td><td></td>' + (hasPart ? '<td></td>' : '') +
-          '<td colspan="3"><span class="idesc">' + esc(it.note) + '</span></td></tr>';
-      }
     });
     var tail = [];
     if(q.leadTime) tail.push('Please allow ' + q.leadTime.replace(/^please allow\s*/i,''));
@@ -4417,7 +4418,7 @@
         '<th>Description</th>' +
         '<th class="col-price" style="text-align:right">Unit Price</th>' +
         '<th class="col-amt" style="text-align:right">Total</th>' +
-      '</tr></thead><tbody>' + rows + totalRows + '</tbody></table>' +
+      '</tr></thead><tbody>' + rows + '</tbody><tbody class="ttotals">' + totalRows + '</tbody></table>' +
 
       (driveImgId(q.imageId) ?
         '<div class="docimg"><img src="https://drive.google.com/thumbnail?id=' +
