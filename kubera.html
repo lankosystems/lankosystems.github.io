@@ -388,7 +388,7 @@
 
   /* letterhead */
   .lh{ display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
-  .lh-logo img{ height:0.84in; width:auto; display:block; }
+  .lh-logo img{ height:1.05in; width:auto; display:block; }
   .lh-addr{ text-align:left; font-size:8.6pt; line-height:1.5; color:#2D2926; }
   .lh-addr b{ font-weight:600; }
   .lh-strip{ display:flex; gap:24px; margin-top:8px; font-size:8.6pt; line-height:1.4; color:#2D2926; }
@@ -879,12 +879,12 @@
   function addrLines(o, ship){
     if(!o) return [];
     var L = [];
-    var a1 = ship ? (o.shipAddr1 || o.addr1) : o.addr1;
-    var a2 = ship ? (o.shipAddr2 || o.addr2) : o.addr2;
-    var city = ship ? (o.shipCity || o.city) : o.city;
-    var prov = ship ? (o.shipProv || o.prov) : o.prov;
-    var post = ship ? (o.shipPostal || o.postal) : o.postal;
-    var ctry = ship ? (o.shipCountry || o.country) : o.country;
+    var a1 = ship ? o.shipAddr1 : o.addr1;
+    var a2 = ship ? o.shipAddr2 : o.addr2;
+    var city = ship ? o.shipCity : o.city;
+    var prov = ship ? o.shipProv : o.prov;
+    var post = ship ? o.shipPostal : o.postal;
+    var ctry = ship ? o.shipCountry : o.country;
     if(a1) L.push(a1);
     if(a2) L.push(a2);
     var cl = [city, prov].filter(Boolean).join(', ');
@@ -4404,7 +4404,7 @@
       '<div class="parties">' +
         partyBlock('Bill To:', c.name, addrLines(c),
           q.contact ? 'Attn: ' + q.contact : '', '') +
-        partyBlock('Ship To:', (c.shipSame===false && c.shipName) ? c.shipName : c.name,
+        partyBlock('Ship To:', c.shipSame===false ? (c.shipName || '') : c.name,
           addrLines(c, c.shipSame===false), '', '') +
       '</div>' +
 
@@ -4453,7 +4453,7 @@
     var shipLines = p.shipToOverride
       ? String(p.shipToOverride).split('\n').map(function(s){ return s.trim(); }).filter(Boolean)
       : addrLines(c, c.shipSame===false);
-    var shipName = p.shipToOverride ? c.name : ((c.shipSame===false && c.shipName) ? c.shipName : c.name);
+    var shipName = p.shipToOverride ? c.name : (c.shipSame===false ? (c.shipName || '') : c.name);
     var hasPkgs = (p.packages||[]).length > 0;
 
     var meta = '<table class="metabox"><tr>' +
