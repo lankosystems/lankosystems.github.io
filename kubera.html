@@ -388,7 +388,9 @@
 
   /* letterhead */
   .lh{ display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
-  .lh-logo img{ height:0.56in; width:auto; display:block; }
+  .lh-logo img{ height:0.84in; width:auto; display:block; }
+  .lh-addr{ text-align:right; font-size:8.6pt; line-height:1.5; color:#2D2926; }
+  .lh-addr b{ font-weight:600; }
   .lh-strip{ display:flex; gap:24px; margin-top:8px; font-size:8.6pt; line-height:1.4; color:#2D2926; }
   .lh-strip .col.a b{ font-weight:600; }
   .lh-strip .col{ flex:1; }
@@ -4296,12 +4298,10 @@
       .map(function(x){ return 'Phone: ' + esc(x.phone) + (x.name ? ' ' + esc(x.name) : ''); }).join('<br>');
     var emails = contacts.filter(function(x){ return x.email; })
       .map(function(x){ return 'Email: ' + esc(x.email); }).join('<br>');
-    return '<div class="lh"><div class="lh-logo"><img src="'+LOGO+'" alt="Lanko"></div></div>' +
-      '<div class="lh-strip">' +
-        '<div class="col a"><b>'+esc(co.name)+'</b><br>'+addr+'</div>' +
-        '<div class="col">'+phones+'</div>' +
-        '<div class="col">'+emails+'</div>' +
-      '</div><div class="lh-hr"></div>';
+    return '<div class="lh"><div class="lh-logo"><img src="'+LOGO+'" alt="Lanko"></div>' +
+      '<div class="lh-addr"><b>'+esc(co.name)+'</b><br>'+addr+
+      (phones ? '<br>'+phones : '') + (emails ? '<br>'+emails : '') +
+      '</div></div><div class="lh-hr"></div>';
   }
   function sheetFoot(docName, page, pages){
     var co = state.company || SEED_COMPANY;
