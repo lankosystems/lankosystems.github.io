@@ -381,7 +381,7 @@
   /* Every document carries the maroon frame -- matched to Quote 26191 (Jul 2026),
      which is how the real proposals go out. "Formal" now differs only by content
      (terms, closing, signatures), not by dress. */
-  .frame{ border:none; padding:0.16in 0.26in; min-height:9.55in;
+  .frame{ border:none; padding:0.12in 0.26in; min-height:9.55in;
     display:flex; flex-direction:column; }
   .frame.formal{ }
   .frame > .growth{ flex:1; }
@@ -389,7 +389,7 @@
   /* letterhead */
   .lh{ display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
   .lh-logo img{ height:1.05in; width:auto; display:block; }
-  .lh-addr{ text-align:left; font-size:8.6pt; line-height:1.5; color:#2D2926; }
+  .lh-addr{ text-align:left; font-size:8.6pt; line-height:1.25; color:#2D2926; }
   .lh-addr b{ font-weight:600; }
   .lh-strip{ display:flex; gap:24px; margin-top:8px; font-size:8.6pt; line-height:1.4; color:#2D2926; }
   .lh-strip .col.a b{ font-weight:600; }
@@ -411,7 +411,7 @@
   table.doctable td.tval{ text-align:right; font-family:"IBM Plex Mono",monospace;
     font-size:9pt; white-space:nowrap; }
   table.doctable tr.tgrand td{ font-weight:700; color:#7C2629; background:#FBEFD2; }
-  table.doctable tr.blank td{ height:0.22in; }
+  table.doctable tr.blank td{ height:0.12in; }
 
   /* boxed meta table, matching the Proposal # / Date / Terms strip */
   table.metabox{ border-collapse:collapse; margin:0 0 14px; }
@@ -447,7 +447,7 @@
   .parties .pblock{ flex:1; min-width:0; }
   .pblock .plabel{ font-family:"Big Shoulders Text",sans-serif; font-weight:700; font-size:8.6pt;
     letter-spacing:0.3px; color:#1a1a1a; padding:0 0 3px; display:block; }
-  .pblock .pbody{ padding:0; font-size:9pt; line-height:1.45; min-height:0.7in; }
+  .pblock .pbody{ padding:0; font-size:9pt; line-height:1.3; min-height:0.5in; }
   .pblock .pbody b{ font-weight:600; }
   .pblock .pbody .attn{ margin-top:4px; color:#4a4238; }
 
@@ -514,7 +514,7 @@
   .closing .role{ font-size:8.4pt; color:#6a6155; }
 
   /* sheet footer */
-  .sheetfoot{ margin-top:30px; border-top:1px solid #D9A510; padding-top:5px;
+  .sheetfoot{ margin-top:12px; border-top:1px solid #D9A510; padding-top:4px;
     display:flex; justify-content:space-between; gap:14px;
     font-size:7.6pt; color:#8a7f68; letter-spacing:0.4px; }
   .sheetfoot .fr{ font-family:"IBM Plex Mono",monospace; }
@@ -4291,7 +4291,7 @@
   function letterhead(){
     var co = state.company || SEED_COMPANY;
     var cityLine = [co.city, co.prov].filter(Boolean).join(', ');
-    var addr = [ co.addr1, co.addr2, cityLine, co.postal, co.country ]
+    var addr = [ co.addr1, co.addr2, cityLine, co.postal ]
       .filter(Boolean).map(esc).join('<br>');
     var contacts = (co.contacts && co.contacts.length) ? co.contacts : [];
     var phones = contacts.filter(function(x){ return x.phone; })
