@@ -83,6 +83,39 @@
   .voteday-banner .pill{ background:#fff; color:#D52B1E; padding:2px 10px; border-radius:14px; }
   html.lanko-voteday-theme .voteday-banner{ display:flex; }
 
+  /* Canadian Remembrance Day theme. Auto-applied and removed by updateRemembranceTheme()
+     purely based on the date (see boot()), same pattern as the vote-day theme above -
+     expires on its own at midnight local/tablet time on Nov 12, 2026, no second deploy
+     needed to revert. Scoped to the --shop-* tokens only (employee-facing screens), same
+     as the vote-day theme - the admin panel is left untouched on purpose. */
+  html.lanko-remembrance-theme{
+    --shop-oxblood:       #8B0000;
+    --shop-oxblood-light: #C8102E;
+    --shop-oxblood-deep:  #000000;
+    --shop-bg-deep:       #0A0A0A;
+    --shop-bg:            #161616;
+    --shop-bg-2:          #202020;
+  }
+  .remembrance-banner{
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    background:#000;
+    color:#fff;
+    font-family: var(--shop-display);
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.3px;
+    padding:8px 10px;
+    text-align:center;
+    border-bottom:4px solid #C8102E;
+    flex-shrink:0;
+  }
+  .remembrance-banner .pill{ background:#fff; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; padding:0; }
+  .remembrance-banner .pill svg{ display:block; }
+  html.lanko-remembrance-theme .remembrance-banner{ display:flex; }
+
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; height:100%; touch-action:manipulation; overscroll-behavior:none; }
   body{
@@ -504,6 +537,7 @@
     </div>
   </header>
   <div class="voteday-banner" id="votedayBanner"><span class="pill">🍁</span>Today is Alberta’s Referendum Vote Day — Make Your Voice Heard<span class="pill">🍁</span></div>
+  <div class="remembrance-banner" id="remembranceBanner"><span class="pill"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="4" rx="4" ry="5" fill="#C8102E"/><ellipse cx="16" cy="10" rx="5" ry="4" fill="#C8102E"/><ellipse cx="10" cy="16" rx="4" ry="5" fill="#C8102E"/><ellipse cx="4" cy="10" rx="5" ry="4" fill="#C8102E"/><circle cx="10" cy="10" r="3" fill="#000"/></svg></span>Lest We Forget — Remembrance Day, November 11<span class="pill"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="4" rx="4" ry="5" fill="#C8102E"/><ellipse cx="16" cy="10" rx="5" ry="4" fill="#C8102E"/><ellipse cx="10" cy="16" rx="4" ry="5" fill="#C8102E"/><ellipse cx="4" cy="10" rx="5" ry="4" fill="#C8102E"/><circle cx="10" cy="10" r="3" fill="#000"/></svg></span></div>
   <div id="stage"></div>
 </div>
 
@@ -653,6 +687,7 @@
     editingMileageId:null, logMileageEditError:null,
     mileageSheetWriteStatus:'idle', mileageSheetWriteError:null, mileageSheetWriteLastSentAt:null,
     adminLogTimeMode:'clock', adminLogTimeError:null, adminLogTimeSavedName:null,
+    logViewMode:'employee', logJobFilter:null, logJobEmpFilter:null,
     sheetWriteUrl:null, sheetWriteFormOpen:false, sheetWriteError:null, sheetWriteStatus:'idle', sheetWriteLastSentAt:null,
     historyFrom:null, historyTo:null, historyFlagOpenId:null, historyFlagError:null,
     historyPrintStatus:'idle', historyPrintError:null,
@@ -3219,48 +3254,26 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     // touches getFilteredEntries() itself, so the summary cards always keep
     // showing every employee (with the active one highlighted) and it's a
     // one-click toggle to get back to everyone.
-    var displayRows = STATE.logEmpFilter ? rows.filter(function(en){ return en.employeeName===STATE.logEmpFilter; }) : rows;
-    var tableRows = displayRows.map(function(en){
-      if(STATE.editingEntryId===en.id){
-        return '<tr><td colspan="8"><div class="inlineform" style="margin:0;">'+
-          '<div class="field"><label>Job</label><select id="logJobSelect">'+
-          jobsWithKuberaQuotes().slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}); }).map(function(j){ return '<option value="'+j.id+'" '+(j.id===en.jobId?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('')+
-          '</select></div>'+
-          '<div class="field"><label>Clock in</label><input id="logInInput" type="datetime-local" value="'+toLocalInputVal(en.clockIn)+'"></div>'+
-          '<div class="field"><label>Clock out</label><input id="logOutInput" type="datetime-local" value="'+(en.clockOut?toLocalInputVal(en.clockOut):'')+'"></div>'+
-          (STATE.logEditError?'<div class="formerr">'+esc(STATE.logEditError)+'</div>':'')+
-          '<div class="formbtns"><button class="save" data-action="log-save-edit" data-id="'+en.id+'">Save</button>'+
-          '<button class="cancel" data-action="log-cancel-edit">Cancel</button></div></div></td></tr>';
-      }
-      var p = payable[en.id] || {hoursMs:0, quoteMs:0, pendingMs:0};
-      var hrsStr = en.clockOut ? fmtDuration(p.hoursMs) : 'active';
-      if(p.quoteMs>0) hrsStr += ' <span style="color:var(--gold-dim);font-weight:600;">(quote)</span>';
-      var pendingStr = '';
-      if(p.pendingMs>0){
-        pendingStr = '<div style="font-size:11px;color:var(--olive);font-weight:600;margin-top:2px;">&#9203; +'+msToHoursStr(p.pendingMs)+'h outside window, pending</div>';
-      } else if(en.afterHoursApproved){
-        pendingStr = '<div style="font-size:11px;color:var(--olive);font-weight:600;margin-top:2px;">&#10003; after-hours approved</div>';
-      } else if(en.afterHoursIgnored){
-        pendingStr = '<div style="font-size:11px;color:#8a7f68;font-weight:600;margin-top:2px;">&#10005; outside-window time ignored, not paid</div>';
-      } else if(p.autoIgnored){
-        pendingStr = '<div style="font-size:11px;color:#8a7f68;font-weight:600;margin-top:2px;">&#10005; outside-window time auto-ignored (≤30m), not paid</div>';
-      }
-      var taskStr = (en.completedTasks && en.completedTasks.length) ? esc(en.completedTasks.join(', ')) : '<span style="color:#c4bba5;">—</span>';
-      var enteredByStr = en.enteredBy ? '<div style="font-size:11px;color:#8a7f68;margin-top:2px;">via '+esc(en.enteredBy)+'</div>' : '';
-      var flagStr = en.flagged ? '<div style="font-size:11px;color:var(--rust);font-weight:600;margin-top:2px;">&#9873; '+esc(en.flagNote||'Flagged')+'</div>' : '';
-      return '<tr'+(en.flagged?' style="background:#fff8ec;"':'')+'><td>'+fmtDateShort(en.clockIn)+'</td><td>'+esc(en.employeeName)+enteredByStr+'</td><td>'+esc(en.jobName)+'</td>'+
-        '<td>'+fmtTime(en.clockIn)+'</td><td>'+(en.clockOut?fmtTime(en.clockOut):'— active')+'</td><td>'+hrsStr+pendingStr+'</td>'+
-        '<td style="max-width:220px;">'+taskStr+flagStr+'</td>'+
-        '<td><button class="iconbtn" data-action="log-edit" data-id="'+en.id+'">Edit</button>'+
-        (en.clockOut?'<button class="iconbtn" data-action="log-add-lunch" data-id="'+en.id+'">+ Lunch</button>':'')+
-        (p.pendingMs>0?'<button class="iconbtn" data-action="log-approve-afterhours" data-id="'+en.id+'">Approve</button>'+
-          '<button class="iconbtn" data-action="log-ignore-afterhours" data-id="'+en.id+'">Ignore</button>':'')+
-        (en.afterHoursApproved && p.pendingMs===0?'<button class="iconbtn" data-action="log-approve-afterhours" data-id="'+en.id+'">Un-approve</button>':'')+
-        (en.afterHoursIgnored && p.pendingMs===0?'<button class="iconbtn" data-action="log-ignore-afterhours" data-id="'+en.id+'">Un-ignore</button>':'')+
-        (p.autoIgnored?'<button class="iconbtn" data-action="log-approve-afterhours" data-id="'+en.id+'">Approve</button>':'')+
-        (en.flagged?'<button class="iconbtn" data-action="log-resolve-flag" data-id="'+en.id+'">Resolve</button>':'')+
-        '<button class="iconbtn danger" data-action="log-delete" data-id="'+en.id+'">Delete</button></td></tr>';
-    }).join('');
+    var viewModeToggle = '<div class="admin-tabs" style="margin-bottom:14px;">'+
+      '<button class="'+(STATE.logViewMode!=='job'?'active':'')+'" data-action="log-view-mode" data-id="employee">By Employee</button>'+
+      '<button class="'+(STATE.logViewMode==='job'?'active':'')+'" data-action="log-view-mode" data-id="job">By Job Number</button>'+
+      '</div>';
+
+    var bodyHtml;
+    if(STATE.logViewMode==='job'){
+      bodyHtml = renderLogByJobSection(rows, payable);
+    } else {
+      var displayRows = STATE.logEmpFilter ? rows.filter(function(en){ return en.employeeName===STATE.logEmpFilter; }) : rows;
+      var tableRows = displayRows.map(function(en){ return renderLogRow(en, payable); }).join('');
+
+      bodyHtml = '<div class="subhead">Hours by employee — click a name to see just their entries</div>'+
+        '<div class="summary-cards">'+totalsHtml+'</div>'+
+        '<div class="subhead">'+(STATE.logEmpFilter?
+          'Entries — showing '+esc(STATE.logEmpFilter)+' only <button class="iconbtn" data-action="log-emp-filter" data-id="'+esc(STATE.logEmpFilter)+'" style="margin-left:6px;">Show everyone</button>' :
+          'Entries — paid time is 7am–5:30pm (Mon–Thu) / 7am–3:30pm (Fri), rounded to the nearest 15 minutes; anything outside that needs approval above')+'</div>'+
+        (displayRows.length===0?'<div class="empty-state">No time entries'+(STATE.logEmpFilter?' for '+esc(STATE.logEmpFilter):'')+' in this range.</div>':
+          '<table class="datatable"><thead><tr><th>Date</th><th>Employee</th><th>Job</th><th>In</th><th>Out</th><th>Hours</th><th>Tasks completed</th><th>Actions</th></tr></thead><tbody>'+tableRows+'</tbody></table>');
+    }
 
     return '<div class="admin-section-head"><h2>Daily Log</h2></div>'+
       flaggedBanner+
@@ -3273,14 +3286,119 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
       '<button class="addbtn" style="background:var(--card);color:var(--oxblood);border:1px solid var(--line);" data-action="log-export">Export CSV</button>'+
       '</div>'+
       renderSheetWritePanel()+
-      '<div class="subhead">Hours by employee — click a name to see just their entries</div>'+
-      '<div class="summary-cards">'+totalsHtml+'</div>'+
-      '<div class="subhead">'+(STATE.logEmpFilter?
-        'Entries — showing '+esc(STATE.logEmpFilter)+' only <button class="iconbtn" data-action="log-emp-filter" data-id="'+esc(STATE.logEmpFilter)+'" style="margin-left:6px;">Show everyone</button>' :
-        'Entries — paid time is 7am\u20135:30pm (Mon\u2013Thu) / 7am\u20133:30pm (Fri), rounded to the nearest 15 minutes; anything outside that needs approval above')+'</div>'+
-      (displayRows.length===0?'<div class="empty-state">No time entries'+(STATE.logEmpFilter?' for '+esc(STATE.logEmpFilter):'')+' in this range.</div>':
-        '<table class="datatable"><thead><tr><th>Date</th><th>Employee</th><th>Job</th><th>In</th><th>Out</th><th>Hours</th><th>Tasks completed</th><th>Actions</th></tr></thead><tbody>'+tableRows+'</tbody></table>')+
+      viewModeToggle+
+      bodyHtml+
       renderMileageLogSection();
+  }
+
+  // Shared <tr> renderer for a single time entry, used by both the by-employee and
+  // by-job-number views of the Daily Log table so the two stay in sync automatically.
+  function renderLogRow(en, payable){
+    if(STATE.editingEntryId===en.id){
+      return '<tr><td colspan="8"><div class="inlineform" style="margin:0;">'+
+        '<div class="field"><label>Job</label><select id="logJobSelect">'+
+        jobsWithKuberaQuotes().slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}); }).map(function(j){ return '<option value="'+j.id+'" '+(j.id===en.jobId?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('')+
+        '</select></div>'+
+        '<div class="field"><label>Clock in</label><input id="logInInput" type="datetime-local" value="'+toLocalInputVal(en.clockIn)+'"></div>'+
+        '<div class="field"><label>Clock out</label><input id="logOutInput" type="datetime-local" value="'+(en.clockOut?toLocalInputVal(en.clockOut):'')+'"></div>'+
+        (STATE.logEditError?'<div class="formerr">'+esc(STATE.logEditError)+'</div>':'')+
+        '<div class="formbtns"><button class="save" data-action="log-save-edit" data-id="'+en.id+'">Save</button>'+
+        '<button class="cancel" data-action="log-cancel-edit">Cancel</button></div></div></td></tr>';
+    }
+    var p = payable[en.id] || {hoursMs:0, quoteMs:0, pendingMs:0};
+    var hrsStr = en.clockOut ? fmtDuration(p.hoursMs) : 'active';
+    if(p.quoteMs>0) hrsStr += ' <span style="color:var(--gold-dim);font-weight:600;">(quote)</span>';
+    var pendingStr = '';
+    if(p.pendingMs>0){
+      pendingStr = '<div style="font-size:11px;color:var(--olive);font-weight:600;margin-top:2px;">&#9203; +'+msToHoursStr(p.pendingMs)+'h outside window, pending</div>';
+    } else if(en.afterHoursApproved){
+      pendingStr = '<div style="font-size:11px;color:var(--olive);font-weight:600;margin-top:2px;">&#10003; after-hours approved</div>';
+    } else if(en.afterHoursIgnored){
+      pendingStr = '<div style="font-size:11px;color:#8a7f68;font-weight:600;margin-top:2px;">&#10005; outside-window time ignored, not paid</div>';
+    } else if(p.autoIgnored){
+      pendingStr = '<div style="font-size:11px;color:#8a7f68;font-weight:600;margin-top:2px;">&#10005; outside-window time auto-ignored (≤30m), not paid</div>';
+    }
+    var taskStr = (en.completedTasks && en.completedTasks.length) ? esc(en.completedTasks.join(', ')) : '<span style="color:#c4bba5;">—</span>';
+    var enteredByStr = en.enteredBy ? '<div style="font-size:11px;color:#8a7f68;margin-top:2px;">via '+esc(en.enteredBy)+'</div>' : '';
+    var flagStr = en.flagged ? '<div style="font-size:11px;color:var(--rust);font-weight:600;margin-top:2px;">&#9873; '+esc(en.flagNote||'Flagged')+'</div>' : '';
+    return '<tr'+(en.flagged?' style="background:#fff8ec;"':'')+'><td>'+fmtDateShort(en.clockIn)+'</td><td>'+esc(en.employeeName)+enteredByStr+'</td><td>'+esc(en.jobName)+'</td>'+
+      '<td>'+fmtTime(en.clockIn)+'</td><td>'+(en.clockOut?fmtTime(en.clockOut):'— active')+'</td><td>'+hrsStr+pendingStr+'</td>'+
+      '<td style="max-width:220px;">'+taskStr+flagStr+'</td>'+
+      '<td><button class="iconbtn" data-action="log-edit" data-id="'+en.id+'">Edit</button>'+
+      (en.clockOut?'<button class="iconbtn" data-action="log-add-lunch" data-id="'+en.id+'">+ Lunch</button>':'')+
+      (p.pendingMs>0?'<button class="iconbtn" data-action="log-approve-afterhours" data-id="'+en.id+'">Approve</button>'+
+        '<button class="iconbtn" data-action="log-ignore-afterhours" data-id="'+en.id+'">Ignore</button>':'')+
+      (en.afterHoursApproved && p.pendingMs===0?'<button class="iconbtn" data-action="log-approve-afterhours" data-id="'+en.id+'">Un-approve</button>':'')+
+      (en.afterHoursIgnored && p.pendingMs===0?'<button class="iconbtn" data-action="log-ignore-afterhours" data-id="'+en.id+'">Un-ignore</button>':'')+
+      (p.autoIgnored?'<button class="iconbtn" data-action="log-approve-afterhours" data-id="'+en.id+'">Approve</button>':'')+
+      (en.flagged?'<button class="iconbtn" data-action="log-resolve-flag" data-id="'+en.id+'">Resolve</button>':'')+
+      '<button class="iconbtn danger" data-action="log-delete" data-id="'+en.id+'">Delete</button></td></tr>';
+  }
+
+  // Every job that has ever had time logged against it, plus every currently-active
+  // job (so a job with zero entries so far still shows up in the picker), deduped by
+  // id and sorted the same way the clock-in tiles are (jobNumericCompare).
+  function distinctJobsForLog(){
+    var map = {};
+    jobsWithKuberaQuotes().forEach(function(j){ map[j.id] = {id:j.id, name:j.name}; });
+    STATE.entries.forEach(function(en){
+      if(!map[en.jobId]) map[en.jobId] = {id:en.jobId, name:en.jobName};
+    });
+    return Object.keys(map).map(function(k){ return map[k]; }).sort(jobNumericCompare);
+  }
+
+  // "By Job Number" view of the Daily Log: pick a job, see time-to-date on that job
+  // (all entries ever logged against it, independent of the From/To range above) next
+  // to time within the selected range, broken down per employee, plus optional filtering
+  // down to one employee's entries on that job.
+  function renderLogByJobSection(rangeRows, payable){
+    var jobs = distinctJobsForLog();
+    if(jobs.length===0){
+      return '<div class="empty-state">No jobs to show yet.</div>';
+    }
+    if(!STATE.logJobFilter || !jobs.some(function(j){ return j.id===STATE.logJobFilter; })){
+      STATE.logJobFilter = jobs[0].id;
+    }
+
+    var allJobEntries = STATE.entries.filter(function(en){ return en.jobId===STATE.logJobFilter; });
+    var rangeJobEntries = rangeRows.filter(function(en){ return en.jobId===STATE.logJobFilter; });
+
+    var empNames = {};
+    allJobEntries.forEach(function(en){ empNames[en.employeeName]=true; });
+    var empTotals = Object.keys(empNames).sort().map(function(name){
+      var toDateRowsForEmp = allJobEntries.filter(function(en){ return en.employeeName===name; });
+      var rangeRowsForEmp = rangeJobEntries.filter(function(en){ return en.employeeName===name; });
+      return { name:name,
+        toDateMs: roundedTotalHoursMs(toDateRowsForEmp, payable),
+        rangeMs: roundedTotalHoursMs(rangeRowsForEmp, payable) };
+    });
+
+    var jobToDateMs = roundedTotalHoursMs(allJobEntries, payable);
+    var jobRangeMs = roundedTotalHoursMs(rangeJobEntries, payable);
+
+    var jobOptions = jobs.map(function(j){ return '<option value="'+j.id+'" '+(j.id===STATE.logJobFilter?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('');
+
+    var empCards = empTotals.map(function(e){
+      var selected = STATE.logJobEmpFilter===e.name;
+      return '<div class="summary-card clickable'+(selected?' selected':'')+'" data-action="log-job-emp-filter" data-id="'+esc(e.name)+'">'+
+        '<div class="n">'+msToHoursStr(e.rangeMs)+'h</div><div class="l">'+esc(e.name)+'</div>'+
+        '<div style="font-size:11px;color:#8a7f68;margin-top:2px;">'+msToHoursStr(e.toDateMs)+'h to date</div></div>';
+    }).join('') || '<div class="empty-state" style="padding:14px;">No one has logged time on this job yet.</div>';
+
+    var displayJobRows = STATE.logJobEmpFilter ? rangeJobEntries.filter(function(en){ return en.employeeName===STATE.logJobEmpFilter; }) : rangeJobEntries;
+    var tableRows = displayJobRows.slice().sort(function(a,b){ return new Date(b.clockIn)-new Date(a.clockIn); })
+      .map(function(en){ return renderLogRow(en, payable); }).join('');
+
+    return '<div class="logfilters">'+
+      '<div class="field" style="min-width:260px;"><label>Job</label><select id="logJobFilterSelect" data-action="log-job-select">'+jobOptions+'</select></div>'+
+      '</div>'+
+      '<div class="subhead">Time on this job — '+msToHoursStr(jobToDateMs)+'h to date, '+msToHoursStr(jobRangeMs)+'h in the selected range</div>'+
+      '<div class="summary-cards">'+empCards+'</div>'+
+      '<div class="subhead">'+(STATE.logJobEmpFilter?
+        'Entries — showing '+esc(STATE.logJobEmpFilter)+' on this job only <button class="iconbtn" data-action="log-job-emp-filter" data-id="'+esc(STATE.logJobEmpFilter)+'" style="margin-left:6px;">Show everyone</button>' :
+        'Entries for this job in the selected date range — click a name above to see just their entries')+'</div>'+
+      (displayJobRows.length===0?'<div class="empty-state">No time entries for this job'+(STATE.logJobEmpFilter?' by '+esc(STATE.logJobEmpFilter):'')+' in this range.</div>':
+        '<table class="datatable"><thead><tr><th>Date</th><th>Employee</th><th>Job</th><th>In</th><th>Out</th><th>Hours</th><th>Tasks completed</th><th>Actions</th></tr></thead><tbody>'+tableRows+'</tbody></table>');
   }
 
   function renderSettingsTab(){
@@ -3737,6 +3855,18 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
   }
 
   /* ---------------- dispatcher ---------------- */
+  // Only the Daily Log's "by job number" picker needs a live change handler (every
+  // other control in the app is read on a button click instead) - kept separate from
+  // onBodyClick so that click doesn't have to special-case select elements.
+  function onBodyChange(e){
+    var el = e.target.closest('[data-action]');
+    if(!el) return;
+    var action = el.dataset.action;
+    switch(action){
+      case 'log-job-select': STATE.logJobFilter = el.value; STATE.logJobEmpFilter = null; render(); break;
+    }
+  }
+
   function onBodyClick(e){
     var el = e.target.closest('[data-action]');
     if(!el) return;
@@ -3891,6 +4021,8 @@ case 'calendar-today': STATE.calendarMonth=null; render(); break;
         break;
       case 'log-export': onLogExport(); break;
       case 'log-emp-filter': STATE.logEmpFilter = (STATE.logEmpFilter===id ? null : id); render(); break;
+      case 'log-view-mode': STATE.logViewMode=id; STATE.editingEntryId=null; render(); break;
+      case 'log-job-emp-filter': STATE.logJobEmpFilter = (STATE.logJobEmpFilter===id ? null : id); render(); break;
       case 'sheetwrite-setup-open': STATE.sheetWriteFormOpen=true; STATE.sheetWriteError=null; render(); break;
       case 'sheetwrite-cancel-form': STATE.sheetWriteFormOpen=false; STATE.sheetWriteError=null; render(); break;
       case 'sheetwrite-save': onSheetWriteSave(); break;
@@ -4034,11 +4166,23 @@ fsDoc(K.timeOff).onSnapshot(function(snap){
     return active;
   }
 
+  // Canadian Remembrance Day theme window - same auto on/off-by-date pattern as the
+  // vote-day theme above. Expires at midnight local/tablet time on Nov 12, 2026.
+  function updateRemembranceTheme(){
+    var end = new Date(2026, 10, 12, 0, 0, 0);
+    var active = new Date() < end;
+    document.documentElement.classList.toggle('lanko-remembrance-theme', active);
+    return active;
+  }
+
   function boot(){
     updateVoteDayTheme();
     setInterval(updateVoteDayTheme, 60000);
+    updateRemembranceTheme();
+    setInterval(updateRemembranceTheme, 60000);
     STATE.lastInteractionAt = Date.now();
     document.body.addEventListener('click', onBodyClick);
+    document.body.addEventListener('change', onBodyChange);
     document.body.addEventListener('pointerdown', function(){ STATE.lastInteractionAt=Date.now(); });
     document.body.addEventListener('input', function(){ STATE.lastInteractionAt=Date.now(); });
     document.body.addEventListener('keydown', function(e){
