@@ -3343,7 +3343,7 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     if(STATE.editingEntryId===en.id){
       return '<tr><td colspan="8"><div class="inlineform" style="margin:0;">'+
         '<div class="field"><label>Job</label><select id="logJobSelect">'+
-        jobsWithKuberaQuotes().slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}); }).map(function(j){ return '<option value="'+j.id+'" '+(j.id===en.jobId?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('')+
+        jobsWithKuberaQuotes().slice().sort(function(a,b){ return (a.name||'').localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}); }).map(function(j){ var tag=(j.audience==='office'?' (Office)':' (Shop)'); return '<option value="'+j.id+'" '+(j.id===en.jobId?'selected':'')+'>'+esc(j.name+tag)+'</option>'; }).join('')+
         '</select></div>'+
         '<div class="field"><label>Clock in</label><input id="logInInput" type="datetime-local" value="'+toLocalInputVal(en.clockIn)+'"></div>'+
         '<div class="field"><label>Clock out</label><input id="logOutInput" type="datetime-local" value="'+(en.clockOut?toLocalInputVal(en.clockOut):'')+'"></div>'+
@@ -3381,16 +3381,28 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
       '<button class="iconbtn danger" data-action="log-delete" data-id="'+en.id+'">Delete</button></td></tr>';
   }
 
-  // Every job that has ever had time logged against it, plus every currently-active
-  // job (so a job with zero entries so far still shows up in the picker), deduped by
-  // id and sorted the same way the clock-in tiles are (jobNumericCompare).
+  // Shop and office jobs sync from two separate sheets, so the same job number can
+  // exist as two different job records (different ids, same leading number) - one
+  // per pool. Group by that leading number so the picker offers it once and "hours
+  // on this job" combines time logged against either pool's record. A job with no
+  // parseable leading number (manual/ad-hoc jobs) is kept distinct, keyed by its own
+  // id. Also includes every job that has ever had time logged against it, plus every
+  // currently-active job (so a job with zero entries so far still shows up), sorted
+  // the same way the clock-in tiles are (jobNumericCompare).
+  function jobMergeKey(name, id){
+    var m = /^\s*(\d+)/.exec(name||'');
+    return m ? 'num:'+parseInt(m[1],10) : 'id:'+id;
+  }
   function distinctJobsForLog(){
     var map = {};
-    jobsWithKuberaQuotes().forEach(function(j){ map[j.id] = {id:j.id, name:j.name}; });
-    STATE.entries.forEach(function(en){
-      if(!map[en.jobId]) map[en.jobId] = {id:en.jobId, name:en.jobName};
-    });
-    return Object.keys(map).map(function(k){ return map[k]; }).sort(jobNumericCompare);
+    function add(id, name){
+      var key = jobMergeKey(name, id);
+      if(!map[key]) map[key] = {key:key, name:name, ids:[id]};
+      else if(map[key].ids.indexOf(id)===-1) map[key].ids.push(id);
+    }
+    jobsWithKuberaQuotes().forEach(function(j){ add(j.id, j.name); });
+    STATE.entries.forEach(function(en){ add(en.jobId, en.jobName); });
+    return Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){ return jobNumericCompare({name:a.name}, {name:b.name}); });
   }
 
   // "By Job Number" view of the Daily Log: pick a job, see time-to-date on that job
@@ -3402,12 +3414,14 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     if(jobs.length===0){
       return '<div class="empty-state">No jobs to show yet.</div>';
     }
-    if(!STATE.logJobFilter || !jobs.some(function(j){ return j.id===STATE.logJobFilter; })){
-      STATE.logJobFilter = jobs[0].id;
+    if(!STATE.logJobFilter || !jobs.some(function(j){ return j.key===STATE.logJobFilter; })){
+      STATE.logJobFilter = jobs[0].key;
     }
+    var activeJobIds = {};
+    (jobs.find(function(j){ return j.key===STATE.logJobFilter; }).ids||[]).forEach(function(id){ activeJobIds[id]=true; });
 
-    var allJobEntries = STATE.entries.filter(function(en){ return en.jobId===STATE.logJobFilter; });
-    var rangeJobEntries = rangeRows.filter(function(en){ return en.jobId===STATE.logJobFilter; });
+    var allJobEntries = STATE.entries.filter(function(en){ return activeJobIds[en.jobId]; });
+    var rangeJobEntries = rangeRows.filter(function(en){ return activeJobIds[en.jobId]; });
 
     var empNames = {};
     allJobEntries.forEach(function(en){ empNames[en.employeeName]=true; });
@@ -3422,7 +3436,7 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     var jobToDateMs = roundedTotalHoursMs(allJobEntries, payable);
     var jobRangeMs = roundedTotalHoursMs(rangeJobEntries, payable);
 
-    var jobOptions = jobs.map(function(j){ return '<option value="'+j.id+'" '+(j.id===STATE.logJobFilter?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('');
+    var jobOptions = jobs.map(function(j){ return '<option value="'+j.key+'" '+(j.key===STATE.logJobFilter?'selected':'')+'>'+esc(j.name)+'</option>'; }).join('');
 
     var empCards = empTotals.map(function(e){
       var selected = STATE.logJobEmpFilter===e.name;
