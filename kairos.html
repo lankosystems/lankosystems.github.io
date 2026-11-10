@@ -805,8 +805,8 @@ timeOffEditingId:null,
     function tickClock(){
       var now = new Date();
       var t=document.getElementById('ssTime'), d=document.getElementById('ssDate');
-      if(t) t.textContent = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
-      if(d) d.textContent = now.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}).toUpperCase();
+      if(t) t.textContent = now.toLocaleTimeString([], {timeZone:AB_FIXED_TZ, hour:'numeric', minute:'2-digit', hour12:true});
+      if(d) d.textContent = now.toLocaleDateString([], {timeZone:AB_FIXED_TZ, weekday:'short', month:'short', day:'numeric'}).toUpperCase();
     }
     tickClock();
     wrap._clockTimer = setInterval(tickClock, 1000);
@@ -835,7 +835,29 @@ timeOffEditingId:null,
     var d = new Date(); d.setDate(d.getDate()-n);
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
-  function fmtTime(iso){ return new Date(iso).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true}); }
+  // Alberta no longer observes seasonal time change - clocks stay on daylight time
+  // (UTC-6) permanently. toLocaleTimeString/getHours() etc. default to whatever
+  // timezone rule each device's OS/browser has cached, which drifts between tablets
+  // as that rule changes (exactly what caused entries to show an hour off on one
+  // tablet but not the other). Pin every clock display and every admin-edit parse to
+  // this fixed, mathematically-defined offset instead, so every tablet agrees no
+  // matter its own timezone database version.
+  var AB_FIXED_TZ = 'Etc/GMT+6'; // IANA fixed-offset zone = UTC-6, never changes
+  var AB_OFFSET_MS = -6*60*60*1000;
+  function abLocalParts(iso){
+    var d = new Date(new Date(iso).getTime() + AB_OFFSET_MS);
+    return { y:d.getUTCFullYear(), mo:d.getUTCMonth(), day:d.getUTCDate(), h:d.getUTCHours(), mi:d.getUTCMinutes() };
+  }
+  function fromLocalInputVal(val){
+    // val is "YYYY-MM-DDTHH:MM" from a <input type="datetime-local">. Interpret it as
+    // Alberta's fixed offset (not the device's own timezone setting) so a time typed
+    // or edited on any tablet saves the same UTC instant.
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(val||'');
+    if(!m) return new Date(NaN);
+    var utcMs = Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5])) - AB_OFFSET_MS;
+    return new Date(utcMs);
+  }
+  function fmtTime(iso){ return new Date(iso).toLocaleTimeString([], {timeZone:AB_FIXED_TZ, hour:'numeric', minute:'2-digit', hour12:true}); }
   // Job tiles are shown in numerical order by job number so crew can find their job
   // quickly on the tablet. Job names are usually a leading job number (optionally
   // followed by " - description"); parseInt reads the leading digits and ignores the
@@ -891,7 +913,7 @@ timeOffEditingId:null,
       }
     }catch(e){}
   }
-  function fmtDateShort(iso){ return new Date(iso).toLocaleDateString([], {month:'short', day:'numeric'}); }
+  function fmtDateShort(iso){ return new Date(iso).toLocaleDateString([], {timeZone:AB_FIXED_TZ, month:'short', day:'numeric'}); }
   // For plain 'YYYY-MM-DD' strings (mileage requests use a date-only field, unlike time
   // entries which carry a full clockIn timestamp). new Date('YYYY-MM-DD') parses as UTC
   // midnight, which rolls back a day once .toLocaleDateString() renders it in a timezone
@@ -908,9 +930,9 @@ timeOffEditingId:null,
     return h+'h '+String(m).padStart(2,'0')+'m';
   }
   function toLocalInputVal(iso){
-    var d = new Date(iso);
+    var p = abLocalParts(iso);
     function pad(n){ return String(n).padStart(2,'0'); }
-    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+    return p.y+'-'+pad(p.mo+1)+'-'+pad(p.day)+'T'+pad(p.h)+':'+pad(p.mi);
   }
 
   /* ---------------- payroll time rules ----------------
@@ -2234,8 +2256,8 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     if(!emp){ STATE.manualEntryError='Pick an employee.'; render(); return; }
     if(!job){ STATE.manualEntryError='Pick a job.'; render(); return; }
     if(!inVal){ STATE.manualEntryError='Clock-in time is required.'; render(); return; }
-    var clockIn = new Date(inVal).toISOString();
-    var clockOut = outVal ? new Date(outVal).toISOString() : null;
+    var clockIn = fromLocalInputVal(inVal).toISOString();
+    var clockOut = outVal ? fromLocalInputVal(outVal).toISOString() : null;
     if(clockOut && new Date(clockOut) <= new Date(clockIn)){ STATE.manualEntryError='Clock-out must be after clock-in.'; render(); return; }
     var entry = { id:uid('ent'), employeeId:emp.id, employeeName:emp.name, jobId:job.id, jobName:job.name,
       clockIn:clockIn, clockOut:clockOut, completedTasks:[], enteredBy: loggedBy ? loggedBy.name : null };
@@ -2435,8 +2457,8 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     if(!emp){ STATE.adminLogTimeError='Pick an employee.'; render(); return; }
     if(!job){ STATE.adminLogTimeError='Pick a job.'; render(); return; }
     if(!inVal){ STATE.adminLogTimeError='Clock-in time is required.'; render(); return; }
-    var clockIn = new Date(inVal).toISOString();
-    var clockOut = outVal ? new Date(outVal).toISOString() : null;
+    var clockIn = fromLocalInputVal(inVal).toISOString();
+    var clockOut = outVal ? fromLocalInputVal(outVal).toISOString() : null;
     if(clockOut && new Date(clockOut) <= new Date(clockIn)){ STATE.adminLogTimeError='Clock-out must be after clock-in.'; render(); return; }
     var entry = { id:uid('ent'), employeeId:emp.id, employeeName:emp.name, jobId:job.id, jobName:job.name,
       clockIn:clockIn, clockOut:clockOut, completedTasks:[], enteredBy: loggedBy ? loggedBy.name : null };
@@ -3624,8 +3646,8 @@ var timeOffBtn = '<button class="bigbtn secondary" data-action="open-timeoff-req
     var inVal = document.getElementById('logInInput').value;
     var outVal = document.getElementById('logOutInput').value;
     if(!inVal){ STATE.logEditError='Clock-in time is required.'; render(); return; }
-    var clockIn = new Date(inVal).toISOString();
-    var clockOut = outVal ? new Date(outVal).toISOString() : null;
+    var clockIn = fromLocalInputVal(inVal).toISOString();
+    var clockOut = outVal ? fromLocalInputVal(outVal).toISOString() : null;
     if(clockOut && new Date(clockOut) <= new Date(clockIn)){ STATE.logEditError='Clock-out must be after clock-in.'; render(); return; }
     var job = STATE.jobs.find(function(j){ return j.id===jobSel.value; });
     mutateEntries(function(list){
@@ -4079,8 +4101,8 @@ case 'calendar-today': STATE.calendarMonth=null; render(); break;
   function updateHeaderClock(){
     var now = new Date();
     var t = document.getElementById('hcTime'), d = document.getElementById('hcDate');
-    if(t) t.textContent = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true});
-    if(d) d.textContent = now.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}).toUpperCase();
+    if(t) t.textContent = now.toLocaleTimeString([], {timeZone:AB_FIXED_TZ, hour:'numeric', minute:'2-digit', hour12:true});
+    if(d) d.textContent = now.toLocaleDateString([], {timeZone:AB_FIXED_TZ, weekday:'short', month:'short', day:'numeric'}).toUpperCase();
   }
   function startClock(){ updateHeaderClock(); setInterval(updateHeaderClock, 1000); }
   // Real-time cross-tablet sync: whenever employees/jobs/entries/tasks change in
