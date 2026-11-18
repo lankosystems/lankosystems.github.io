@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lanko Kubera Quote Builder 26.8</title>
+<title>Lanko Kubera Quote Builder 26.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -876,6 +876,28 @@
      '26191 R1' someone typed by hand. */
   function baseNum(n){ return String(n||'').replace(/\s*-?\s*R(?:ev)?\.?\s*\d+\s*$/i,'').trim(); }
   function packFile(p){ return packLabel(p) + ' - ' + custName(p.customerId); }
+  /* ---------------- duplicate number guards ----------------
+     Quote number + rev must be unique (a rev of the same quote is expected
+     to repeat the base number, so rev is part of the key). Job number must
+     be unique across different quote families, but revisions of the same
+     quote sharing their own job number is normal and not a collision. */
+  function findDupQuoteNum(q){
+    var n = String(q.num||'').trim(); if(!n) return null;
+    var rev = num(q.rev);
+    return state.quotes.filter(function(o){
+      return o.id !== q.id && String(o.num||'').trim() === n && num(o.rev) === rev;
+    })[0] || null;
+  }
+  function findDupJobRef(q){
+    var j = String(q.jobRef||'').trim(); if(!j) return null;
+    var myBase = baseNum(q.num) || j;
+    return state.quotes.filter(function(o){
+      if(o.id === q.id) return false;
+      var theirs = String(o.jobRef||'').trim();
+      if(!theirs || theirs !== j) return false;
+      return (baseNum(o.num) || theirs) !== myBase;
+    })[0] || null;
+  }
   function addrLines(o, ship){
     if(!o) return [];
     var L = [];
@@ -1760,9 +1782,22 @@
       var hasLine = q.items.some(function(it){ return String(it.desc).trim() || num(it.unitPrice) || String(it.partNo).trim(); });
       if(!hasLine){ view.err = 'Add at least one line item with a description or a price.'; return renderQuoteEditor(); }
 
+      var dupNum = String(q.num||'').trim() ? findDupQuoteNum(q) : null;
+      if(dupNum){ view.err = 'Quote number ' + q.num + (num(q.rev)>0?' Rev '+q.rev:'') +
+        ' is already used by ' + quoteFile(dupNum) + ' - pick a different number or leave it blank to auto-assign.';
+        return renderQuoteEditor(); }
+      var dupJob = String(q.jobRef||'').trim() ? findDupJobRef(q) : null;
+      if(dupJob){ view.err = 'Job number ' + q.jobRef + ' is already used by ' + quoteFile(dupJob) +
+        ' - pick a different job number or leave it blank to take the quote number.';
+        return renderQuoteEditor(); }
+
       var chain = Promise.resolve();
       if(!q.num){
         var n = nextQuoteNumber();
+        if(findDupQuoteNum({ id:q.id, num:n.num, rev:q.rev })){
+          view.err = 'The next quote number (' + n.num + ') is already taken - check the Letterhead tab\'s counter.';
+          return renderQuoteEditor();
+        }
         q.num = n.num;
         chain = saveCounters(n.counters);
       }
@@ -4218,6 +4253,10 @@
       var chain = Promise.resolve();
       if(!q.num){
         var nx = nextQuoteNumber();
+        if(findDupQuoteNum({ id:q.id, num:nx.num, rev:q.rev })){
+          toast('The next quote number (' + nx.num + ') is already taken - check the Letterhead tab\'s counter.', true);
+          return Promise.resolve(false);
+        }
         q.num = nx.num;
         chain = saveCounters(nx.counters);
       }
