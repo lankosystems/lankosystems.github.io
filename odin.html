@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lanko Odin Projects 26.8</title>
+<title>Lanko Odin Projects 26.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -187,7 +187,7 @@
   table.items textarea{ resize:vertical; min-height:32px; line-height:1.4; }
   .c-qty{ width:64px; } .c-unit{ width:64px; } .c-part{ width:118px; }
   .c-price{ width:96px; } .c-date{ width:132px; } .c-sel{ width:128px; }
-  .c-del{ width:32px; text-align:center; }
+  .c-del{ width:32px; text-align:center; } .c-po{ width:96px; }
   .iconbtn{ border:1px solid var(--line); background:#fff; border-radius:5px; padding:4px 8px;
     cursor:pointer; font-family:var(--mono); font-size:11px; color:#7a6f5c; }
   .iconbtn.danger{ color:var(--rust); border-color:var(--rust-dim); }
@@ -328,7 +328,7 @@
       <div class="wordmark">
         <img class="logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHkAAABuCAYAAAADKbxqAAASEklEQVR42u3de3BTV3oA8O879149bEuyZQxJNzaSAe800MAm2WYnZUI0ZjabECAxyMGZZZtst2lSMtNMaWZaWiIpadJ2Z3fb3W0yIX9sG7qZBCmBZZKQh+0adjNtXgQ2y6M2YF5mA0v80pWtx733fP3jSrZZHpbwkZFknRkPDGAjnZ++73zfuVdHGLrtRi325XmZyTIAEWQ7CIBbGLIU5/u+33PuZgBA848v+neIwKj3jbn77PLoktEkcARgWf8/hKRIBhqseqD6a5vm1XgfHiICRITsH2weBgXM5xDMw88OBoFEPj85ORKTRwb6gSlKrsigIYCW5bdQahCIx4BSmNtkEgJJOhCDghmBADAMATdf1yj854dCANS1WUZfSBeCjIwBk2W4ikgGhgDM4Nl9AzIAlAEw10lBcx6ZVBDAXQGQfSHQe16dP6/KOvxiyuCVnACIpq5NHEGSuGFVlIqT8c4nAaCTCBgi8Ckhp8Nl/Cu/SW4K30fXHJgIJETQe7bfMs9uHOmwSkkPGObrbyqPDtMZiyOHageDs0P2UON9H/y3COBx5PKYHDjslxAjRvdbzY0Vyf0dEiY9gypqgCAhTe0VSICAYOguh9V6LuZ6cl5b3w9onRjgMnIuwK0Ro7u9pbEyuqdTItUTizODMVDGQnEKcYxkaO5qi3UYbnqx0f/xD6gLZEAwRD1+ViacbA1eJmNrxDjZ/kRj5ciHE4EFFAkIAIbmdlkUVV78oufeTx7rCmgy3AkGClyfypE8CbAvtEc/+asnGqX+SKekn/fE4pIgYDCBnbKiwrwXG7718WPhsCbd6QdDdHtYRr5yitZPfvyjRvnsv3cy7ZwnlpAFApPmdirKMG/c4ll98DEK6xL4iSOi8AqznK6vsAaf+PAnXvnc850secozkpR1scBMGdau2+JZffjRfAKXI/nSbRJDjBiHf3G7A/ue26GwQU80KeuIYuaKiHS3S1KGkrO2eNcef5TCXAI/5A24jHxJYOCHf3G7oyJ18B2bHF8cHWUCgUF3O5kcTbq2eNf2TQDO7yZAOV1fBPyko1Lv3lVpSfyJKhAYiLQaB8jDcfsWz9qz0wZcRh6b/8AYcJWxdVeFPLJ0MIYiU7RWW82UqF73c+8Dg49SmKYNuIw8Bhzi5w50VVUar+yyS0NLB2OgM4HANQ5QVGhqh5ZTfx4OkwQHxV5lKiNnBXygKnX0z96pkPqXDqooHDgufbVdX7F/lRcxcfAgkHkFa/qGPNOBDx8+70j1fGOXHc4sHVRBZ0zMnHAi3e1AZZTq2/WFv17lRUxQIMAwFOLT/VxnJDIFwAQ+T46qj27aZac+M4LFAsuj9JV2fXHPKq/32gHPyHRNgQADADhFZK/68I922fVusRHMTeARw92uL+4wgenaAc+4SDYv7IcAEfmJRXN+5rSqSwdiqDGGijBgJ8ojenWH4X52ldfrTWSWhWv5vNmMAg4CIiI/Hq7Z6rBE1w1EuY4oBpgIdLcD5VjS3mG4/2Kl1/dwIrMsXOvnzmYUcEjiJyPXbXXZRtcPqqAjorCdLGcFl2MpWwcfWbXS6wuZwNNcRc/YdH0B8BvXb3UqA+sHVNJERTDnoFdXcTkOsz/jdc0rva0vFxRwyUcyEaWBFX5yu3erQ+lfP6AaGoC4FO2oMOSUPLcbG/9ptdf3coLCfqmQgEsa2QRGE3jngq1O5bfrB1QuDJgT6FV2QzaU+m7jhmeb6xev7wuHQcLWiFFoc8FKExhM4Ket/NRbN77swOPrB4YNDUVGsJ3LhnxdtzFrXXPD11rPUNgvtbaCUYjzwUoReHcQJHzGxvveXvKyg45+ZzBqaCCwiq6yc9lgdd0jzrblDbc/dyZzk0GhzklJFV4EJrAvJOsn3lz0H5X8wHcGhjUNUFJE3BdnRjDJKXB1x61/vLzJ9/2+Qgcuveq6CySfD/Te8KynHPzQQwMxXShwlZ3kJFX1JPCW5U337OijAl2DSzZdUxfI6AO9d9vszS5rNDQUM3QAJgSYczCqKkjWuLU7gfOam9a8mwYGoxjmhpUOMOon3vBsdtlHnh6KGTqBoI0ODkaljUspw9oTZ7OXN635uKiASwI5A9z7hnezQzn/9JCq6wQoiXivIREaVkWXyDJnSHevXNW05mhfV9cyuZiAix45EACGPqaf2Ll4s0v53dNDqpYBnrIxJyCbokuS/foho27tXY3Nr3R3dS2Tfb49erHNU9EWXuEwSH4/8e/e+vVNVdTz9JCa0gmYEOD0G9+JKTX9Sed9K723/+vHXQEoSuDijeTdy6TWVjBOvnfXitm2Y88ODY+kCCQhwAAACAa32SowVX33Q17fTz/s2TXf6guBXqwBUaTIezgFgKWqv/rLL0fnvFLjsloAuDgEZJhKxsES+9/QqX3hrzTdczRJYb9URp7OEQSCIFDTN34arb+v99sqzH3V7WAKEWmi5iWpIynG8VukM5vfO/HpG9dja8QoVuiiLbwQgYgI6akUm7v62IMqeF51O5lCxIVAMwQ2PCLpcrJ3ofLFpvZzB966rlihi7q6RkSCIFEGegQ8r7qdkkIgJqIRQVbjki6nehdqvRs7ixW66PtkExqInkqx+tXHHlTJ85rbwYRDK1rvjfrxjR3FmLpLYscLEcag595/rC0DDXmIaOWLTe3HiyyiS2bvegx68zh0TR4iWk71LrQc39hRTNBFhayODLDJoekCaJFVd7FCFwVy+pwrUmqbk5njDictxiZCu6S8QCtFAl0EyAQ6R7LKKfto9781Ygg47F4mTQYdhACMQet/8JrbiQoIhI7GJV0pEuiCR0YE5MCI9FiFbeC9t4/98ntN6Nujd3Utu+K+eygU4mNrdMvxtqhe+5rbKa4YY0UEXSzpmiU0xtH4st7a/3bnsfbvNfmygB6vug3mWXOubTjlfq3GwYRFNMu0VwW+RhdN4cUQ2EhCMpj+5Q3W2AToQLbQOvP4z7Wp+qzXapxMaOou9GKsqKprxkAaScgXQodyiWidzV3zRZuqu4Wm7kIvxoquT2aMLob25Qh9f9+DUd2dl/ZqbI3+qHCgi3Iz5LLQ2abuIGIGujYPqVtJ9S5Uflc40EW743VJ6FxSdxp6WHNvq8kTtOX8xrEt0PA1hC7qbU0TWrqq1B0EAAoielr62qJa7TbzMqXYPlpO9i6ynNjYfvZYx5zWaxjRRb93bRZjksH0/hts6s6OQ9ubm3y+PTrRlSc0FAI+Br327LphzW1Cg9j2Sk72LjIOb+g4+3nHnGuVukviAoUJzQw0hutdtL/j0PbmJsSIMfmGCfCx9mrtuXVRzb0tL1evkr2LjFMbrlnVXTJXocaguVrvov0dR99cviDXqnssdecJ2nJiY/u1KMZK6l2NY9Ck1ttT+zozqTuXqtvTcrptOI8RbTk//dAl99ZVxkAaiZsR7aD9HYe2LzWr7gBkX3W39LUNa+5tIrdALwc9HVV3Sb4JPRPRElfrHXTYLMZCoHd1ZQcNaeioVpuX9moidGtrxCAKsDLylKH3p6tuyDqiTejTbbH89dGL5LN/3d7z4S4nYogT5c+ipA+GuRh6aZMvBDqFQcqmj4YgYn1LX1ss00cLXKOHRyTdRicXWU59e9unWx5RAIACgfx4lPw5XmPQZKbuo28uX4CtMGnRk+mjTejTbapuFmPC+mgG8nAMdYd19Ft17siOvXu3yMEgEOUBekYc1pYpxiSu1ltT+zpN6IiR7YZJMIjYcH9fW0wTC40I8mAMNIclvqLu+N/u2Lv3ERnyAD1jjl2cmLrHoLPcMAmmq+6GlgnQotZoAGVApTR0ZEck4lcgJBZ6Rp2SezH0HQty7aPrW/raYrq5BSquGENlQAWtyhJfcRt0bN/7qdiInnFHIV8IfbDz6JvLF5h99LKsq+76+/vaolptuEbsjQfKoAqawxpfUdcbMVO3oIguKmQiMccZXip1m5cpc2qv1kW12nCN2J0xZUAFzWFLQ38qBrpokBERKmzIhEOTWm9NpqFz76PXRTV3WPA7NZT+KOhjES0AmhV+9CIpEgeQnF8kcfbPXZXEAEgXBh1nhgQZ6DsWZNtHT9gZWxfV3GGRxRhDkAcmpu4tJvTV9tHFEclEAAgWT8uJP41q1T92u2QZxPWr49DpNRpbwcgmojN9tAldGxZbjIHSHyXdYYuvqKsxoYPBq4MuCuT0cWts+Df/7JrXev6J4VTtC26npAiH5mZEH3xzuRnRBFn30WNrtMA7TBjD8YiuiezY+9IjV7VhUkyFF0WZBYk4elr6Ngxpdc/XiIZOmBHtSu3rOPj6HQsQIbsbD8Yi2lyjhd5KBJliLGFCX8WGSVFV145KN0cEogCXvS2nHx/W6p6vceQhokltcOHBjiM7vznf59ujZ7MFOnGNjmWgRVbdUdIc1viK2t7coYv1YBhOYS55W04/PqyLh47FmcG42mDX93Ye2fnN+dgaMbLto4PmhokJLfZ6tDKoguayJXKGLtbNEAL/70MzhYiLq7oT49AHX89+wySY2TBJQ4vcMIF0RLsyEf1Sdu1VUZ/+MxFaJc/ztS5FNqFRGLREaoMT93UceXfZ/FzuMMlAqyl3JB99tMssxrZn2qsrQRf56T/j0HNXH3k8Ct7na12KDGBooqBj6TXaNnKg88jOZfNz7aMb1vQ9oKZqI0L7aAZyesPk3onQl2uvSuD0nwy0Ls1d+X+PR/m8F9xORSEyxG6YkNpg0w90Hnz9jvT16OxvPGhYc9qEFthHMwZyvwq6wzYOfbk+unRO/8lArz60IcrnvWBGNBcW0SNxZsikNjjTVXc20BNvPDCh3RGhffT4zpgJ/dKloUvr9J/fg3Y7FUUkdCwNbdP3dh7ZucyEzuXGgzV9D6hJR8TtRHFrdKaPtiYugJ64RpfUpcZLQ0sKkJEHaHONRpy8vcrceABBxIa15x5QkxURtwPF9tEqaQ5b4t66ahN6YntVcteTL4JmS15wuywKkC4Wmo9D+0KTb5hcUIyt7c8L9GCUNId9PHVnoKcPGYETAQcyf832K/PvAbK/xHgB9IpPN0TlxS+4XVaFSNcIMKf//1JfyABHkiyFhtpg1w+83/1WcyO2RozJj58a3zC5AJpAI4ApPy5CkAajlKy0xO+dXRN5HYAQQ8Cn8+T6igobMAJgLIeAIgJQJABVgypkccwFmgh4OJyS5t79yYbT73wdZtV8/pexkRQwxmCqnzKDABbNYOCwxLyU2PfR6V23NeM9H30+2Ydxph8XQBDxZ0DrvruoFuqq4351lASFHFpHEwCzaxKrToRr3ju+Y7F/+pAJPo8nIZlIAeVywjwRgS4RIIOoNmrRc03dRMTDfpTq7/5kw+ldSxIy+3XzaIJzQJzylBIB9g+jbrOoNn2k9x9Pvet/CO6KDFIQEPHyr6IMdBAQgkFa9/CNNTELi988GkdCJuLjFQD7znPdoiTm6sm+zfj3N3lo+LdngCmKGTZZmwG3IDCN076fnEvcDOmD8wpzD9ScOBz7rfiHSQFgu+9cxnL5nAqiK78YRIyeH4N1RtzIhwCEZlJg+QBGAMAQ8Fw/iATRvB1iwlqOoh9b019BUoYZNBDz87nGNMUXIITGfkReonrG3ZI7E0cZuYxcHqUwRK3JmI+ioTzElAxTR0aJJKuNCrV9mtG6AADErz6SEYBpnIBZpD98aolnHxAvz2qB9Y3AOVld1frUIhkReCplH+ztWVKe1cKLYisiJGpn/4uAdI1gyEo5jAsriLlEHAx75YlbQz96SkjhhUTlKr2ABieiSosi2eZc/8PW1tZUGaf00jSXiZhutR9dsem5rQGYzuvJ5TFNykQWRUZrVeXf3bpq1SgAMLk8KyU1DAVIogrHb57Z17tDQmQhAL0cyaUVxKBYLDC7cV4QEY2FfnODqoxcQlFsQZR02bLnyff/Z7sfQGqNgFFGLrEoZooCsxo8QSAC/4S/KyOXTBSDJFdX7970wf7dfgCpFcwoLiOXThQjyLJRWV23kQzjor8vIxd/X2xYEZhc5dzxD7/67DM/gBSZEMVl5FIYnCOzV/CGJbc8A0B4wWJcRi6FgYZNQsbs9v/cEH77cz8Ai0TgonwtExFkvnK5Jbc8CiBTk8G4zR6bc0NjEA6dwRsvc01fVqw2UGz2nO+7Lo9rbmzYGMqSe9Z//c37H5z2A0ghuDiKAQD+H3+xj+KNKj+YAAAAAElFTkSuQmCC" alt="Lanko">
         <span class="divider"></span>
-        <small>Odin 26.8</small>
+        <small>Odin 26.9</small>
       </div>
       <nav id="nav"></nav>
       <div class="spacer"></div>
@@ -790,7 +790,7 @@
       h += '<div style="margin-bottom:10px"><button class="btn sm" id="pjSeed">Seed '+p.buys.length+
         ' lines from the estimate purchases</button></div>';
     }
-    h += '<table class="items"><thead><tr><th>Description</th><th class="c-sel">Type</th>' +
+    h += '<table class="items"><thead><tr><th class="c-po">PO #</th><th>Description</th><th class="c-sel">Type</th>' +
       '<th class="c-sel">Vendor</th><th class="c-qty">Qty</th><th class="c-date">ETA</th>' +
       '<th class="c-sel">Status</th><th>Blocks</th><th class="c-del"></th></tr></thead><tbody>';
     var vendOpts = function(sel){
@@ -804,7 +804,15 @@
       var recInfo = recs.length ?
         '<div class="recv'+(flagged?' flag':'')+'">'+(flagged?'&#9888; ':'&#10003; ')+rq+' of '+esc(l.qty||1)+
         ' received'+(recs[0].mtrUrl?' &middot; <a href="'+esc(recs[recs.length-1].mtrUrl)+'" target="_blank">MTR</a>':'')+'</div>' : '';
+      /* The PO document only exists once the PO itself is saved (i.e. not
+         still a pending _po from this editing session) - until then show
+         the number as a preview with a note instead of a live PDF link. */
+      var poCell = !l.poNum ? '&mdash;' :
+        (l._po ? '<span class="mono">'+esc(l.poNum)+'</span><div class="hint" style="font-size:11px">save to print</div>' :
+          (poById(l.poId) ? '<span class="mono">'+esc(l.poNum)+'</span><br><button class="iconbtn" data-poview="'+i+'">PDF</button>' :
+            '<span class="mono">'+esc(l.poNum)+'</span>'));
       h += '<tr>' +
+        '<td class="c-po">'+poCell+'</td>' +
         '<td><textarea data-pi="'+i+'" data-pf="desc" rows="1">'+esc(l.desc||'')+'</textarea>'+recInfo+'</td>' +
         '<td><select data-pi="'+i+'" data-pf="type">'+PTYPE.map(function(t){
           return '<option value="'+t[0]+'"'+(l.type===t[0]?' selected':'')+'>'+t[1]+'</option>'; }).join('')+'</select></td>' +
@@ -851,18 +859,37 @@
       var prev = state.projects.find(function(x){ return x.id === p.id; });
       var entering = prev && prev.status === 'awaiting' && p.status !== 'awaiting';
       p.value = projectValue(p);
-      saveProjects(upsert(state.projects, JSON.parse(JSON.stringify(p))))
-        .then(function(ok){
-          if(!ok) return;
-          if(entering){
-            pushJobToSheet(p).then(function(res){
-              if(res && res.ok) toast('Project saved. Job ' + p.jobRef + (res.created ? ' added to' : ' updated on') + ' the jobs sheet.');
-              else if(res && res.skipped) toast('Project saved. Job sheet: ' + res.skipped + '.');
-              else toast('Project saved, but the job sheet push failed - use Send to job sheet to retry.');
-              go('projects');
-            });
-          } else { toast('Project saved. Minerva constraints updated.'); go('projects'); }
-        });
+      /* Finalize any procurement-line PO numbers that were only a preview
+         (added this session, not yet saved): recompute fresh against the
+         current pos list so a number issued elsewhere in the meantime
+         isn't collided with, then hand the PO itself to the pos
+         collection - the project keeps only the poId/poNum pointer. */
+      var pendingPos = [];
+      (p.procurement||[]).forEach(function(l){
+        if(l._po){
+          l.poNum = nextProjectPoNumber(p);
+          l._po.num = l.poNum;
+          l._po.projectId = p.id;
+          pendingPos.push(JSON.parse(JSON.stringify(l._po)));
+          delete l._po;
+        }
+      });
+      var posChain = pendingPos.length ? savePOs(state.pos.concat(pendingPos)) : Promise.resolve(true);
+      posChain.then(function(posOk){
+        if(!posOk){ toast('Could not save the new purchase order(s) - try again.', true); return; }
+        saveProjects(upsert(state.projects, JSON.parse(JSON.stringify(p))))
+          .then(function(ok){
+            if(!ok) return;
+            if(entering){
+              pushJobToSheet(p).then(function(res){
+                if(res && res.ok) toast('Project saved. Job ' + p.jobRef + (res.created ? ' added to' : ' updated on') + ' the jobs sheet.');
+                else if(res && res.skipped) toast('Project saved. Job sheet: ' + res.skipped + '.');
+                else toast('Project saved, but the job sheet push failed - use Send to job sheet to retry.');
+                go('projects');
+              });
+            } else { toast('Project saved. Minerva constraints updated.'); go('projects'); }
+          });
+      });
     };
     document.getElementById('pjDelete').onclick = function(){
       confirmModal('Delete this project',
@@ -911,16 +938,16 @@
     });
     var seed = document.getElementById('pjSeed');
     if(seed) seed.onclick = function(){
-      p.procurement = (p.buys||[]).map(function(b){
-        return { id:uid('pr'), desc:b.desc||'', type:'raw', vendorId:'', qty:num(b.qty)||1,
-          eta:'', status:'needed', blocks:[] };
-      });
+      var buys = p.buys || [];
+      p.procurement = [];
+      /* pushed one at a time (not .map) so each line's PO number sees the
+         ones already added and numbers sequentially, not all -1 */
+      buys.forEach(function(b){ p.procurement.push(newProcLineWithPo(p, b.desc||'', num(b.qty)||1)); });
       render();
     };
     var ap = document.getElementById('pjAddProc');
     if(ap) ap.onclick = function(){
-      p.procurement.push({ id:uid('pr'), desc:'', type:'raw', vendorId:'', qty:1,
-        eta:'', status:'needed', blocks:[] });
+      p.procurement.push(newProcLineWithPo(p, '', 1));
       render();
     };
     wireReminderRows();
@@ -928,7 +955,22 @@
     if(addRemHere) addRemHere.onclick = function(){ goNewReminder(p.id); };
     Array.prototype.forEach.call(document.querySelectorAll('[data-pi]'), function(el){
       var i = parseInt(el.getAttribute('data-pi'),10), f = el.getAttribute('data-pf');
-      el.onchange = el.oninput = function(){ p.procurement[i][f] = el.value; };
+      el.onchange = el.oninput = function(){
+        p.procurement[i][f] = el.value;
+        var line = p.procurement[i];
+        if(line._po && line._po.items && line._po.items[0]){
+          if(f==='vendorId') line._po.vendorId = el.value;
+          if(f==='desc') line._po.items[0].desc = el.value;
+          if(f==='qty') line._po.items[0].qty = num(el.value);
+        }
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-poview]'), function(el){
+      el.onclick = function(e){
+        e.stopPropagation();
+        var line = p.procurement[parseInt(el.getAttribute('data-poview'),10)];
+        if(line && line.poId) openPoDocFrom(line.poId, 'project', p.id);
+      };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-pdel]'), function(el){
       el.onclick = function(){ p.procurement.splice(parseInt(el.getAttribute('data-pdel'),10),1); render(); };
@@ -955,12 +997,15 @@
      one past the highest already issued for that job - deleting a PO never
      causes a number to be reused. A PO with no project (or a project that
      has no job number yet) falls back to the old PO-26NNN year counter. */
+  function poSeqRegexFor(jobRef){
+    var esc_ = String(jobRef).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('^' + esc_ + '-(\\d+)$');
+  }
   function nextPoNum(po){
     var pj = po && po.projectId ? projectById(po.projectId) : null;
     var jobRef = pj ? String(pj.jobRef||'').trim() : '';
     if(jobRef){
-      var esc_ = jobRef.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      var re = new RegExp('^' + esc_ + '-(\\d+)$');
+      var re = poSeqRegexFor(jobRef);
       var maxN = 0;
       state.pos.forEach(function(x){
         var m = String(x.num||'').match(re);
@@ -975,6 +1020,47 @@
     state.counters = c;
     safeSet('counters', c);
     return 'PO-' + yr + String(c.poSeq).padStart(3,'0');
+  }
+  /* Project-side PO numbering: same job-prefixed scheme as nextPoNum, but
+     scoped to the project being edited (p) rather than a committed project
+     lookup, so a job number typed moments ago in this same edit session is
+     honoured immediately - projectById(p.id) would still show the stale,
+     last-saved jobRef until Save. Also scans p.procurement's own poNum
+     values (not just state.pos) so several lines added in one sitting,
+     before any save, number sequentially instead of colliding. The number
+     shown here is a preview; it's finalized (recomputed fresh) at Save time
+     in case something else was saved to this job in the meantime. */
+  function nextProjectPoNumber(p){
+    var jobRef = String(p.jobRef||'').trim();
+    if(!jobRef){
+      var yr = parseInt(String(new Date().getFullYear()).slice(2),10);
+      var c = state.counters || { poYear: yr, poSeq: 0 };
+      if(c.poYear !== yr) c = { poYear: yr, poSeq: 0 };
+      c.poSeq = num(c.poSeq) + 1;
+      state.counters = c;
+      safeSet('counters', c);
+      return 'PO-' + yr + String(c.poSeq).padStart(3,'0');
+    }
+    var re = poSeqRegexFor(jobRef);
+    var maxN = 0;
+    state.pos.forEach(function(x){ var m = String(x.num||'').match(re); if(m) maxN = Math.max(maxN, parseInt(m[1],10)); });
+    (p.procurement||[]).forEach(function(l){ var m = String(l.poNum||'').match(re); if(m) maxN = Math.max(maxN, parseInt(m[1],10)); });
+    return jobRef + '-' + (maxN + 1);
+  }
+  /* A procurement line IS a PO as far as this project's screen is
+     concerned: adding one hands out the next number right away and
+     carries a full (unsaved) PO draft alongside it in _po, seeded from
+     the line's own desc/qty so there's something to print. _po is
+     stripped at Save time, once the PO itself has been handed to the
+     pos collection - see pjSave. */
+  function newProcLineWithPo(p, desc, qty){
+    var n = nextProjectPoNumber(p);
+    var po = blankPO();
+    po.num = n;
+    po.projectId = p.id;
+    po.items = [{ id:uid('i'), qty:num(qty)||1, unit:'EA', partNo:'', desc:desc||'', unitPrice:0 }];
+    return { id:uid('pr'), desc:desc||'', type:'raw', vendorId:'', qty:num(qty)||1,
+      eta:'', status:'needed', blocks:[], poId:po.id, poNum:n, _po:po };
   }
   function poTotal(po){
     return (po.items||[]).reduce(function(a,it){ return a + num(it.qty)*num(it.unitPrice); }, 0);
@@ -1066,12 +1152,47 @@
       '</div></div>';
     return h;
   }
+  /* Keep a project's procurement list in step with a PO raised or
+     reassigned from the Purchase Orders tab, so it shows up back on the
+     job it's for without anyone having to add a matching line by hand.
+     Mirrors vendor + the first item's desc/qty onto the linked line;
+     a line already on the project (matched by poId) is updated in place,
+     one moved to a different project (or cleared) is dropped from here. */
+  function syncProjectProcFromPO(po){
+    var changed = false;
+    var list = state.projects.map(function(p){
+      var proc = (p.procurement||[]).slice();
+      var idx = -1;
+      for(var i=0;i<proc.length;i++){ if(proc[i].poId === po.id){ idx = i; break; } }
+      if(p.id === po.projectId){
+        var firstItem = (po.items||[])[0] || {};
+        var before = idx>=0 ? JSON.stringify(proc[idx]) : null;
+        var line = idx>=0 ? JSON.parse(JSON.stringify(proc[idx])) :
+          { id:uid('pr'), type:'raw', eta:'', status:'needed', blocks:[] };
+        line.poId = po.id; line.poNum = po.num;
+        line.vendorId = po.vendorId || line.vendorId || '';
+        line.desc = firstItem.desc || line.desc || '';
+        line.qty = num(firstItem.qty) || line.qty || 1;
+        if(idx>=0) proc[idx] = line; else proc.push(line);
+        if(JSON.stringify(line) !== before) changed = true;
+        return Object.assign({}, p, { procurement: proc });
+      }
+      if(idx>=0){ proc.splice(idx,1); changed = true; return Object.assign({}, p, { procurement: proc }); }
+      return p;
+    });
+    return changed ? saveProjects(list) : Promise.resolve(true);
+  }
   function savePOForm(thenDoc){
     var po = view.dirty;
     if(!po.vendorId){ toast('Pick a vendor before saving.', true); return; }
     if(!po.num) po.num = nextPoNum(po);
     savePOs(upsert(state.pos, JSON.parse(JSON.stringify(po))))
-      .then(function(ok){ if(ok){ toast('Saved '+po.num); go(thenDoc?'podoc':'pos', thenDoc?po.id:null); } });
+      .then(function(ok){
+        if(!ok) return;
+        syncProjectProcFromPO(po).then(function(){
+          toast('Saved '+po.num); go(thenDoc?'podoc':'pos', thenDoc?po.id:null);
+        });
+      });
   }
   function wirePOEditor(){
     var po = view.dirty;
@@ -1177,9 +1298,17 @@
       '</div><div class="docviewer">' + sheet + '</div>';
   }
   function wirePODoc(){
-    document.getElementById('docBack').onclick = function(){ go('pos'); };
+    var rt = view.returnTo;
+    document.getElementById('docBack').onclick = function(){ if(rt) go(rt.page, rt.id); else go('pos'); };
     document.getElementById('docEdit').onclick = function(){ go('poedit', view.id); };
     document.getElementById('docPrint').onclick = function(){ window.print(); };
+  }
+  /* Opens the PO document view for printing/saving, remembering where to
+     return to (e.g. back into the project's procurement area instead of
+     always landing on the main Purchase Orders list). */
+  function openPoDocFrom(poId, backPage, backId){
+    go('podoc', poId);
+    view.returnTo = { page: backPage, id: backId };
   }
 
   /* ==========================================================================
