@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lanko Odin Projects 26.7</title>
+<title>Lanko Odin Projects 26.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -471,13 +471,42 @@
     return out;
   }
 
+  /* ---- auto-push on award ----
+     A project lands here from Kubera already "awaiting" with a job number.
+     Rather than wait for someone to open it, change its stage and save (or
+     click a manual push button), push it onto the jobs sheet the moment it
+     shows up here. sheetPushed marks a project as handled so we don't
+     re-push on every unrelated snapshot; the bridge itself is an idempotent
+     upsert, so a re-push (e.g. after this flag is introduced, for projects
+     awarded before it existed) just refreshes the sheet row, no harm done. */
+  var autoPushBusy = false;
+  function autoPushNewAwards(){
+    if(autoPushBusy) return;
+    var pending = state.projects.filter(function(p){
+      return p.status === 'awaiting' && p.jobRef && !p.sheetPushed;
+    });
+    if(!pending.length) return;
+    autoPushBusy = true;
+    var chain = Promise.resolve();
+    pending.forEach(function(p){
+      chain = chain.then(function(){ return pushJobToSheet(p); }).then(function(res){
+        if(res && res.ok){ p.sheetPushed = true; p.sheetPushedAt = Date.now(); }
+        else console.warn('auto job-sheet push did not complete for', p.jobRef, res);
+      });
+    });
+    chain.then(function(){
+      return saveProjects(state.projects.slice());
+    }).then(function(){ autoPushBusy = false; })
+      .catch(function(e){ autoPushBusy = false; console.error('autoPushNewAwards failed', e); });
+  }
+
   /* ---------------- listeners ---------------- */
   function listen(){
     ['projects','vendors','pos','counters','settings','reminders'].forEach(function(k){
       fsDoc(k).onSnapshot(function(snap){
         loaded[k] = true;
         var v = snap.exists ? snap.data().value : null;
-        if(k==='projects') state.projects = Array.isArray(v) ? v : [];
+        if(k==='projects'){ state.projects = Array.isArray(v) ? v : []; autoPushNewAwards(); }
         if(k==='vendors')  state.vendors  = Array.isArray(v) ? v : [];
         if(k==='pos')      state.pos      = Array.isArray(v) ? v : [];
         if(k==='counters') state.counters = v || null;
@@ -698,7 +727,6 @@
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
         '<button class="btn ghost" id="pjBack">Back to list</button>' +
         '<button class="btn danger" id="pjDelete">Delete</button>' +
-        (p.jobRef ? '<button class="btn ghost" id="pjPushSheet">Send to job sheet</button>' : '') +
         '<button class="btn dark" id="pjSave">Save project</button>' +
       '</div></div>';
 
@@ -835,15 +863,6 @@
             });
           } else { toast('Project saved. Minerva constraints updated.'); go('projects'); }
         });
-    };
-    var pushBtn = document.getElementById('pjPushSheet');
-    if(pushBtn) pushBtn.onclick = function(){
-      pushBtn.disabled = true;
-      pushJobToSheet(p).then(function(res){
-        pushBtn.disabled = false;
-        if(res && res.ok) toast('Job ' + p.jobRef + (res.created ? ' added to' : ' updated on') + ' the jobs sheet.');
-        else toast('Job sheet push failed: ' + esc((res && (res.error || res.skipped)) || 'unknown'));
-      });
     };
     document.getElementById('pjDelete').onclick = function(){
       confirmModal('Delete this project',
