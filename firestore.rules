@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- who is asking ----
+    function signedIn() { return request.auth != null; }
+    // A real email/password account, not the anonymous sign-in the shop tablets use.
+    function realAccount() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+    // Jay Hale: Odin only (purchase orders). Kairos still works so he can clock in;
+    // Iris receipts are read-only because Odin shows deliveries against PO lines.
+    function isJay() {
+      return realAccount() && request.auth.token.email == 'jhale@lankosystems.com';
+    }
+    // Office staff with full access.
+    function staff() { return realAccount() && !isJay(); }
+
+    // Kairos timeclock - shop tablets sign in anonymously, so any signed-in session can
+    // read and write. Since Kairos 26.16 punches live in lanko_entries_YYYY-MM;
+    // lanko_entries is the pre-split history, kept as a read-only snapshot.
+    match /kairos_state/{doc} {
+      allow read: if signedIn();
+      allow write: if signedIn() && doc != 'lanko_entries';
+    }
+
+    // Minerva planner - the tablets only need the published week (job suggestions) and
+    // the roster (office task tiles). Everything else, including the admin PIN, is office-only.
+    match /minerva_state/{doc} {
+      allow read: if staff() || (signedIn() && doc in ['lb_published_schedule', 'lb_employees']);
+      allow write: if staff();
+    }
+
+    // Kubera quote builder (collection keeps its old Mercury name). Real quotes - prices,
+    // margins, contacts - are office-only. The tablets read mc_quote_jobs: number,
+    // revision, status and title only, for clocking quote time (Kubera 26.15+ writes it).
+    match /mercury_state/{doc} {
+      allow read: if staff() || (signedIn() && doc == 'mc_quote_jobs');
+      allow write: if staff();
+    }
+
+    // Odin projects - office writes only, but the anonymous Iris yard tablet reads
+    // expected deliveries and settings, and Kairos reads the constraints feed.
+    // Jay has full Odin access.
+    match /odin_state/{doc} {
+      allow read: if signedIn();
+      allow write: if realAccount();
+    }
+
+    // Iris shipping & receiving - the yard tablet signs in anonymously, like Kairos.
+    // Jay can read (for Odin) but not write.
+    match /iris_state/{doc} {
+      allow read: if signedIn();
+      allow write: if signedIn() && !isJay();
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

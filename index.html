@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lanko Aengus Dashboard 26.2</title>
+<title>Lanko Aengus Dashboard 26.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -326,6 +326,7 @@
   @media print{ #whoami, #authgate{ display:none !important; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
@@ -338,6 +339,17 @@
     appId: "1:40770664322:web:71b865076a1f8b6f15419b"
   };
   firebase.initializeApp(FIREBASE_CONFIG);
+  /* App Check: proves a request came from the real Lanko apps on lankosystems.github.io,
+     not from someone who copied the project id out of this page. Blank = off. Once the
+     reCAPTCHA key is registered in Firebase console > App Check, put the SAME site key in
+     all six apps, deploy, watch the App Check metrics for a few days, then switch on
+     enforcement for Cloud Firestore. The site key is public by design; the secret key
+     never goes in any file. */
+  var APP_CHECK_SITE_KEY = '';
+  if(APP_CHECK_SITE_KEY && firebase.appCheck){
+    try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(APP_CHECK_SITE_KEY), true); }
+    catch(e){ console.error('App Check did not start', e); }
+  }
   var firebaseDb = firebase.firestore();
   firebaseDb.enablePersistence({ synchronizeTabs: false }).catch(function(e){
     console.warn('Firestore offline persistence not enabled:', e.code);
@@ -502,7 +514,7 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.4';
+  var APP_VERSION = '26.5';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
@@ -1024,6 +1036,30 @@
       });
   }
 
+  /* Kairos punches live one document per month since Kairos 26.16 (see the note in
+     kairos.html). The floor panel only needs today, so this follows the last two months -
+     two, so a punch opened late on the last day of a month still shows. Falls back to the
+     old single document if the split hasn't happened yet. Returns one function that
+     detaches everything, like watch() does. */
+  function watchEntries(){
+    var col = firebaseDb.collection(SOURCES.kairos.collection);
+    var cache = {}, subs = {};
+    function ok(){ delete DATA.err.timeclock; DATA.entries = Object.keys(cache).sort().reduce(function(a, k){ return a.concat(cache[k]); }, []); render(); }
+    function bad(e){ console.error('read failed', 'kairos', 'entries', e); DATA.err.timeclock = true; render(); }
+    var ixUnsub = col.doc('lanko_entries_index').onSnapshot(function(ix){
+      var v = ix.exists ? ix.data().value : null;
+      var ms = (v && Array.isArray(v.months)) ? v.months.slice().sort().slice(-2) : ['legacy'];
+      Object.keys(subs).forEach(function(m){ if(ms.indexOf(m) < 0){ subs[m](); delete subs[m]; delete cache[m]; } });
+      ms.forEach(function(m){
+        if(subs[m]) return;
+        subs[m] = col.doc(m === 'legacy' ? 'lanko_entries' : 'lanko_entries_' + m).onSnapshot(function(s){
+          cache[m] = (s.exists && s.data().value) || []; ok();
+        }, bad);
+      });
+    }, bad);
+    return function(){ ixUnsub(); Object.keys(subs).forEach(function(m){ subs[m](); }); };
+  }
+
   /* Listeners are re-attachable because signing in or out changes what
      mercury_state will allow, and a Firestore listener that has already failed
      with permission-denied stays dead. Dropping and re-opening them is the only
@@ -1036,7 +1072,7 @@
     lamp('saving', 'Loading');
     var S = SOURCES;
     unsubs.push(watch('kairos',  S.kairos.employees, 'roster',   function(v){ DATA.employees = v || []; }));
-    unsubs.push(watch('kairos',  S.kairos.entries,   'timeclock',function(v){ DATA.entries   = v || []; }));
+    unsubs.push(watchEntries());
     unsubs.push(watch('minerva', S.minerva.schedule, 'planner',  function(v){ DATA.schedule  = v || false; }));
     unsubs.push(watch('kubera',  S.kubera.quotes,    'quotes',   function(v){ DATA.quotes    = v || []; }));
     unsubs.push(watch('odin',    S.odin.projects,    'projects', function(v){ DATA.projects  = v || []; }));

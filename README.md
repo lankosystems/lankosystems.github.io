@@ -7,12 +7,12 @@ set of design tokens. No build step: each file is opened directly in a browser.
 
 | Product name                 | Header chip    | File           | Firestore collection | Doc keys  |
 | ----------------------------- | -------------- | -------------- | --------------------- | --------- |
-| Lanko Aengus Dashboard        | `Aengus 26.4`  | `index.html`   | *(reads only)*        | —         |
-| Lanko Kairos Timeclock        | `Kairos 26.11` | `kairos.html`  | `kairos_state`        | `lanko_*` |
-| Lanko Minerva Planner         | `Minerva 26.13`| `minerva.html` | `minerva_state`       | `lb_*`    |
-| Lanko Kubera Quote Builder    | `Kubera 26.7`  | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
-| Lanko Iris Shipping & Receiving | `Iris 26.2`  | `iris.html`    | `iris_state`          | —         |
-| Lanko Odin Projects           | `Odin 26.6`    | `odin.html`    | `odin_state`          | —         |
+| Lanko Aengus Dashboard        | `Aengus 26.5`  | `index.html`   | *(reads only)*        | —         |
+| Lanko Kairos Timeclock        | `Kairos 26.16` | `kairos.html`  | `kairos_state`        | `lanko_*` |
+| Lanko Minerva Planner         | `Minerva 26.15`| `minerva.html` | `minerva_state`       | `lb_*`    |
+| Lanko Kubera Quote Builder    | `Kubera 26.15` | `kubera.html`  | `mercury_state` ⚠    | `mc_*`    |
+| Lanko Iris Shipping & Receiving | `Iris 26.3`  | `iris.html`    | `iris_state`          | —         |
+| Lanko Odin Projects           | `Odin 26.14`   | `odin.html`    | `odin_state`          | —         |
 
 The pattern is **`Lanko <Deity> <Function>`**. The deity alone is the short name; the
 function says what it does so nobody has to remember which Roman/Greek/Hindu/Norse god
@@ -33,14 +33,14 @@ per released iteration:
 2027:  27.0  27.1  27.2  …
 ```
 
-Each app carries its own counter — they are not kept in step. Current: Aengus 26.4,
-Kairos 26.11, Minerva 26.13, Kubera 26.7, Iris 26.2, Odin 26.6.
+Each app carries its own counter — they are not kept in step. Current: Aengus 26.5,
+Kairos 26.16, Minerva 26.15, Kubera 26.15, Iris 26.3, Odin 26.14.
 
-In Aengus the version lives in one place, `APP_VERSION`, and both the `<title>` and the
-header chip are built from it. The others still have it written out by hand in a
-couple of spots (title, header chip, the "Exit to …" button in Kairos and Minerva, and
-the backup-file app stamp in Kubera) — worth collapsing to one constant next time each
-is touched.
+Every app now keeps its version in one place, `APP_VERSION`, in the script that starts
+Firebase. On load it rewrites the `<title>`, the header chip (`data-app-version`) and,
+in Kairos and Minerva, the "Exit to …" button. The numbers still typed in the HTML are
+only a fallback for the split second before the script runs — bump `APP_VERSION` and
+they follow.
 
 ## Aengus
 
@@ -188,6 +188,35 @@ If the collection is ever renamed properly, it is a copy-then-cut-over, not a
 find-and-replace: copy each `mc_*` doc to the new collection, verify, point the app at
 it, keep the old collection read-only for a while, then delete.
 
+## Kairos: punches are stored one document per month
+
+Until 26.15 every punch ever made lived in one document, `kairos_state/lanko_entries`.
+Firestore refuses any document over 1 MiB; that one was 590 KB in November 2026 and
+growing about 155 KB a month, so clock-ins would have started failing around February
+2027. Every punch also re-uploaded the whole history from the tablet.
+
+Since 26.16:
+
+| Document | Holds |
+| --- | --- |
+| `lanko_entries_index` | `{ months: ['2026-07', …], migratedAt, legacyCount }` |
+| `lanko_entries_YYYY-MM` | that month's punches, by the Alberta month of `clockIn` |
+| `lanko_entries` | the pre-split history — read-only snapshot, never written again |
+
+The first copy of 26.16 to load copies `lanko_entries` into month documents inside one
+transaction keyed on the index, so two tablets booting together can't both do it. Inside
+Kairos, `STATE.entries` is still one flat list, so payroll, history, the Daily Log and the
+sheet bridges didn't change — only `createEntryStore` underneath. Each punch runs a
+transaction that always reads the current and previous month (every open punch is in one
+of them) plus any other month it changes, and rewrites only those.
+
+Aengus and Minerva follow the last two months from the index; both fall back to the old
+document if the index doesn't exist yet. Anything else that reads punches must do the
+same — never read `lanko_entries` for new data.
+
+If a punch fails to save, the tablet now says **Not saved — Check the Wi-Fi and try
+again** instead of showing a "Clocked in" stamp for a punch that never landed.
+
 ## Who can sign in, and why
 
 These are static files on a public URL (`lankosystems.github.io`). The Firebase config
@@ -215,21 +244,58 @@ its error until a reload.
 Adding someone: Firebase Console → Authentication → Users → Add user. There are no
 roles — any account can read and write everything the rules allow. If that changes,
 put an allow-list in the rules rather than in the apps, since the apps are editable
-by whoever is looking at them.
+by whoever is looking at them. The rules already do this once: `jhale@lankosystems.com`
+can use Odin (and clock in through Kairos) but is refused Kubera and Minerva.
+
+The tablets are anonymous, so they get the least the rules can give them: Kairos's own
+collection, the published Minerva week and roster, `mc_quote_jobs` (Kubera's slim
+number/rev/status/title list for clocking quote time — Kubera 26.15+ keeps it in step on
+every save), and read access to Odin and Iris. Full quotes and the rest of Minerva need a
+real account. `firestore.rules` in this repo is the copy that's live — edit it here
+first, then paste it into the console.
 
 **Deploy order, if you ever change this.** Ship the apps that can sign in first,
 sign in once to prove it works, then publish the rules. The other way round locks the
 office apps out of their own data.
 
+## App Check
+
+`kairos_state`, Odin and Iris have to stay open to anonymous sessions so keyboardless
+tablets work, and the project id is in every page's source. Without App Check, anyone can
+use the REST API to read PINs and edit punches. App Check makes Firebase refuse any request
+that didn't come from these pages on `lankosystems.github.io`.
+
+Every app loads the App Check SDK and reads one constant, `APP_CHECK_SITE_KEY`, in the
+script that starts Firebase. Blank means off. The key is a reCAPTCHA v3 *site* key — public
+by design; the secret key only ever goes in the Firebase console. Turning it on:
+
+1. Create a reCAPTCHA v3 key for `lankosystems.github.io` and register it in Firebase
+   console → App Check → the web app.
+2. Put the site key in `APP_CHECK_SITE_KEY` in **all six** apps and deploy.
+3. Watch App Check → Firestore metrics for a few days until nearly every request is
+   "verified". Anything unverified is a device still on an old page.
+4. Then switch on enforcement for Cloud Firestore. Unverified requests are refused from
+   that moment, so don't do step 4 before step 3.
+
+The nightly backup script is unaffected: it reads as Ivan's Google account, which App
+Check and the rules don't apply to.
+
+## Backups
+
+`backup/lanko-backup.gs` is a Google Apps Script that runs in Ivan's own Drive. Every
+night around 2 AM it saves every document in all five collections to one JSON file in a
+Drive folder called "Lanko app backups", keeps 60 days, and emails Ivan if a night fails.
+`restoreDocument(fileName, collection, docId)` puts one document back. That overwrites the
+live copy for everyone, so it's a deliberate manual step, never automatic. Setup steps are
+at the top of the script. It runs with full access to the database, so never share it or
+deploy it as a web app.
+
 ## Still worth tightening
 
-Neither is caused by the rename, but both get more exposed on a public URL.
-
-**1. `kairos_state` is still open to anonymous sessions.** It has to be, so keyboardless
-tablets can clock people in. Anyone who works out the project id can read the roster,
-jobs and hours. The pricing is what's locked; this is names and times. The proper fix is
-App Check, which attests a request came from your real site without adding a login. It
-needs SDK changes across every app, so it is not a five-minute job.
+**1. Kairos uses a fixed UTC−6 for Alberta time.** `AB_OFFSET_MS` is −6 hours year-round.
+That's correct: Alberta stayed on UTC−6 permanently in 2026. If the province ever goes back
+to changing clocks, this one constant is what needs changing (or swap it for the
+`America/Edmonton` time zone).
 
 **2. Never commit `Lanko_quote_archive.json`.** It is 640 KB of real customer quotes,
 names and prices. It went into a public repo once already and had to be deleted along
