@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lanko Aengus Dashboard 26.7</title>
+<title>Lanko Aengus Dashboard 26.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -245,6 +245,27 @@
     font-family:var(--mono); font-size:10.5px; text-transform:uppercase;
     letter-spacing:0.05em; fill:var(--ink-soft);
   }
+
+  /* calendar tile - same grid/chip pattern as Kairos's and Odin's own
+     calendars, combining both plus PO expected dates into one view.
+     Chips are real links (Aengus has no internal routing - every click
+     here is a plain navigation to the owning app), not buttons. */
+  .cal-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .cal-toolbar h2{ font-family:var(--display); font-size:22px; font-weight:800; color:var(--ink); margin:0; }
+  .cal-nav{ display:flex; gap:8px; align-items:center; }
+  .cal-nav button{ font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;
+    background:none; border:1px solid var(--line); color:var(--olive); border-radius:6px; padding:5px 10px; cursor:pointer; }
+  .cal-nav button:hover{ border-color:var(--olive); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-dow{ font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-soft); text-align:center; padding-bottom:4px; }
+  .cal-cell{ background:var(--card); border:1px solid var(--line); border-radius:8px; min-height:74px; padding:6px; }
+  .cal-cell.other-month{ background:var(--paper-dim); opacity:0.55; }
+  .cal-cell.today{ border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
+  .cal-daynum{ font-family:var(--mono); font-size:11px; color:var(--ink-soft); margin-bottom:4px; }
+  .cal-chip{ display:block; font-family:var(--display-text); font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px; margin-bottom:3px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:none; }
+  .cal-legend{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; font-family:var(--display-text); font-size:11.5px; color:var(--ink-soft); }
+  .cal-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .cal-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
 
   @media (max-width:900px){
     .rack{ grid-template-columns:1fr; }
@@ -520,17 +541,17 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.7';
+  var APP_VERSION = '26.8';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
      has to change here too, and the affected panel will just show "not published
      yet" in the meantime rather than breaking. */
   var SOURCES = {
-    kairos: { collection:'kairos_state',  employees:'lanko_employees', entries:'lanko_entries' },
+    kairos: { collection:'kairos_state',  employees:'lanko_employees', entries:'lanko_entries', timeoff:'lanko_timeoff_requests' },
     minerva:{ collection:'minerva_state', schedule:'lb_published_schedule' },
     kubera: { collection:'mercury_state', quotes:'mc_quotes' },
-    odin:   { collection:'odin_state',    projects:'projects' },
+    odin:   { collection:'odin_state',    projects:'projects', pos:'pos' },
     iris:   { collection:'iris_state',    receipts:'receipts' }
   };
 
@@ -568,10 +589,11 @@
      "we could not look" never gets rendered as "there is nothing there". */
   var DATA = {
     employees:null, entries:null, schedule:null, quotes:null,
-    projects:null, receipts:null,
+    projects:null, receipts:null, timeoff:null, pos:null,
     err:{}
   };
   var live = 0, failed = 0;
+  var calMonth = null; // local-only month cursor for the calendar tile, YYYY-MM
 
   /* ---------------- helpers ---------------- */
   function esc(s){
@@ -594,6 +616,29 @@
   }
   function pad(n){ return String(n).padStart(2,'0'); }
   function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function monthStrFromDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1); }
+  function shiftMonthStr(monthStr, delta){
+    var parts = monthStr.split('-'); var y=parseInt(parts[0],10), m=parseInt(parts[1],10)-1;
+    return monthStrFromDate(new Date(y, m+delta, 1));
+  }
+  // Same expansion Kairos uses for a time-off request's [from,to] range -
+  // both are plain YYYY-MM-DD strings, no timezone conversion needed.
+  function dateRangeDays(fromStr, toStr){
+    var days = [];
+    var d = new Date(fromStr+'T00:00:00');
+    var end = new Date(toStr+'T00:00:00');
+    while(d <= end){ days.push(dateKey(d)); d.setDate(d.getDate()+1); }
+    return days;
+  }
+  // Same hash-to-palette approach as Kairos's calendar, so the same person
+  // tends to land on a recognizable color, though the two apps don't share
+  // a literal color table.
+  var TIMEOFF_CHIP_COLORS = ['#6D1708','#5B6B3F','#3B5169','#AD8007','#A23B1E','#8C6E08','#4E1005','#2E5C4A'];
+  function colorForEmployeeName(name){
+    var h = 0;
+    for(var i=0;i<name.length;i++){ h = (h*31 + name.charCodeAt(i)) & 0xffffffff; }
+    return TIMEOFF_CHIP_COLORS[Math.abs(h) % TIMEOFF_CHIP_COLORS.length];
+  }
   function fmtTime(iso){
     var d = new Date(iso);
     if(isNaN(d)) return '--:--';
@@ -743,7 +788,8 @@
     document.title = 'Lanko Aengus Dashboard ' + APP_VERSION;
     document.getElementById('wordmarkVer').textContent = 'Aengus ' + APP_VERSION;
     document.getElementById('stage').innerHTML =
-      renderFloor() + renderRack() + renderLedgers() + renderFoot();
+      renderFloor() + renderRack() + renderCalendarTile() + renderLedgers() + renderFoot();
+    wireCalendarTile();
   }
 
   function renderFloor(){
@@ -886,6 +932,89 @@
     return (DATA.receipts || []).filter(function(r){
       return r.kind !== 'ship' && r.flag && num(r.at) >= cutoff;
     });
+  }
+
+  /* ---------------- calendar tile ----------------
+     Combines three read-only layers: Kairos time off (per-employee color),
+     Odin project due dates and Odin PO expected dates. Every chip is a real
+     link - Aengus has no internal routing, so a click is a plain navigation
+     straight to the owning app, deep-linked where that app supports it. */
+  function calendarItems(){
+    var items = [];
+    if(Array.isArray(DATA.timeoff)){
+      DATA.timeoff.filter(function(r){ return r.status==='approved'; }).forEach(function(r){
+        dateRangeDays(r.from, r.to).forEach(function(dk){
+          items.push({ date:dk, label:r.employeeName + (r.partial ? ' (partial)' : ''),
+            color:colorForEmployeeName(r.employeeName), href:'kairos.html?tab=calendar' });
+        });
+      });
+    }
+    if(Array.isArray(DATA.projects)){
+      DATA.projects.filter(function(p){ return p.dueDate && p.status!=='closed'; }).forEach(function(p){
+        var jobRef = p.jobRef || p.quoteNum || '';
+        items.push({ date:p.dueDate, label:(jobRef + ' ' + (p.title||'')).trim(),
+          color:'var(--oxblood)', href:'odin.html?job=' + encodeURIComponent(jobRef) });
+      });
+    }
+    if(Array.isArray(DATA.pos)){
+      DATA.pos.filter(function(po){ return po.requiredBy && po.status!=='received'; }).forEach(function(po){
+        items.push({ date:po.requiredBy, label:'PO ' + (po.num||''),
+          color:'var(--steel)', href:'odin.html?po=' + encodeURIComponent(po.num||'') });
+      });
+    }
+    return items;
+  }
+  function renderCalendarTile(){
+    var anyErr = DATA.err.timeoff || DATA.err.projects || DATA.err.pos;
+    var stillLoading = DATA.timeoff===null || DATA.projects===null || DATA.pos===null;
+    var h = '<section><div class="eyebrow">Calendar<span class="rule"></span></div>';
+    if(stillLoading && !anyErr){
+      return h + '<div class="empty">Reading the calendars&hellip;</div></section>';
+    }
+    var monthStr = calMonth || monthStrFromDate(new Date());
+    var parts = monthStr.split('-'); var y = parseInt(parts[0],10), m = parseInt(parts[1],10)-1;
+    var monthLabel = new Date(y,m,1).toLocaleDateString([], {month:'long', year:'numeric'});
+    var byDay = {};
+    calendarItems().forEach(function(it){ (byDay[it.date] = byDay[it.date]||[]).push(it); });
+
+    var firstOfMonth = new Date(y,m,1);
+    var startOffset = firstOfMonth.getDay();
+    var gridStart = new Date(y,m,1-startOffset);
+    var todayKey = dateKey(new Date());
+    var cells = '';
+    for(var i=0;i<42;i++){
+      var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()+i);
+      var dk = dateKey(d);
+      var inMonth = d.getMonth()===m;
+      var dayItems = (byDay[dk] || []).slice().sort(function(a,b){ return a.label.localeCompare(b.label); });
+      var chips = dayItems.map(function(it){
+        return '<a class="cal-chip" href="'+esc(it.href)+'" style="background:'+it.color+';" title="'+esc(it.label)+'">'+esc(it.label)+'</a>';
+      }).join('');
+      cells += '<div class="cal-cell'+(inMonth?'':' other-month')+(dk===todayKey?' today':'')+'"><div class="cal-daynum">'+d.getDate()+'</div>'+chips+'</div>';
+    }
+    var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(l){ return '<div class="cal-dow">'+l+'</div>'; }).join('');
+
+    h += '<div class="cal-legend">' +
+      '<span><i style="background:#6D1708"></i>Time off (Kairos, by employee)</span>' +
+      '<span><i style="background:var(--oxblood)"></i>Project due date (Odin)</span>' +
+      '<span><i style="background:var(--steel)"></i>PO expected date (Odin)</span></div>';
+    h += '<div class="cal-toolbar"><h2>'+esc(monthLabel)+'</h2>' +
+      '<div class="cal-nav">' +
+      '<button id="calPrev">&larr; Prev</button>' +
+      '<button id="calToday">Today</button>' +
+      '<button id="calNext">Next &rarr;</button>' +
+      '</div></div>';
+    h += '<div class="cal-grid">'+dow+cells+'</div>';
+    if(anyErr){
+      h += '<div class="foot"><span class="stale">Some sources unavailable - this calendar may be missing items.</span></div>';
+    }
+    return h + '</section>';
+  }
+  function wireCalendarTile(){
+    var prev = document.getElementById('calPrev'), today = document.getElementById('calToday'), next = document.getElementById('calNext');
+    if(prev) prev.onclick = function(){ calMonth = shiftMonthStr(calMonth || monthStrFromDate(new Date()), -1); render(); };
+    if(today) today.onclick = function(){ calMonth = null; render(); };
+    if(next) next.onclick = function(){ calMonth = shiftMonthStr(calMonth || monthStrFromDate(new Date()), 1); render(); };
   }
 
   function renderJobs(){
@@ -1170,6 +1299,8 @@
     unsubs.push(watch('minerva', S.minerva.schedule, 'planner',  function(v){ DATA.schedule  = v || false; }));
     unsubs.push(watch('kubera',  S.kubera.quotes,    'quotes',   function(v){ DATA.quotes    = v || []; }));
     unsubs.push(watch('odin',    S.odin.projects,    'projects', function(v){ DATA.projects  = v || []; }));
+    unsubs.push(watch('odin',    S.odin.pos,         'pos',      function(v){ DATA.pos       = v || []; }));
+    unsubs.push(watch('kairos',  S.kairos.timeoff,   'timeoff',  function(v){ DATA.timeoff   = v || []; }));
     unsubs.push(watch('iris',    S.iris.receipts,    'receiving',function(v){ DATA.receipts  = v || []; }));
   }
   // The sign-in overlay calls this when the account changes.
