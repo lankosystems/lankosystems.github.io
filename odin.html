@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lanko Odin Projects 26.42</title>
+<title>Lanko Odin Projects 26.43</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -179,6 +179,23 @@
   .pill.po-sent{ background:var(--steel-dim); color:var(--steel); }
   .pill.po-partial{ background:#F3E7C6; color:var(--gold-dim); }
   .pill.po-received{ background:var(--olive-dim); color:var(--olive); }
+
+  /* calendar tab - project due dates + PO expected dates, same grid/chip
+     pattern as Kairos's time-off calendar so a Lanko calendar looks like a
+     Lanko calendar wherever it shows up. */
+  .cal-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .cal-toolbar h2{ font-family:var(--display); font-size:22px; font-weight:800; color:var(--oxblood); margin:0; }
+  .cal-nav{ display:flex; gap:8px; align-items:center; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-dow{ font-family:var(--display-text); font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:#8a7f68; text-align:center; padding-bottom:4px; }
+  .cal-cell{ background:var(--card); border:1px solid var(--line); border-radius:8px; min-height:74px; padding:6px; }
+  .cal-cell.other-month{ background:var(--paper-dim); opacity:0.55; }
+  .cal-cell.today{ border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
+  .cal-daynum{ font-family:var(--mono); font-size:11px; color:#8a7f68; margin-bottom:4px; }
+  .cal-chip{ display:block; font-family:var(--display-text); font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px; margin-bottom:3px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; border:none; width:100%; text-align:left; }
+  .cal-legend{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; font-family:var(--display-text); font-size:11.5px; color:#7a6f5c; }
+  .cal-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .cal-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
   tr.rem-done td{ color:#a89e8a; }
   tr.rem-done .pill{ opacity:0.6; }
 
@@ -432,7 +449,7 @@
   }
   /* The one place this app's version lives. The <title>, the header chip and any
      [data-app-version] element are rewritten from it on load. */
-  var APP_VERSION = '26.42';
+  var APP_VERSION = '26.43';
   document.addEventListener('DOMContentLoaded', function(){
     document.title = document.title.replace(/\d+\.\d+\s*$/, APP_VERSION);
     Array.prototype.forEach.call(document.querySelectorAll('[data-app-version]'), function(el){
@@ -480,7 +497,8 @@
   };
 
   /* ---------------- state ---------------- */
-  var state = { projects:[], vendors:[], pos:[], counters:null, settings:null, receipts:[], reminders:[], kairosEntries:[], kairosLoaded:false, users:[] };
+  var state = { projects:[], vendors:[], pos:[], counters:null, settings:null, receipts:[], reminders:[], kairosEntries:[], kairosLoaded:false, users:[], calendarMonth:null };
+  var calItemsIndex = {}; // calendar chip id -> {date,label,color,onOpen}, rebuilt each render
 
   /* ---------------- roles & approval ----------------
      Owners (Ivan, Travis) are hardcoded so they're never locked out even
@@ -658,6 +676,35 @@
       .catch(function(e){ autoPushBusy = false; console.error('autoPushNewAwards failed', e); });
   }
 
+  /* One-time deep link, applied once projects AND pos have both loaded (po
+     lookups need state.pos, which may arrive after or before projects -
+     listener order isn't guaranteed). Supports:
+       ?job=<job number>   - from Kubera's quote editor, opens that project
+       ?po=<po number>     - from Aengus's calendar tile, opens that PO
+       ?tab=calendar       - from Aengus's calendar tile, lands on Calendar tab
+     Checked in that order; the first match wins. */
+  function maybeApplyDeepLink(){
+    if(autoOpenedFromLink) return;
+    if(!loaded.projects || !loaded.pos) return;
+    autoOpenedFromLink = true;
+    var qs = new URLSearchParams(location.search);
+    var wantJob = qs.get('job');
+    if(wantJob){
+      var pTarget = state.projects.find(function(pr){
+        return String(pr.jobRef||pr.quoteNum||'').trim().toLowerCase() === wantJob.trim().toLowerCase();
+      });
+      if(pTarget){ go('project', pTarget.id); return; }
+    }
+    var wantPo = qs.get('po');
+    if(wantPo){
+      var poTarget = state.pos.find(function(po){
+        return String(po.num||'').trim().toLowerCase() === wantPo.trim().toLowerCase();
+      });
+      if(poTarget){ go('poedit', poTarget.id); return; }
+    }
+    if(qs.get('tab')==='calendar'){ go('calendar'); return; }
+  }
+
   /* ---------------- listeners ---------------- */
   function listen(){
     ['projects','vendors','pos','counters','settings','reminders','users'].forEach(function(k){
@@ -667,18 +714,6 @@
         if(k==='projects'){
           state.projects = Array.isArray(v) ? v : [];
           autoPushNewAwards();
-          if(!autoOpenedFromLink){
-            autoOpenedFromLink = true;
-            /* One-time deep link from Kubera's quote editor: ?job=<job number> opens
-               that project directly instead of landing on the Projects list. */
-            var wantJob = new URLSearchParams(location.search).get('job');
-            if(wantJob){
-              var target = state.projects.find(function(pr){
-                return String(pr.jobRef||pr.quoteNum||'').trim().toLowerCase() === wantJob.trim().toLowerCase();
-              });
-              if(target) go('project', target.id);
-            }
-          }
         }
         if(k==='vendors')  state.vendors  = Array.isArray(v) ? v : [];
         if(k==='pos')      state.pos      = Array.isArray(v) ? v : [];
@@ -686,6 +721,7 @@
         if(k==='settings') state.settings = v || null;
         if(k==='reminders') state.reminders = Array.isArray(v) ? v : [];
         if(k==='users') state.users = Array.isArray(v) ? v : [];
+        maybeApplyDeepLink();
         lamp('on','Synced'); render();
       }, function(e){
         console.error('listen failed', k, e); loaded[k] = true;
@@ -761,7 +797,7 @@
   }
 
   /* ---------------- navigation ---------------- */
-  var NAV = [['projects','Projects'],['archive','Archive'],['reminders','Reminders'],['pos','Purchase orders'],['vendors','Vendors'],['settings','Settings']];
+  var NAV = [['projects','Projects'],['calendar','Calendar'],['archive','Archive'],['reminders','Reminders'],['pos','Purchase orders'],['vendors','Vendors'],['settings','Settings']];
   function go(page, id){ var ps = view.projSort, sr = view.search; view = { page:page, id:id||null, err:'', search: sr || '', projSort: ps || { key:'awardedAt', dir:-1 } }; view.dirty = null; render(); window.scrollTo(0,0); }
   function renderNav(){
     var pendingNavCount = state.pos.filter(function(po){ return poNeedsApproval(po) && !poApproved(po); }).length;
@@ -773,6 +809,89 @@
     }).join('');
     Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function(b){
       b.onclick = function(){ go(b.getAttribute('data-nav')); };
+    });
+  }
+
+  /* ---------------- calendar ----------------
+     Two layers, both read-only here (editing still happens on the project
+     or PO itself): project.dueDate and po.requiredBy. Same month-grid
+     pattern as Kairos's time-off calendar. state.calendarMonth is
+     deliberately not part of the Firestore-synced key list above - it is
+     local UI state only, same treatment as kairosEntries/kairosLoaded. */
+  function monthStrFromDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+  function shiftMonthStr(monthStr, delta){
+    var parts = monthStr.split('-'); var y=parseInt(parts[0],10), m=parseInt(parts[1],10)-1;
+    return monthStrFromDate(new Date(y, m+delta, 1));
+  }
+  function calDateKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function onCalendarMonthShift(delta){
+    state.calendarMonth = shiftMonthStr(state.calendarMonth || monthStrFromDate(new Date()), delta);
+    render();
+  }
+  function calendarItems(){
+    var projItems = state.projects.filter(function(p){ return p.dueDate && p.status!=='closed'; })
+      .map(function(p){
+        return { date:p.dueDate, label:((p.jobRef||p.quoteNum||'')+' '+(p.title||'')).trim(),
+          color:'var(--oxblood)', onOpen:function(){ go('project', p.id); } };
+      });
+    var poItems = state.pos.filter(function(po){ return po.requiredBy && po.status!=='received'; })
+      .map(function(po){
+        var v = vendById(po.vendorId);
+        return { date:po.requiredBy, label:(po.num||'PO')+' – '+(v?v.name:'no vendor'),
+          color:'var(--steel)', onOpen:function(){ go('poedit', po.id); } };
+      });
+    return projItems.concat(poItems);
+  }
+  function renderCalendarTab(){
+    var monthStr = state.calendarMonth || monthStrFromDate(new Date());
+    var parts = monthStr.split('-'); var y = parseInt(parts[0],10), m = parseInt(parts[1],10)-1;
+    var monthLabel = new Date(y,m,1).toLocaleDateString([], {month:'long', year:'numeric'});
+    var byDay = {};
+    calendarItems().forEach(function(it){ (byDay[it.date] = byDay[it.date]||[]).push(it); });
+
+    var firstOfMonth = new Date(y,m,1);
+    var startOffset = firstOfMonth.getDay();
+    var gridStart = new Date(y,m,1-startOffset);
+    var todayKey = calDateKey(new Date());
+    var cells = ''; calItemsIndex = {}; var idc = 0;
+    for(var i=0;i<42;i++){
+      var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()+i);
+      var dk = calDateKey(d);
+      var inMonth = d.getMonth()===m;
+      var dayItems = (byDay[dk] || []).slice().sort(function(a,b){ return a.label.localeCompare(b.label); });
+      var chips = dayItems.map(function(it){
+        var cid = 'c'+(idc++); calItemsIndex[cid] = it;
+        return '<button type="button" class="cal-chip" style="background:'+it.color+';" data-calitem="'+cid+'" title="'+esc(it.label)+'">'+esc(it.label)+'</button>';
+      }).join('');
+      cells += '<div class="cal-cell'+(inMonth?'':' other-month')+(dk===todayKey?' today':'')+'"><div class="cal-daynum">'+d.getDate()+'</div>'+chips+'</div>';
+    }
+    var dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(l){ return '<div class="cal-dow">'+l+'</div>'; }).join('');
+
+    return '<div class="section-head"><div><h1>Calendar</h1>' +
+      '<div class="sub">Project due dates and PO expected dates</div></div></div>' +
+      '<div class="cal-legend"><span><i style="background:var(--oxblood)"></i>Project due date</span>' +
+      '<span><i style="background:var(--steel)"></i>PO expected date</span></div>' +
+      '<div class="cal-toolbar"><h2>'+esc(monthLabel)+'</h2>' +
+      '<div class="cal-nav">' +
+      '<button class="btn sm ghost" data-calnav="prev">&larr; Prev</button>' +
+      '<button class="btn sm ghost" data-calnav="today">Today</button>' +
+      '<button class="btn sm ghost" data-calnav="next">Next &rarr;</button>' +
+      '</div></div>' +
+      '<div class="cal-grid">'+dow+cells+'</div>';
+  }
+  function wireCalendarTab(){
+    Array.prototype.forEach.call(document.querySelectorAll('[data-calnav]'), function(b){
+      b.onclick = function(){
+        var a = b.getAttribute('data-calnav');
+        if(a==='today'){ state.calendarMonth = null; render(); }
+        else onCalendarMonthShift(a==='prev' ? -1 : 1);
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-calitem]'), function(b){
+      b.onclick = function(){
+        var it = calItemsIndex[b.getAttribute('data-calitem')];
+        if(it && it.onOpen) it.onOpen();
+      };
     });
   }
 
@@ -2394,6 +2513,7 @@
     var el = document.getElementById('view');
     switch(view.page){
       case 'projects':  el.innerHTML = renderProjects();  wireProjects();  break;
+      case 'calendar':  el.innerHTML = renderCalendarTab(); wireCalendarTab(); break;
       case 'archive':   el.innerHTML = renderArchive();   wireArchive();   break;
       case 'reminders': el.innerHTML = renderReminders(); wireReminders(); break;
       case 'project':  el.innerHTML = renderProject();  wireProject();  break;
