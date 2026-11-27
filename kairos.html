@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Lanko Kairos Timeclock 26.17</title>
+<title>Lanko Kairos Timeclock 26.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -538,7 +538,7 @@
 .cal-cell.other-month{ background:var(--paper-dim); opacity:0.55; }
 .cal-cell.today{ border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
 .cal-daynum{ font-family:var(--mono); font-size:11px; color:#8a7f68; margin-bottom:4px; }
-.cal-chip{ display:block; font-family:var(--display-text); font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px; margin-bottom:3px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-chip{ display:block; font-family:var(--display-text); font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px; margin-bottom:3px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; border:none; width:100%; text-align:left; }
 </style>
 </head>
 <body>
@@ -608,7 +608,7 @@
   }
   /* The one place this app's version lives. The <title>, the header chip and any
      [data-app-version] element are rewritten from it on load. */
-  var APP_VERSION = '26.17';
+  var APP_VERSION = '26.19';
   document.addEventListener('DOMContentLoaded', function(){
     document.title = document.title.replace(/\d+\.\d+\s*$/, APP_VERSION);
     Array.prototype.forEach.call(document.querySelectorAll('[data-app-version]'), function(el){
@@ -1819,8 +1819,8 @@ function renderCalendarTab(){
     var dayEntries = byDay[dk] || [];
     var chips = dayEntries.map(function(r){
       var color = colorForEmployeeName(r.employeeName);
-      var label = r.employeeName + (r.partial ? ' (partial day)' : '');
-      return '<span class="cal-chip" style="background:'+color+';" title="'+esc(label)+'">'+esc(r.employeeName)+(r.partial?' &frac12;':'')+'</span>';
+      var label = r.employeeName + (r.partial ? ' (partial day)' : '') + ' — click to cancel this time off';
+      return '<button type="button" class="cal-chip" style="background:'+color+';" data-action="timeoff-admin-cancel" data-id="'+r.id+'" title="'+esc(label)+'">'+esc(r.employeeName)+(r.partial?' &frac12;':'')+'</button>';
     }).join('');
     cells += '<div class="cal-cell'+(inMonth?'':' other-month')+(dk===todayKey?' today':'')+'"><div class="cal-daynum">'+d.getDate()+'</div>'+chips+'</div>';
   }
@@ -4368,6 +4368,9 @@ case 'open-timeoff-request':
 case 'timeoff-back': STATE.view='action'; STATE.timeOffError=null; STATE.timeOffSavedInfo=null; STATE.timeOffEditingId=null; render(); break;
 case 'timeoff-save': onTimeOffRequestSave(); break;
 case 'timeoff-withdraw': onTimeOffWithdraw(id); break;
+case 'timeoff-admin-cancel':
+  if(confirm('Cancel this approved time off? This cannot be undone.')) onTimeOffWithdraw(id);
+  break;
 case 'timeoff-edit-open':
   STATE.timeOffEditingId = id;
   var __editReq = STATE.timeOffRequests.find(function(r){ return r.id===id; });
@@ -4623,7 +4626,10 @@ fsDoc(K.timeOff).onSnapshot(function(snap){
     }).then(function(){
       STATE.officeAdmin = isOfficeAdmin();
       if(STATE.officeAdmin && STATE.adminPin){
-        STATE.view = 'admin'; STATE.adminTab = 'employees';
+        STATE.view = 'admin';
+        // ?tab=calendar - used by Aengus's calendar tile to land an admin
+        // straight on the Calendar tab instead of the default Employees tab.
+        STATE.adminTab = (new URLSearchParams(location.search).get('tab')==='calendar') ? 'calendar' : 'employees';
       } else {
         STATE.view = STATE.adminPin ? 'rack' : 'setup';
       }
