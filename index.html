@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Lanko Aengus Dashboard 26.5</title>
+<title>Lanko Aengus Dashboard 26.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@500;700;800&family=Big+Shoulders+Text:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Jura:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -238,6 +238,12 @@
   .foot{
     font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); letter-spacing:0.05em;
     text-align:center; padding-top:6px; line-height:1.9;
+  }
+  .wonchart{ width:100%; height:150px; display:block; margin-top:4px; }
+  .wonchart .bartop{ font-family:var(--mono); font-size:10.5px; fill:var(--ink); }
+  .wonchart .barlabel{
+    font-family:var(--mono); font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.05em; fill:var(--ink-soft);
   }
 
   @media (max-width:900px){
@@ -514,7 +520,7 @@
                       (Kubera is the documented exception: its collection is
                        still mercury_state so existing quotes stay reachable.)
      ============================================================================ */
-  var APP_VERSION = '26.5';
+  var APP_VERSION = '26.6';
 
   /* Each app owns one collection; Aengus reads from all three. Doc keys are the
      ones those apps already write, copied verbatim - if a key changes there, it
@@ -689,6 +695,27 @@
       buckets[st].n++; buckets[st].v += quoteTotal(q);
     });
     return buckets;
+  }
+  /* Won quotes have no separate "decided" timestamp - q.date is the quote's
+     own issue date (the same field Kubera's own expiry logic keys off), so
+     that's what buckets a win into a month here. Last 6 months, including
+     the current one, to keep the chart glanceable on a daily dashboard. */
+  function wonByMonth(){
+    var now = new Date();
+    var months = [];
+    for(var i=5;i>=0;i--){
+      var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      months.push({ key: d.getFullYear()+'-'+pad(d.getMonth()+1),
+        label: d.toLocaleDateString('en-CA',{month:'short'}), v:0 });
+    }
+    var byKey = {};
+    months.forEach(function(m){ byKey[m.key] = m; });
+    (DATA.quotes||[]).forEach(function(q){
+      if(!q || q.status!=='won' || !q.date) return;
+      var key = String(q.date).slice(0,7);
+      if(byKey[key]) byKey[key].v += quoteTotal(q);
+    });
+    return months;
   }
 
   /* ---------------- render ---------------- */
@@ -914,7 +941,8 @@
 
   function renderLedgers(){
     return '<section><div class="ledgers">' + renderPlan() + renderPipeline() + '</div></section>' +
-           '<section><div class="ledgers">' + renderJobs() + renderYard() + '</div></section>';
+           '<section><div class="ledgers">' + renderJobs() + renderYard() + '</div></section>' +
+           '<section>' + renderWonGraph() + '</section>';
   }
 
   function renderPlan(){
@@ -991,6 +1019,51 @@
     });
     h += '</tbody></table>' +
       '<div class="foot">Totals are a roll-up. Kubera is the source of truth for any single quote.</div>';
+    return h + '</div>';
+  }
+
+  function renderWonGraph(){
+    var h = '<div class="ledger"><div class="eyebrow">Value of quotes won &middot; Kubera<span class="rule"></span></div>';
+    if(DATA.err.quotes){
+      var u = firebase.auth().currentUser;
+      h += (!u || u.isAnonymous)
+        ? '<div class="empty"><b>Sign in to see this</b>Quote values stay hidden until someone signs in.</div>'
+        : '<div class="empty"><b>Quote builder unavailable</b>Signed in, but this account ' +
+          'still could not read mercury_state. Check the Firestore rules.</div>';
+      return h + '</div>';
+    }
+    if(DATA.quotes === null){
+      h += '<div class="empty">Reading the quote builder&hellip;</div>';
+      return h + '</div>';
+    }
+    var months = wonByMonth();
+    var max = 0;
+    months.forEach(function(m){ if(m.v > max) max = m.v; });
+    if(!max){
+      h += '<div class="empty"><b>No quotes won in the last 6 months</b>' +
+        'Mark a quote Won in Kubera and it appears here, grouped by the quote&rsquo;s own date.</div>';
+      return h + '</div>';
+    }
+    var W = 560, H = 150, padTop = 26, padBottom = 20, n = months.length;
+    var gap = 14, barW = (W - gap*(n-1)) / n;
+    var plotH = H - padTop - padBottom;
+    var svg = '';
+    months.forEach(function(m, i){
+      var bh = max ? (m.v/max)*plotH : 0;
+      var x = i*(barW+gap);
+      var y = padTop + (plotH - bh);
+      svg += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+
+        '" height="'+Math.max(bh,1).toFixed(1)+'" rx="2" fill="var(--olive)"></rect>';
+      if(m.v){
+        svg += '<text x="'+(x+barW/2).toFixed(1)+'" y="'+(y-6).toFixed(1)+
+          '" text-anchor="middle" class="bartop">'+esc(money(m.v))+'</text>';
+      }
+      svg += '<text x="'+(x+barW/2).toFixed(1)+'" y="'+(H-4)+
+        '" text-anchor="middle" class="barlabel">'+esc(m.label)+'</text>';
+    });
+    h += '<svg class="wonchart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">' + svg + '</svg>';
+    var total = months.reduce(function(s,m){ return s+m.v; }, 0);
+    h += '<div class="foot">'+money(total)+' won over the last 6 months.</div>';
     return h + '</div>';
   }
 
